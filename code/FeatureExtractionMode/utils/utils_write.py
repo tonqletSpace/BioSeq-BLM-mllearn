@@ -229,6 +229,37 @@ def create_all_seq_file(seq_files, tgt_dir, ind=False):
         return tgt_dir + '/' + 'ind_all_seq_file' + suffix
 
 
+def mll_seq_file2one(category, seq_file, out_file, label_cardinality=7, iid=True):
+    # 暂时支持单数据文件输入
+    if category == 'DNA':
+        alphabet = DNA
+    elif category == 'RNA':
+        alphabet = RNA
+    else:
+        alphabet = PROTEIN
+
+    # 读取所有序列
+    seq_len_list = []  # list of length integer (list[len(seq1), len(seq2), ...])
+    label_list = [] # list of label string
+    with open(seq_file, 'r') as in_f:
+        seq_all, seq_info_all = get_seqs(in_f, alphabet) # list of sequence in alphabet (list[seq1, seq2, ...])
+        for seq in seq_all:
+            seq_len_list.append(len(seq))
+        for info in seq_info_all:
+            label_list.append(info[:label_cardinality])
+
+    # if iid:
+    # 写入所有序列
+    with open(out_file, 'w') as out_f:
+        for j in range(len(seq_all)):
+            out_f.write('>Sequence[' + str(j) + '] | ' + 'Label[' + str(label_list[j]) + ']')
+            out_f.write('\n')
+            out_f.write(seq_all[j])
+            out_f.write('\n')
+
+    return seq_len_list, label_list
+
+
 def seq_file2one(category, seq_files, label_list, out_file):
     if category == 'DNA':
         alphabet = DNA
@@ -266,6 +297,11 @@ def gen_label_array(sp_num_list, label_list):
     for i in range(len(sp_num_list)):
         labels += [int(label_list[i])] * sp_num_list[i]
     return np.array(labels)
+
+
+def mll_gen_label_matrix(seq_label_list):
+    from scipy.sparse import lil_matrix
+    return lil_matrix(seq_label_list)
 
 
 def fixed_len_control(seq_len_list, fixed_len):

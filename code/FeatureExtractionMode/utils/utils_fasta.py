@@ -151,6 +151,7 @@ def get_sequence_check_dna(f, alphabet):
     Return the sequence list.
     """
     sequence_list = []
+    name_list = []
     for e in read_fasta_yield(f):
         res = is_under_alphabet(e.seq, alphabet)
         if res is not True:
@@ -163,8 +164,9 @@ def get_sequence_check_dna(f, alphabet):
             # print(e.name)
             # print(e.seq)
             sequence_list.append(e.seq)
+            name_list.append(e.name)
 
-    return sequence_list
+    return sequence_list, name_list
 
 
 def is_sequence_list(sequence_list, alphabet):
@@ -198,7 +200,7 @@ def get_seqs(input_file, alphabet, desc=False):
     # modified at 2020/05/10
     if hasattr(input_file, 'read'):
         if desc is False:
-            return get_sequence_check_dna(input_file, alphabet)
+            return get_sequence_check_dna(input_file, alphabet) # mllearn
         else:
             return read_fasta_check_dna(input_file, alphabet)  # return Seq(name, seq, count)
     elif isinstance(input_file, list):

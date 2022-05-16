@@ -817,6 +817,41 @@ def prepare4train_seq(args, label_array, dl):
     return args
 
 
+def mll_prepare4train_seq(args, label_array, dl):
+    from scipy.sparse import lil_matrix
+    if not isinstance(label_array, lil_matrix):
+        return prepare4train_seq(args, label_array, dl)
+
+    # multi-label learning version
+    info_dict = {}
+
+    if args.cv == 'j':
+        args.folds_num = sum(args.sample_num_list)
+        info_dict['Validation method'] = 'Jackknife cross validation'
+    elif args.cv == '10':
+        args.folds_num = 10
+        info_dict['Validation method'] = '10-fold cross validation'
+    else:
+        args.folds_num = 5
+        info_dict['Validation method'] = '5-fold cross validation'
+    args.folds = construct_partition2two(label_array, args.folds_num, True)  # 固定交叉验证的每一折index
+    if dl is False:
+        args.metric_index = Metric_Index[args.metric]
+        info_dict['Metric for selection'] = Metric_dict[args.metric]
+
+        if args.sp != 'none':
+            if args.sp == 'over':
+                info_dict['Technique for sampling'] = 'oversampling '
+            elif args.sp == 'under':
+                info_dict['Technique for sampling'] = 'undersampling '
+            else:
+                info_dict['Technique for sampling'] = 'combine oversampling  and undersampling '
+
+    info_dict['Type of Problem'] = 'multi-label learning'
+
+    print_base_dict(info_dict)
+    return args
+
 def print_base_dict(info_dict):
     print('\r')
     key_max_len = 0
