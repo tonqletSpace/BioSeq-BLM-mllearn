@@ -59,6 +59,13 @@ def one_ml_process(args, vectors, labels, folds, vec_files, params_dict):
     return params_dict
 
 
+def mll_one_ml_process(args, vectors, labels, folds, params_dict):
+    params_dict = mll_ml_cv_process(args.ml, vectors, labels, folds, args.metric_index, args.sp, args.multi, args.res,
+                                params_dict)
+
+    return params_dict
+
+
 def ml_results(args, vectors, labels, folds, vec_files, params_selected):
     if args.score == 'none':
         ml_cv_results(args.ml, vectors, labels, folds, args.sp, args.multi, args.res, args.results_dir, params_selected)

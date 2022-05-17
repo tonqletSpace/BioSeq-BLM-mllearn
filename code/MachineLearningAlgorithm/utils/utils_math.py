@@ -17,8 +17,13 @@ SEED = 42
 # TODO: 将数据集划分为训练集和测试集
 def construct_partition2two(labels, folds_num, stratified=True):
     # 将数据集划分为n折，并进行保存？ 如果需要进行相似性打分，则数据集划分提前到特征提取！
-    vectors = random.normal(loc=0.0, scale=1, size=(len(labels), 64))
-    if stratified is True:
+    from scipy.sparse import lil_matrix
+    if not isinstance(labels, lil_matrix):
+        vectors = random.normal(loc=0.0, scale=1, size=(len(labels), 64))
+    else:
+        vectors = random.normal(loc=0.0, scale=1, size=(labels.get_shape()[0], 64))
+
+    if stratified is True and not isinstance(labels, lil_matrix):
         fold = StratifiedKFold(n_splits=folds_num, shuffle=True, random_state=random.RandomState(SEED))
         folds_temp = list(fold.split(vectors, labels))
     else:

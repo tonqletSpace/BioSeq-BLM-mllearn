@@ -359,6 +359,38 @@ def out_seq_file(label_list, out_format, results_dir, params_dict, params_list_d
     return output_file_list
 
 
+def mll_out_seq_file(out_format, results_dir, params_dict, params_list_dict):
+    # 这里需要注意的是比如params_list_dict = {k: [1, 2, 3], w: [0.7, 0.8], n: [3]}, 则最终的输出文件名只包含k和w
+    multi_fea = False
+    # print(params_list_dict)
+    params_val_list = list(params_list_dict.values())
+    for params_val in params_val_list:
+        if len(params_val) > 1:
+            multi_fea = True
+
+    if multi_fea is False:
+        fea_path = results_dir
+    else:
+        fea_path = results_dir + 'all_fea_files/'
+
+    if multi_fea is False:
+        fea_path += 'cv_features[' + 'mll' + ']_' + str(out_format) + '.txt'  # 给文件名加上标签
+    else:
+        for key in params_list_dict.keys():
+            if len(params_list_dict[key]) >= 2:
+                fea_path += str(key) + '_' + str(params_dict[key]) + '_'  # For example: _k_2_lag_5
+        fea_path += '/'
+        if not os.path.exists(fea_path):
+            try:
+                os.makedirs(fea_path)
+            except OSError:
+                pass
+        fea_path += 'cv_features[' + 'mll' + ']_' + str(out_format) + '.txt'  # 给文件名加上标签
+
+    res = [fea_path]
+    return res  # 复用blm其他功能
+
+
 def out_ind_file(label, out_format, results_dir):
     output_file_list = []
     for i in range(len(label)):

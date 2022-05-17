@@ -159,6 +159,73 @@ def one_seq_fe_process(args, input_one_file, labels, vec_files, sample_num_list,
                     score_process(args.score, vec_files, labels, args.cv, args.format, args.cpu)
 
 
+def mll_one_seq_fe_process(args, input_one_file, labels, vec_files, **params_dict):
+    print_fe_dict(params_dict)  # 输出特征提取参数详细信息
+
+    sample_num_list = [labels.get_shape()[0]]  # 可以复用blm对二分类的特征提取
+    args.dl = 0  # demo中先不用deep learning
+
+    if args.mode == 'OHE':
+        from FeatureExtractionMode.OHE.OHE4vec import ohe2seq_vec, ohe2seq_mat
+        for out_file in vec_files:
+            if not os.path.exists(out_file):
+                if args.dl == 0:
+                    ohe2seq_vec(input_one_file, args.category, args.method, args.current_dir, args.pp_file,
+                                args.rss_file, sample_num_list, args.fixed_len, args.format, vec_files, args.cpu)
+                else:
+                    ohe2seq_mat(input_one_file, args.category, args.method, args.current_dir, args.pp_file,
+                                args.rss_file, sample_num_list, vec_files, args.cpu)
+
+    elif args.mode == 'BOW':
+        from FeatureExtractionMode.BOW.BOW4vec import bow
+        for out_file in vec_files:
+            if not os.path.exists(out_file):
+                bow(input_one_file, args.category, args.words, sample_num_list, args.format,
+                    vec_files, args.current_dir, False, **params_dict)
+
+    elif args.mode == 'TF-IDF':
+        from FeatureExtractionMode.TF_IDF.TF_IDF4vec import tf_idf
+        for out_file in vec_files:
+            if not os.path.exists(out_file):
+                tf_idf(input_one_file, args.category, args.words, args.fixed_len, sample_num_list,
+                       args.format, vec_files, args.current_dir, False, **params_dict)
+
+    elif args.mode == 'TR':
+        from FeatureExtractionMode.TR.TR4vec import text_rank
+        for out_file in vec_files:
+            if not os.path.exists(out_file):
+                text_rank(input_one_file, args.category, args.words, args.fixed_len, sample_num_list,
+                          args.format, vec_files, args.current_dir, False, **params_dict)
+    elif args.mode == 'WE':
+        from FeatureExtractionMode.WE.WE4vec import word_emb
+        for out_file in vec_files:
+            if not os.path.exists(out_file):
+                word_emb(args.method, input_one_file, args.category, args.words, args.fixed_len,
+                         sample_num_list, args.format, vec_files, args.current_dir, **params_dict)
+
+    elif args.mode == 'TM':
+        from FeatureExtractionMode.TM.TM4vec import topic_model
+        for out_file in vec_files:
+            if not os.path.exists(out_file):
+                topic_model(args.in_tm, args.method, input_one_file, labels, args.category, args.words, args.fixed_len,
+                            sample_num_list, args.format, vec_files, args.current_dir, **params_dict)
+
+    elif args.mode == 'SR':
+        from FeatureExtractionMode.SR.SR4vec import syntax_rules
+        from FeatureExtractionMode.SR.pse import AAIndex
+        for out_file in vec_files:
+            if not os.path.exists(out_file):
+                syntax_rules(args.method, input_one_file, args.category, sample_num_list,
+                             args.format, vec_files, args.current_dir, args, **params_dict)
+    else:
+        from FeatureExtractionMode.AF.AF4vec import auto_feature
+        for out_file in vec_files:
+            if not os.path.exists(out_file):
+                # method, in_fa, input_file, labels, sample_num_list, out_format, out_file_list, alphabet, cur_dir,
+                # chosen_file, cpu, fixed_len, ** params_dict
+                auto_feature(args.method, input_one_file, labels, sample_num_list, vec_files, args, **params_dict)
+
+
 def main(args):
     print("\nStep into analysis...\n")
     start_time = time.time()

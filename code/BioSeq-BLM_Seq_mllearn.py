@@ -2,16 +2,19 @@ import multiprocessing
 import os
 import time
 
+from scipy.sparse import lil_matrix
+
 from CheckAll import Batch_Path_Seq, DeepLearning, Classification, Method_Semantic_Similarity, prepare4train_seq
 from CheckAll import Method_One_Hot_Enc, Feature_Extract_Mode, check_contain_chinese, seq_sys_check, dl_params_check, \
     seq_feature_check, mode_params_check, results_dir_check, ml_params_check, make_params_dicts, Final_Path, All_Words
 from FeatureAnalysis import fa_process
 from FeatureExtractionMode.utils.utils_write import seq_file2one, gen_label_array, out_seq_file, out_ind_file, \
-    opt_file_copy, out_dl_seq_file, create_all_seq_file, fixed_len_control, mll_seq_file2one, mll_gen_label_matrix
-from FeatureExtractionSeq import one_seq_fe_process
+    opt_file_copy, out_dl_seq_file, create_all_seq_file, fixed_len_control, mll_seq_file2one, mll_gen_label_matrix, \
+    mll_out_seq_file
+from FeatureExtractionSeq import one_seq_fe_process, mll_one_seq_fe_process
 from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process, dl_ind_process
 from MachineLearningAlgorithm.utils.utils_read import files2vectors_seq, read_dl_vec4seq
-from MachineLearningSeq import one_ml_process, params_select, ml_results, ind_ml_results
+from MachineLearningSeq import one_ml_process, params_select, ml_results, ind_ml_results, mll_one_ml_process
 
 
 def create_results_dir(args, cur_dir):
@@ -40,7 +43,7 @@ def mll_ml_fe_process(args):
     # 统计样本数目和序列长度
     seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
     # 生成标签矩阵
-    label_matrix = mll_gen_label_matrix(seq_label_list)
+    label_array = mll_gen_label_matrix(seq_label_list)
     # 控制序列的固定长度(只需要操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
 
@@ -56,12 +59,69 @@ def mll_ml_fe_process(args):
     params_list_dict, all_params_list_dict = mode_params_check(args, all_params_list_dict)
     # 列表字典 ---> 字典列表
     params_dict_list = make_params_dicts(all_params_list_dict)
-    # print(params_dict_list)
-    # exit()
     # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
-    args = prepare4train_seq(args, label_matrix, dl=False)
+    args = prepare4train_seq(args, label_array, dl=False)
+
+    # 指定分析层面
+    args.res = False
+
+    params_dict_list_pro = []
+    print('\n')
+    print('Parameter Selection Processing...')
+    print('\n')
+    for i in range(len(params_dict_list)):
+        params_dict = params_dict_list[i]
+        # 生成特征向量文件名
+        vec_files = mll_out_seq_file(args.format, args.results_dir, params_dict, params_list_dict)
+        params_dict['out_files'] = vec_files
+        # 注意多进程计算的debug
+        # one_ml_fe_process(args, input_one_file, label_array, vec_files, sp_num_list, args.folds, **params_dict)
+        params_dict_list_pro.append(pool.apply_async(mll_one_ml_fe_process, (args, input_one_file, label_array,
+                                                                             vec_files, args.folds, params_dict)))
+
+    pool.close()
+    pool.join()
+    # exit()
+    # 根据指标进行参数选择
+    # params_selected = params_select(params_dict_list_pro, args.results_dir)
+    # # 将最优的特征向量文件从"all_fea_files/"文件夹下复制到主文件下
+    # opt_files = opt_file_copy(params_selected['out_files'], args.results_dir)
+    # # 获取最优特征向量
+    # opt_vectors = files2vectors_seq(opt_files, args.format)
+    # print(' Shape of Optimal Feature vectors: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0], opt_vectors.shape[1]))
+    # # 特征分析
+    # if args.score == 'none':
+    #     opt_vectors = fa_process(args, opt_vectors, label_array, after_ps=True, ind=False)
+    #     print(' Shape of Optimal Feature vectors after FA process: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0],
+    #                                                                                              opt_vectors.shape[1]))
+    # # 构建分类器
+    # ml_results(args, opt_vectors, label_array, args.folds, params_selected['out_files'], params_selected)
+    # # -------- 独立测试-------- #
+    # # 即，将独立测试数据集在最优的model上进行测试
+    # if args.ind_seq_file is not None:
+    #     ind_ml_fe_process(args, opt_vectors, label_array, params_selected)
 
 
+def mll_one_ml_fe_process(args, input_one_file, labels, vec_files, folds, params_dict):
+    # 特征提取
+    # args.res = False
+    mll_one_seq_fe_process(args, input_one_file, labels, vec_files, **params_dict)
+    # 获取特征向量
+    vectors = files2vectors_seq(vec_files, args.format)
+    print(' Shape of Feature vectors: [%d, %d] '.center(66, '*') % (vectors.shape[0], vectors.shape[1]))
+
+    # Feature Analysis 先忽略
+    # if args.score == 'none':
+    #     vectors = fa_process(args, vectors, labels, after_ps=False, ind=False)
+    #     print(' Shape of Feature vectors after FA process: [%d, %d] '.center(66, '*') % (vectors.shape[0],
+    #                                                                                      vectors.shape[1]))
+    params_dict = mll_one_ml_process(args, vectors, labels, folds, vec_files, params_dict)
+
+    return params_dict
+
+
+# def mll_construct_sparse_matrix_from_vector_arrays(vector_arrays):
+#     return lil_matrix(vector_arrays)
 
 
 def main(args):
