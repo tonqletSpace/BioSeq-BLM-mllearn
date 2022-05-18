@@ -2,7 +2,7 @@ import multiprocessing
 import os
 import time
 
-from scipy.sparse import lil_matrix
+
 
 from CheckAll import Batch_Path_Seq, DeepLearning, Classification, Method_Semantic_Similarity, prepare4train_seq
 from CheckAll import Method_One_Hot_Enc, Feature_Extract_Mode, check_contain_chinese, seq_sys_check, dl_params_check, \
@@ -83,21 +83,22 @@ def mll_ml_fe_process(args):
     pool.join()
     # exit()
     # 根据指标进行参数选择
-    # params_selected = params_select(params_dict_list_pro, args.results_dir)
-    # # 将最优的特征向量文件从"all_fea_files/"文件夹下复制到主文件下
-    # opt_files = opt_file_copy(params_selected['out_files'], args.results_dir)
-    # # 获取最优特征向量
-    # opt_vectors = files2vectors_seq(opt_files, args.format)
-    # print(' Shape of Optimal Feature vectors: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0], opt_vectors.shape[1]))
-    # # 特征分析
+    params_selected = params_select(params_dict_list_pro, args.results_dir)
+    # 将最优的特征向量文件从"all_fea_files/"文件夹下复制到主文件下
+    opt_files = opt_file_copy(params_selected['out_files'], args.results_dir)
+
+    # 获取最优特征向量
+    opt_vectors = files2vectors_seq(opt_files, args.format)
+    print(' Shape of Optimal Feature vectors: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0], opt_vectors.shape[1]))
+    # 特征分析
     # if args.score == 'none':
     #     opt_vectors = fa_process(args, opt_vectors, label_array, after_ps=True, ind=False)
     #     print(' Shape of Optimal Feature vectors after FA process: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0],
     #                                                                                              opt_vectors.shape[1]))
-    # # 构建分类器
+    # 构建分类器
     # ml_results(args, opt_vectors, label_array, args.folds, params_selected['out_files'], params_selected)
-    # # -------- 独立测试-------- #
-    # # 即，将独立测试数据集在最优的model上进行测试
+    # -------- 独立测试-------- #
+    # 即，将独立测试数据集在最优的model上进行测试
     # if args.ind_seq_file is not None:
     #     ind_ml_fe_process(args, opt_vectors, label_array, params_selected)
 

@@ -10,6 +10,7 @@ from MachineLearningAlgorithm.Classification.ml_machine import ml_cv_process, ml
     ml_score_cv_process, ml_score_cv_results, ml_score_ind_results
 from MachineLearningAlgorithm.utils.utils_read import files2vectors_info, seq_label_read, read_dl_vec4seq
 from SemanticSimilarity import ind_score_process
+from MachineLearningAlgorithm.Classification.mll_machine import mll_ml_cv_process
 
 
 def ml_process(args):
@@ -60,9 +61,7 @@ def one_ml_process(args, vectors, labels, folds, vec_files, params_dict):
 
 
 def mll_one_ml_process(args, vectors, labels, folds, params_dict):
-    params_dict = mll_ml_cv_process(args.ml, vectors, labels, folds, args.metric_index, args.sp, args.multi, args.res,
-                                params_dict)
-
+    params_dict = mll_ml_cv_process(args.mll, args.ml, vectors, labels, folds, args.metric_index, params_dict)
     return params_dict
 
 

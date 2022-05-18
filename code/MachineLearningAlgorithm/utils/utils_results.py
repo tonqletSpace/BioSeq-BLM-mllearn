@@ -1,6 +1,6 @@
 import math
 import os
-
+import sklearn.metrics as metrics
 from sklearn.metrics import roc_auc_score
 
 
@@ -76,6 +76,29 @@ def performance(origin_labels, predict_labels, deci_value, bi_or_multi=False, re
                 correct_labels += 1.0
         acc = correct_labels / len(origin_labels)
         return acc
+
+
+def mll_performance(origin_labels, predicted_labels):
+    """evaluations used to evaluate the performance of the model.
+    :param deci_value: decision values used for ROC and AUC.
+    :param bi_or_multi: binary or multiple classification
+    :param origin_labels: true values of the data set.
+    :param predicted_labels: predicted values of the data set.
+    :param res: residue or not.
+    """
+    if len(origin_labels) != len(predicted_labels):
+        raise ValueError("The number of the original labels must equal to that of the predicted labels.")
+
+    # 'Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1'
+    hamming_loss = metrics.hamming_loss(origin_labels, predicted_labels)
+    accuracy = metrics.accuracy_score(origin_labels, predicted_labels)
+    jaccard_similarity = metrics.jaccard_score(origin_labels, predicted_labels)
+    precision = metrics.precision_score(origin_labels, predicted_labels)
+    recall = metrics.recall_score(origin_labels, predicted_labels)
+    f1_score = metrics.f1_score(origin_labels, predicted_labels)
+
+    return hamming_loss, accuracy, jaccard_similarity, precision, recall, f1_score
+
 
 
 # def table_metric(results, opt=False, ind=False):
