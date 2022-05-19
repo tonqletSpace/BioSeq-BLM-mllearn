@@ -33,41 +33,7 @@ def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, params_dict):
         # if sp != 'none':
         #     x_train, y_train = sampling(sp, x_train, y_train)
 
-        if mll == 'BR':
-            if ml == 'SVM':
-                clf = BinaryRelevance(
-                    classifier=svm.SVC(C=2 ** params_dict['cost'], gamma=2 ** params_dict['gamma']),
-                    require_dense=[False, True]
-                )
-            else:
-                clf = BinaryRelevance(
-                    classifier=RandomForestClassifier(random_state=42, n_estimators=params_dict['tree']),
-                    require_dense=[False, True]
-                )
-        elif mll == 'CC':
-            if ml == 'SVM':
-                clf = ClassifierChain(
-                    classifier=svm.SVC(C=2 ** params_dict['cost'], gamma=2 ** params_dict['gamma']),
-                    require_dense=[False, True]
-                )
-            else:
-                clf = ClassifierChain(
-                    classifier=RandomForestClassifier(random_state=42, n_estimators=params_dict['tree']),
-                    require_dense=[False, True]
-                )
-        elif mll == 'LP':
-            if ml == 'SVM':
-                clf = LabelPowerset(
-                    classifier=svm.SVC(C=2 ** params_dict['cost'], gamma=2 ** params_dict['gamma']),
-                    require_dense=[False, True]
-                )
-            else:
-                clf = LabelPowerset(
-                    classifier=RandomForestClassifier(random_state=42, n_estimators=params_dict['tree']),
-                    require_dense=[False, True]
-                )
-        else:
-            raise ValueError('mll method err')
+        clf = get_mll_ml_model(mll, ml, params_dict)
 
         clf.fit(x_train, y_train)
         y_val_ = clf.predict(x_val)
@@ -97,3 +63,23 @@ def get_partition(vectors, labels, train_index, val_index):
     y_val = labels[val_index]
 
     return x_train, y_train, x_val, y_val
+
+
+def get_mll_ml_model(mll, ml, params_dict):
+    if mll == 'BR':
+        return BinaryRelevance(classifier=get_ml_model(ml, params_dict), require_dense=[False, True])
+    elif mll == 'CC':
+        return ClassifierChain(classifier=get_ml_model(ml, params_dict), require_dense=[False, True])
+    elif mll == 'LP':
+        return LabelPowerset(classifier=get_ml_model(ml, params_dict), require_dense=[False, True])
+    else:
+        raise ValueError('mll method err')
+
+
+def get_ml_model(ml, params_dict):
+    if ml == 'SVM':
+        return svm.SVC(C=2 ** params_dict['cost'], gamma=2 ** params_dict['gamma'], probability=True)
+    elif ml == 'RF':
+        return RandomForestClassifier(random_state=42, n_estimators=params_dict['tree'])
+    else:
+        raise ValueError('ml method err')

@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from scipy.sparse import lil_matrix
 
 
 class FormatRead(object):
@@ -103,6 +104,11 @@ def files2vectors_seq(file_list, in_format):
             vectors = np.vstack((vectors, temp_vec))
 
     return vectors
+
+
+def mll_files2vectors_seq(file_list, in_format):
+    vectors = files2vectors_seq(file_list, in_format)
+    return lil_matrix(vectors)
 
 
 def files2vectors_info(file_list, in_format):

@@ -7,7 +7,7 @@ from CheckAll import ml_params_check, dl_params_check, make_params_dicts, Classi
 from FeatureExtractionMode.utils.utils_write import opt_params2file, gen_label_array, fixed_len_control
 from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process, dl_ind_process
 from MachineLearningAlgorithm.Classification.ml_machine import ml_cv_process, ml_cv_results, ml_ind_results, \
-    ml_score_cv_process, ml_score_cv_results, ml_score_ind_results
+    ml_score_cv_process, ml_score_cv_results, ml_score_ind_results, mll_ml_cv_results, mll_ml_ind_results
 from MachineLearningAlgorithm.utils.utils_read import files2vectors_info, seq_label_read, read_dl_vec4seq
 from SemanticSimilarity import ind_score_process
 from MachineLearningAlgorithm.Classification.mll_machine import mll_ml_cv_process
@@ -74,6 +74,11 @@ def ml_results(args, vectors, labels, folds, vec_files, params_selected):
     return params_selected
 
 
+def mll_ml_results(args, vectors, labels, folds, params_selected):
+    mll_ml_cv_results(args.mll, args.ml, vectors, labels, folds, args.sp, args.multi, args.res, args.results_dir, params_selected)
+    return params_selected
+
+
 def ind_ml_results(args, vectors, labels, ind_vectors, ind_labels, params_selected):
     if args.score == 'none':
         ml_ind_results(args.ml, ind_vectors, ind_labels, args.multi, args.res, args.results_dir, params_selected)
@@ -81,6 +86,10 @@ def ind_ml_results(args, vectors, labels, ind_vectors, ind_labels, params_select
         ind_score_process(args.score, vectors, args.ind_vec_file, labels, ind_labels, args.format, args.cpu)
         ml_score_ind_results(args.ml, args.ind_vec_file[0], args.sp, args.multi, args.format,
                              args.results_dir, params_selected)
+
+
+def mll_ind_ml_results(args, ind_vectors, ind_labels, params_selected):
+    mll_ml_ind_results(args.ml, ind_vectors, ind_labels, args.multi, args.res, args.results_dir, params_selected)
 
 
 def params_select(params_list, out_dir):

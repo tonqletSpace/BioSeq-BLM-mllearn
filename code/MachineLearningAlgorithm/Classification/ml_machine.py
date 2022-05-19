@@ -1,10 +1,13 @@
+from scipy.sparse import lil_matrix
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
 import joblib
 import os
 import numpy as np
+from skmultilearn.problem_transform import BinaryRelevance, ClassifierChain, LabelPowerset
 
-from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict
+from .mll_machine import get_mll_ml_model
+from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance
 from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
 from ..utils.utils_math import sampling
 from ..utils.utils_read import FormatRead
@@ -128,12 +131,94 @@ def ml_cv_results(ml, vectors, labels, folds, sp, multi, res, out_dir, params_di
     joblib.dump(model, model_path)  # 使用job lib保存模型
 
 
+def mll_ml_cv_results(mll, ml, vectors, labels, folds, sp, out_dir, params_dict):
+    assert isinstance(vectors, lil_matrix), 'error'
+
+    results = []
+
+    print_len = 60
+    print('\n')
+    if ml == 'SVM':
+        print('  The optimal parameters for SVM are as follows  '.center(print_len, '*'))
+        temp_str1 = '    cost = 2 ** ' + str(params_dict['cost']) + ' | ' + 'gamma = 2 ** ' + \
+                    str(params_dict['gamma']) + '    '
+    else:
+        print('The optimal parameters for RF is as follows'.center(print_len, '*'))
+        temp_str1 = '    tree = ' + str(params_dict['tree']) + '    '
+    print(temp_str1.center(print_len, '*'))
+    print('\n')
+
+    cv_labels = []
+    cv_prob = []
+    predicted_labels = np.zeros(labels.get_shape())  # (N, q)
+    predicted_prob = np.zeros(labels.get_shape())  # (N, q)
+    for train_index, test_index in folds:
+        x_train, y_train, x_test, y_test = get_partition(vectors, labels, train_index, test_index)
+        # if sp != 'none':
+        #     x_train, y_train = sampling(sp, x_train, y_train)
+
+        clf = get_mll_ml_model(mll, ml, params_dict)
+
+        clf.fit(x_train, y_train)
+        y_test_prob = clf.predict_proba(x_test)[:, 0]  # 这里应该是0吧？没有计算roc_auc
+        y_test_ = clf.predict(x_test)
+
+        # 'Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1'
+        result = mll_performance(y_test, y_test_)
+        results.append(result)
+
+        cv_labels.append(y_test)
+        cv_prob.append(y_test_prob)
+        predicted_labels[test_index] = y_test_
+        predicted_prob[test_index] = y_test_prob
+
+    final_results = np.array(results).mean(axis=0)
+
+    final_results_output(final_results, out_dir, ind=False)  # 将指标写入文件
+    prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
+
+    # 利用整个数据集训练并保存模型
+    model = get_mll_ml_model(mll, ml, params_dict)
+    model_path = out_dir + 'cost_[' + str(params_dict['cost']) + ']_gamma_[' + str(
+        params_dict['gamma']) + ']_' + mll.lower() + '_' + ml.lower() + '.model'
+
+    # if sp != 'none':
+    #     vectors, labels = sampling(sp, vectors, labels)
+    model.fit(vectors, labels)
+    joblib.dump(model, model_path)  # 使用job lib保存模型
+
+
 def ml_ind_results(ml, ind_vectors, ind_labels, multi, res, out_dir, params_dict):
     if ml == 'SVM':
         model_path = out_dir + 'cost_[' + str(params_dict['cost']) + ']_gamma_[' + str(
             params_dict['gamma']) + ']_svm.model'
     else:
         model_path = out_dir + 'tree_' + str(params_dict['tree']) + '_rf.model'
+
+    model = joblib.load(model_path)
+
+    ind_prob = model.predict_proba(ind_vectors)[:, 1]
+    pre_labels = model.predict(ind_vectors)
+
+    final_result = performance(ind_labels, pre_labels, ind_prob, multi, res)
+
+    print_metric_dict(final_result, ind=True)
+
+    plot_roc_ind(ind_labels, ind_prob, out_dir)  # 绘制ROC曲线
+    plot_pr_ind(ind_labels, ind_prob, out_dir)  # 绘制PR曲线
+
+    final_results_output(final_result, out_dir, ind=True, multi=multi)  # 将指标写入文件
+    prob_output(ind_labels, pre_labels, ind_prob, out_dir, ind=True)  # 将标签对应概率写入文件
+
+
+def mll_ml_ind_results(mll, ml, ind_vectors, ind_labels, multi, res, out_dir, params_dict):
+    if ml == 'SVM':
+        model_path = out_dir + 'cost_[' + str(params_dict['cost']) + ']_gamma_[' + str(
+            params_dict['gamma']) + ']_svm.model'
+    else:
+        model_path = out_dir + 'tree_' + str(params_dict['tree']) + '_rf.model'
+
+    clf = get_mll_ml_model(mll, ml, params_dict)
 
     model = joblib.load(model_path)
 

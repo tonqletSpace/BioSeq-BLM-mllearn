@@ -10,11 +10,12 @@ from CheckAll import Method_One_Hot_Enc, Feature_Extract_Mode, check_contain_chi
 from FeatureAnalysis import fa_process
 from FeatureExtractionMode.utils.utils_write import seq_file2one, gen_label_array, out_seq_file, out_ind_file, \
     opt_file_copy, out_dl_seq_file, create_all_seq_file, fixed_len_control, mll_seq_file2one, mll_gen_label_matrix, \
-    mll_out_seq_file
+    mll_out_seq_file, mll_out_ind_file
 from FeatureExtractionSeq import one_seq_fe_process, mll_one_seq_fe_process
 from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process, dl_ind_process
-from MachineLearningAlgorithm.utils.utils_read import files2vectors_seq, read_dl_vec4seq
-from MachineLearningSeq import one_ml_process, params_select, ml_results, ind_ml_results, mll_one_ml_process
+from MachineLearningAlgorithm.utils.utils_read import files2vectors_seq, read_dl_vec4seq, mll_files2vectors_seq
+from MachineLearningSeq import one_ml_process, params_select, ml_results, ind_ml_results, mll_one_ml_process, \
+    mll_ml_results, mll_ind_ml_results
 
 
 def create_results_dir(args, cur_dir):
@@ -88,7 +89,7 @@ def mll_ml_fe_process(args):
     opt_files = opt_file_copy(params_selected['out_files'], args.results_dir)
 
     # 获取最优特征向量
-    opt_vectors = files2vectors_seq(opt_files, args.format)
+    opt_vectors = mll_files2vectors_seq(opt_files, args.format)
     print(' Shape of Optimal Feature vectors: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0], opt_vectors.shape[1]))
     # 特征分析
     # if args.score == 'none':
@@ -96,11 +97,11 @@ def mll_ml_fe_process(args):
     #     print(' Shape of Optimal Feature vectors after FA process: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0],
     #                                                                                              opt_vectors.shape[1]))
     # 构建分类器
-    # ml_results(args, opt_vectors, label_array, args.folds, params_selected['out_files'], params_selected)
+    mll_ml_results(args, opt_vectors, label_array, args.folds, params_selected['out_files'], params_selected)
     # -------- 独立测试-------- #
     # 即，将独立测试数据集在最优的model上进行测试
-    # if args.ind_seq_file is not None:
-    #     ind_ml_fe_process(args, opt_vectors, label_array, params_selected)
+    if args.ind_seq_file is not None:
+        mll_ind_ml_fe_process(args, opt_vectors, label_array, params_selected)
 
 
 def mll_one_ml_fe_process(args, input_one_file, labels, vec_files, folds, params_dict):
@@ -108,7 +109,7 @@ def mll_one_ml_fe_process(args, input_one_file, labels, vec_files, folds, params
     # args.res = False
     mll_one_seq_fe_process(args, input_one_file, labels, vec_files, **params_dict)
     # 获取特征向量
-    vectors = files2vectors_seq(vec_files, args.format)
+    vectors = mll_files2vectors_seq(vec_files, args.format)
     print(' Shape of Feature vectors: [%d, %d] '.center(66, '*') % (vectors.shape[0], vectors.shape[1]))
 
     # Feature Analysis 先忽略
@@ -121,8 +122,32 @@ def mll_one_ml_fe_process(args, input_one_file, labels, vec_files, folds, params
     return params_dict
 
 
-# def mll_construct_sparse_matrix_from_vector_arrays(vector_arrays):
-#     return lil_matrix(vector_arrays)
+def mll_ind_ml_fe_process(args, vectors, labels, params_selected):
+    print('########################## Independent Test Begin ##########################\n')
+    # 合并独立测试集序列文件
+    ind_input_one_file = create_all_seq_file(args.ind_seq_file, args.results_dir)
+    # 统计独立测试集样本数目和序列长度
+    seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.ind_seq_file, args.label, ind_input_one_file)
+    # 生成标签矩阵
+    ind_label_array = mll_gen_label_matrix(seq_label_list)
+
+    # 生成独立测试集特征向量文件名
+    ind_out_files = mll_out_ind_file(args.format, args.results_dir)
+    # 特征提取
+    mll_one_seq_fe_process(args, ind_input_one_file, ind_label_array, ind_out_files, **params_selected)
+
+    # 获取独立测试集特征向量
+    ind_vectors = mll_files2vectors_seq(ind_out_files, args.format)
+    print(' Shape of Ind Feature vectors: [%d, %d] '.center(66, '*') % (ind_vectors.shape[0], ind_vectors.shape[1]))
+    # if args.score == 'none':
+    #     ind_vectors = fa_process(args, ind_vectors, ind_label_array, after_ps=True, ind=True)
+    #     print(' Shape of Ind Feature vectors after FA process: [%d, %d] '.center(66, '*') % (ind_vectors.shape[0],
+    #                                                                                          ind_vectors.shape[1]))
+    # 为独立测试集构建分类器
+    args.ind_vec_file = ind_out_files
+    mll_ind_ml_results(args, vectors, labels, ind_vectors, ind_label_array, params_selected)
+
+    print('########################## Independent Test Finish ##########################\n')
 
 
 def main(args):

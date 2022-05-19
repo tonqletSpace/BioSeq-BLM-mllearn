@@ -401,6 +401,15 @@ def out_ind_file(label, out_format, results_dir):
     return output_file_list
 
 
+def mll_out_ind_file(out_format, results_dir):
+    output_file_list = []
+    fea_path = results_dir
+    fea_path += 'ind_features[' + 'mll' + ']_' + str(out_format) + '.txt'  # 给文件名加上标签
+    output_file_list.append(fea_path)
+
+    return output_file_list
+
+
 def out_dl_seq_file(label, results_dir, ind=False):
     output_files = []
     for i in range(len(label)):

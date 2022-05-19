@@ -209,6 +209,25 @@ def prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False):
         print('\n')
 
 
+def mll_prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False):
+    prob_file = out_path + "prob_out.txt"
+    if ind is True:
+        prob_file = out_path + "ind_prob_out.txt"
+    with open(prob_file, 'w') as f:
+        head = 'Sample index' + '\t' + 'True labels' + '\t' + 'predicted labels' + '\t' + 'probability values' + '\n'
+        f.write(head)
+        for i, (k, m, n) in enumerate(zip(true_labels.todense(),
+                                          predicted_labels.todense(),
+                                          prob_list.todense())):
+            line = str(i + 1) + '\t' + str(k) + '\t' + str(m) + '\t' + str(n) + '\n'
+            f.write(line)
+    full_path = os.path.abspath(prob_file)
+    if os.path.isfile(full_path):
+        print('The output file for probability values can be found:')
+        print(full_path)
+        print('\n')
+        
+
 def prob_output_res(true_labels, predicted_labels, prob_list, out_path, ind=False):
     prob_file = out_path + "probability_values.txt"
     if ind is True:
