@@ -7,7 +7,8 @@ import numpy as np
 from skmultilearn.problem_transform import BinaryRelevance, ClassifierChain, LabelPowerset
 
 from .mll_machine import get_mll_ml_model
-from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance
+from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
+    mll_final_results_output, mll_prob_output, mll_print_metric_dict
 from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
 from ..utils.utils_math import sampling
 from ..utils.utils_read import FormatRead
@@ -131,7 +132,7 @@ def ml_cv_results(ml, vectors, labels, folds, sp, multi, res, out_dir, params_di
     joblib.dump(model, model_path)  # 使用job lib保存模型
 
 
-def mll_ml_cv_results(mll, ml, vectors, labels, folds, sp, out_dir, params_dict):
+def mll_ml_cv_results(mll, ml, vectors, labels, folds, out_dir, params_dict):
     assert isinstance(vectors, lil_matrix), 'error'
 
     results = []
@@ -211,29 +212,22 @@ def ml_ind_results(ml, ind_vectors, ind_labels, multi, res, out_dir, params_dict
     prob_output(ind_labels, pre_labels, ind_prob, out_dir, ind=True)  # 将标签对应概率写入文件
 
 
-def mll_ml_ind_results(mll, ml, ind_vectors, ind_labels, multi, res, out_dir, params_dict):
-    if ml == 'SVM':
-        model_path = out_dir + 'cost_[' + str(params_dict['cost']) + ']_gamma_[' + str(
-            params_dict['gamma']) + ']_svm.model'
-    else:
-        model_path = out_dir + 'tree_' + str(params_dict['tree']) + '_rf.model'
-
-    clf = get_mll_ml_model(mll, ml, params_dict)
+def mll_ml_ind_results(mll, ml, ind_vectors, ind_labels, multi, out_dir, params_dict):
+    model_path = out_dir + 'cost_[' + str(params_dict['cost']) + ']_gamma_[' + str(
+        params_dict['gamma']) + ']_' + mll.lower() + '_' + ml.lower() + '.model'
 
     model = joblib.load(model_path)
+    ind_prob = model.predict_proba(ind_vectors)
+    pre_labels = model.predict(ind_vectors)  # [N, q]
+    final_result = mll_performance(ind_labels, pre_labels)
 
-    ind_prob = model.predict_proba(ind_vectors)[:, 1]
-    pre_labels = model.predict(ind_vectors)
+    mll_print_metric_dict(final_result, ind=True)
 
-    final_result = performance(ind_labels, pre_labels, ind_prob, multi, res)
+    # plot_roc_ind(ind_labels, ind_prob, out_dir)  # 绘制ROC曲线
+    # plot_pr_ind(ind_labels, ind_prob, out_dir)  # 绘制PR曲线
 
-    print_metric_dict(final_result, ind=True)
-
-    plot_roc_ind(ind_labels, ind_prob, out_dir)  # 绘制ROC曲线
-    plot_pr_ind(ind_labels, ind_prob, out_dir)  # 绘制PR曲线
-
-    final_results_output(final_result, out_dir, ind=True, multi=multi)  # 将指标写入文件
-    prob_output(ind_labels, pre_labels, ind_prob, out_dir, ind=True)  # 将标签对应概率写入文件
+    mll_final_results_output(final_result, out_dir, ind=True, multi=multi)  # 将指标写入文件
+    mll_prob_output(ind_labels, pre_labels, ind_prob, out_dir, ind=True)  # 将标签对应概率写入文件
 
 
 def ml_score_cv_process(ml, vec_files, folds_num, metric, sp, multi, in_format, params_dict):

@@ -80,11 +80,8 @@ def performance(origin_labels, predict_labels, deci_value, bi_or_multi=False, re
 
 def mll_performance(origin_labels, predicted_labels):
     """evaluations used to evaluate the performance of the model.
-    :param deci_value: decision values used for ROC and AUC.
-    :param bi_or_multi: binary or multiple classification
     :param origin_labels: true values of the data set.
     :param predicted_labels: predicted values of the data set.
-    :param res: residue or not.
     """
     if len(origin_labels) != len(predicted_labels):
         raise ValueError("The number of the original labels must equal to that of the predicted labels.")
@@ -100,39 +97,39 @@ def mll_performance(origin_labels, predicted_labels):
     return hamming_loss, accuracy, jaccard_similarity, precision, recall, f1_score
 
 
-
-# def table_metric(results, opt=False, ind=False):
-#     metric1 = {'Acc': results[0], 'MCC': results[1], 'AUC': results[2], 'BAcc': results[3],
-#                'Sn': results[4], 'Sp': results[5], 'Pr': results[6], 'Rc': results[7], 'F1': results[8]}
-#     metric2 = {'Accuracy': results[0], 'MCC': results[1], 'AUC': results[2], 'Balanced Accuracy': results[3],
-#                'Sensitivity': results[4], 'Specificity': results[5], 'Precision': results[6], 'Recall': results[7],
-#                'F1-score': results[8]}
-#     tb = pt.PrettyTable()
-#     if opt is False:
-#         print('Metric details'.center(18, '*'))
-#         tb.field_names = ["metric", "value"]
-#         for key, value in list(metric1.items()):
-#             tb.add_row([key, round(value, 3)])
-#     else:
-#         if ind is False:
-#             print('+-----------------------------------------+')
-#             print('|  The final results of cross validation  |')
-#             print('+-----------------------------------------+')
-#             tb.field_names = ["cross validation metric", "final results"]
-#         else:
-#             print('+-----------------------------------------+')
-#             print('|  The final results of independent test  |')
-#             print('+-----------------------------------------+')
-#             tb.field_names = ["independent test metric", "final results"]
-#         for key, value in list(metric2.items()):
-#             tb.add_row([key, round(value, 4)])
-#     print(tb)
-#     print('\n')
-
 def print_metric_dict(results, ind):
     metric_dict = {'Accuracy': results[0], 'MCC': results[1], 'AUC': results[2], 'Balanced Accuracy': results[3],
                    'Sensitivity': results[4], 'Specificity': results[5], 'Precision': results[6], 'Recall': results[7],
                    'F1-score': results[8]}
+
+    print('\n')
+    key_max_len = 16
+    val_max_len = 10
+
+    tag = '--'
+    if ind is False:
+        header = 'Final results of cross validation'
+    else:
+        header = 'Results of independent test'
+    header_str1 = '+' + tag.center(key_max_len + val_max_len + 9, '-') + '+'
+    header_str2 = '|' + header.center(key_max_len + val_max_len + 9, ' ') + '|'
+    print(header_str1)
+    print(header_str2)
+
+    up_dn_str = '+' + tag.center(key_max_len + 4, '-') + '+' + tag.center(val_max_len + 4, '-') + '+'
+    print(up_dn_str)
+    for key, val in metric_dict.items():
+        var_str = '%.4f' % val
+        temp_str = '|' + str(key).center(key_max_len + 4, ' ') + '|' + var_str.center(val_max_len + 4, ' ') + '|'
+        print(temp_str)
+    print(up_dn_str)
+
+    print('\n')
+
+
+def mll_print_metric_dict(results, ind):
+    metric_dict = {'hamming_loss': results[0], 'accuracy': results[1], 'jaccard_similarity': results[2],
+                   'precision': results[3], 'recall': results[4], 'f1_score': results[5]}
 
     print('\n')
     key_max_len = 16
@@ -185,6 +182,34 @@ def final_results_output(results, out_path, ind=False, multi=False):
         for i in eval_re:
             f.write(i)
             f.write("\n")
+    full_path = os.path.abspath(filename)
+    if os.path.isfile(full_path):
+        print('The output file for final results can be found:')
+        print(full_path)
+        print('\n')
+
+
+def mll_final_results_output(results, out_path, ind=False, multi=False):
+    hamming_loss = 'Hamming loss = %.4f' % results[0]
+    accuracy = 'Acc = %.4f' % results[1]
+    jaccard_similarity = 'Jaccard similarity = %.4f' % results[2]
+    precision = 'Precision = %.4f' % results[3]
+    recall = 'Recall = %.4f' % results[4]
+    f1_score = 'F1 = %.4f\n' % results[5]
+
+    eval_re = [hamming_loss, accuracy, jaccard_similarity, precision, recall, f1_score]
+
+    if ind is True:
+        filename = out_path + 'ind_final_results.txt'
+    else:
+        filename = out_path + 'final_results.txt'
+
+    with open(filename, 'w') as f:
+        f.write('The final results of cross validation  are as follows:\n')
+        for i in eval_re:
+            f.write(i)
+            f.write("\n")
+
     full_path = os.path.abspath(filename)
     if os.path.isfile(full_path):
         print('The output file for final results can be found:')

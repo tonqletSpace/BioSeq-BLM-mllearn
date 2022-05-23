@@ -58,6 +58,8 @@ DeepLearning = ['CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Re
 Classification = ['SVM', 'RF', 'CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer']
 SequenceLabelling = ['CRF', 'CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer']
 
+MLLDemo = ['BR', 'CC', 'LP']
+
 # 路径
 Final_Path = '/results/'
 Batch_Path_Seq = '/results/batch/Seq/'
