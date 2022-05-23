@@ -83,16 +83,20 @@ def mll_performance(origin_labels, predicted_labels):
     :param origin_labels: true values of the data set.
     :param predicted_labels: predicted values of the data set.
     """
-    if len(origin_labels) != len(predicted_labels):
-        raise ValueError("The number of the original labels must equal to that of the predicted labels.")
+    if origin_labels.get_shape() != predicted_labels.get_shape():
+        raise ValueError("The shape of the original labels must equal to that of the predicted labels.")
+
+    # print(origin_labels.todense())
+    # print(predicted_labels.todense())
+    # exit()
 
     # 'Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1'
     hamming_loss = metrics.hamming_loss(origin_labels, predicted_labels)
     accuracy = metrics.accuracy_score(origin_labels, predicted_labels)
-    jaccard_similarity = metrics.jaccard_score(origin_labels, predicted_labels)
-    precision = metrics.precision_score(origin_labels, predicted_labels)
-    recall = metrics.recall_score(origin_labels, predicted_labels)
-    f1_score = metrics.f1_score(origin_labels, predicted_labels)
+    jaccard_similarity = metrics.jaccard_score(origin_labels, predicted_labels, average='samples')
+    precision = metrics.precision_score(origin_labels, predicted_labels, average='samples')
+    recall = metrics.recall_score(origin_labels, predicted_labels, average='samples')
+    f1_score = metrics.f1_score(origin_labels, predicted_labels, average='samples')
 
     return hamming_loss, accuracy, jaccard_similarity, precision, recall, f1_score
 

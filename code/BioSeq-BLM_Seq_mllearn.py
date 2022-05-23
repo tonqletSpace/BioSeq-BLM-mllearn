@@ -4,7 +4,8 @@ import time
 
 
 
-from CheckAll import Batch_Path_Seq, DeepLearning, Classification, Method_Semantic_Similarity, prepare4train_seq
+from CheckAll import Batch_Path_Seq, DeepLearning, Classification, Method_Semantic_Similarity, prepare4train_seq, \
+    Mll_Conventional_Algorithm, mll_prepare4train_seq
 from CheckAll import Method_One_Hot_Enc, Feature_Extract_Mode, check_contain_chinese, seq_sys_check, dl_params_check, \
     seq_feature_check, mode_params_check, results_dir_check, ml_params_check, make_params_dicts, Final_Path, All_Words
 from FeatureAnalysis import fa_process
@@ -15,7 +16,7 @@ from FeatureExtractionSeq import one_seq_fe_process, mll_one_seq_fe_process
 from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process, dl_ind_process
 from MachineLearningAlgorithm.utils.utils_read import files2vectors_seq, read_dl_vec4seq, mll_files2vectors_seq
 from MachineLearningSeq import one_ml_process, params_select, ml_results, ind_ml_results, mll_one_ml_process, \
-    mll_ml_results, mll_ind_ml_results
+    mll_ml_results, mll_ind_ml_results, mll_params_select
 
 
 def create_results_dir(args, cur_dir):
@@ -45,11 +46,13 @@ def mll_ml_fe_process(args):
     seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
     # 生成标签矩阵
     label_array = mll_gen_label_matrix(seq_label_list)
+    # print(label_array.get_shape())
+    # exit()
     # 控制序列的固定长度(只需要操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
 
     # 多进程计算
-    pool = multiprocessing.Pool(args.cpu)
+    # pool = multiprocessing.Pool(args.cpu)
     # 对每个mode的method进行检查
     seq_feature_check(args)
     # 对SVM或RF的参数进行检查并生成参数字典集合
@@ -58,10 +61,21 @@ def mll_ml_fe_process(args):
     # 对每个mode的words和method的参数进行检查
     # params_list_dict 为只包括特征提取的参数的字典， all_params_list_dict为包含所有参数的字典
     params_list_dict, all_params_list_dict = mode_params_check(args, all_params_list_dict)
+
+    print('for feat extraction')
+    print(params_list_dict)
+    print('all param')
+    print(all_params_list_dict)
+
     # 列表字典 ---> 字典列表
     params_dict_list = make_params_dicts(all_params_list_dict)
+
+    print('for each run')
+    print(params_dict_list)
+    # exit()
+
     # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
-    args = prepare4train_seq(args, label_array, dl=False)
+    args = mll_prepare4train_seq(args, label_array, dl=False)
 
     # 指定分析层面
     args.res = False
@@ -76,15 +90,17 @@ def mll_ml_fe_process(args):
         vec_files = mll_out_seq_file(args.format, args.results_dir, params_dict, params_list_dict)
         params_dict['out_files'] = vec_files
         # 注意多进程计算的debug
-        # one_ml_fe_process(args, input_one_file, label_array, vec_files, sp_num_list, args.folds, **params_dict)
-        params_dict_list_pro.append(pool.apply_async(mll_one_ml_fe_process, (args, input_one_file, label_array,
-                                                                             vec_files, args.folds, params_dict)))
+        params_dict_list_pro.append(mll_one_ml_fe_process(args, input_one_file, label_array, vec_files, args.folds, params_dict))
+        if i == 1:
+            break
+        # params_dict_list_pro.append(pool.apply_async(mll_one_ml_fe_process,
+        #                         (args, input_one_file, label_array, vec_files, args.folds, params_dict)))
 
-    pool.close()
-    pool.join()
+    # pool.close()
+    # pool.join()
     # exit()
     # 根据指标进行参数选择
-    params_selected = params_select(params_dict_list_pro, args.results_dir)
+    params_selected = mll_params_select(params_dict_list_pro, args.results_dir)
     # 将最优的特征向量文件从"all_fea_files/"文件夹下复制到主文件下
     opt_files = opt_file_copy(params_selected['out_files'], args.results_dir)
 
@@ -97,7 +113,7 @@ def mll_ml_fe_process(args):
     #     print(' Shape of Optimal Feature vectors after FA process: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0],
     #                                                                                              opt_vectors.shape[1]))
     # 构建分类器
-    mll_ml_results(args, opt_vectors, label_array, args.folds, params_selected['out_files'], params_selected)
+    mll_ml_results(args, opt_vectors, label_array, args.folds, params_selected)
     # -------- 独立测试-------- #
     # 即，将独立测试数据集在最优的model上进行测试
     if args.ind_seq_file is not None:
@@ -117,7 +133,7 @@ def mll_one_ml_fe_process(args, input_one_file, labels, vec_files, folds, params
     #     vectors = fa_process(args, vectors, labels, after_ps=False, ind=False)
     #     print(' Shape of Feature vectors after FA process: [%d, %d] '.center(66, '*') % (vectors.shape[0],
     #                                                                                      vectors.shape[1]))
-    params_dict = mll_one_ml_process(args, vectors, labels, folds, vec_files, params_dict)
+    params_dict = mll_one_ml_process(args, vectors, labels, folds, params_dict)
 
     return params_dict
 
@@ -302,6 +318,10 @@ if __name__ == '__main__':
                             " 'fs'---apply feature selection to parameter selection procedure;\n"
                             " 'dr'---apply dimension reduction to parameter selection procedure.\n")
     # ----------------------- parameters for MachineLearning---------------------- #
+    # parameters for conventional methods
+    parse.add_argument('-mll', type=str, choices=Mll_Conventional_Algorithm, required=True,
+                       help="The multi-label learning algorithm, for example: Binary Relevance(BR).")
+    # ----------------------- parameters for MachineLearning---------------------- #
     parse.add_argument('-ml', type=str, choices=Classification, required=True,
                        help="The machine learning algorithm, for example: Support Vector Machine(SVM).")
     parse.add_argument('-grid', type=int, nargs='*', choices=[0, 1], default=0,
@@ -356,9 +376,9 @@ if __name__ == '__main__':
     # ----------------------- parameters for input and output ---------------------- #
     # parameters for input
     parse.add_argument('-seq_file', nargs='*', required=True, help="The input files in FASTA format.")
-    parse.add_argument('-label', type=int, nargs='*', required=True,
-                       help="The corresponding label of input sequence files. For deep learning method, the label can "
-                            "only set as positive integer")
+    # parse.add_argument('-label', type=int, nargs='*', required=True,
+    #                    help="The corresponding label of input sequence files. For deep learning method, the label can "
+    #                         "only set as positive integer")
     parse.add_argument('-ind_seq_file', nargs='*', help="The input independent test files in FASTA format.")
 
     parse.add_argument('-fixed_len', type=int,

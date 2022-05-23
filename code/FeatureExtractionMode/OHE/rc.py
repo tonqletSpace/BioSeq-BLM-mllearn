@@ -1,7 +1,7 @@
 import numpy as np
 from ..utils.utils_words import make_km_list
 from ..utils.utils_const import aaList, aaList_DNA, aaList_RNA, aaList_sixbits, aaList_five, aaList_AESNN3, aaList_ncp
-
+from tqdm import tqdm
 
 class ResidueComposition2Vectors(object):
     # TODO: 在模型的初始化函数中定义模型要用到的变量
@@ -35,7 +35,7 @@ class ResidueComposition2Vectors(object):
                         index_list.append(str(self.alphabet_list.index(line[k])))
                     self.aaList_Index.append(index_list)
 
-        for i in range(len(self.aaList_Index)):
+        for i in tqdm(range(len(self.aaList_Index))):
 
             temp_length = len(self.aaList_Index[i])  # 小于或等于fixed_len的长度值
             vec_mat = np.zeros((temp_length, self.size))

@@ -161,7 +161,11 @@ def mll_ml_cv_results(mll, ml, vectors, labels, folds, out_dir, params_dict):
         clf = get_mll_ml_model(mll, ml, params_dict)
 
         clf.fit(x_train, y_train)
-        y_test_prob = clf.predict_proba(x_test)[:, 0]  # 这里应该是0吧？没有计算roc_auc
+        print(x_test.get_shape())
+        print(x_test.todense())
+        y_test_prob = clf.predict_proba(x_test)  # 这里应该是0吧？没有计算roc_auc
+        # print(y_test_prob)
+        # exit()
         y_test_ = clf.predict(x_test)
 
         # 'Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1'

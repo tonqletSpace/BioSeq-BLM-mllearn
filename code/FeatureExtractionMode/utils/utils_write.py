@@ -229,7 +229,7 @@ def create_all_seq_file(seq_files, tgt_dir, ind=False):
         return tgt_dir + '/' + 'ind_all_seq_file' + suffix
 
 
-def mll_seq_file2one(category, seq_file, out_file, label_cardinality=7, iid=True):
+def mll_seq_file2one(category, seq_files, out_file, label_cardinality=7, iid=True):
     # 暂时支持单数据文件输入
     if category == 'DNA':
         alphabet = DNA
@@ -240,13 +240,14 @@ def mll_seq_file2one(category, seq_file, out_file, label_cardinality=7, iid=True
 
     # 读取所有序列
     seq_len_list = []  # list of length integer (list[len(seq1), len(seq2), ...])
-    label_list = [] # list of label string
-    with open(seq_file, 'r') as in_f:
-        seq_all, seq_info_all = get_seqs(in_f, alphabet) # list of sequence in alphabet (list[seq1, seq2, ...])
-        for seq in seq_all:
-            seq_len_list.append(len(seq))
-        for info in seq_info_all:
-            label_list.append(info[:label_cardinality])
+    label_list = []  # list of label string
+    for i in range(len(seq_files)):
+        with open(seq_files[i], 'r') as in_f:
+            seq_all, seq_info_all = get_seqs(in_f, alphabet)  # list of sequence in alphabet (list[seq1, seq2, ...])
+            for seq in seq_all:
+                seq_len_list.append(len(seq))
+            for info in seq_info_all:
+                label_list.append(info[:label_cardinality])
 
     # if iid:
     # 写入所有序列
@@ -301,7 +302,18 @@ def gen_label_array(sp_num_list, label_list):
 
 def mll_gen_label_matrix(seq_label_list):
     from scipy.sparse import lil_matrix
-    return lil_matrix(seq_label_list)
+    # print(seq_label_list[:3])
+    # exit()
+    seq_label_matrix = []
+    for label in seq_label_list:
+        row = []
+        for e in label:
+            if e == '1':
+                row.append(1)
+            else:
+                row.append(0)
+        seq_label_matrix.append(row)
+    return lil_matrix(seq_label_matrix)
 
 
 def fixed_len_control(seq_len_list, fixed_len):

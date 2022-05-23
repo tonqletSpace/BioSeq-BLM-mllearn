@@ -58,7 +58,7 @@ DeepLearning = ['CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Re
 Classification = ['SVM', 'RF', 'CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer']
 SequenceLabelling = ['CRF', 'CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer']
 
-MLLDemo = ['BR', 'CC', 'LP']
+Mll_Conventional_Algorithm = ['BR', 'CC', 'LP']
 
 # 路径
 Final_Path = '/results/'
@@ -71,6 +71,7 @@ FE_PATH_Seq = '/results/FE/Seq/'
 FE_BATCH_PATH_Seq = '/results/batch/FE/Seq/'
 
 # Metric
+Mll_Metric_Index = {'Ham': 0, 'F1': 5}
 Metric_Index = {'Acc': 0, 'MCC': 1, 'AUC': 2, 'BAcc': 3, 'F1': 8}
 Metric_dict = {'Acc': 'Accuracy', 'MCC': 'Matthews Correlation Coefficient', 'AUC': 'Area Under Curve',
                'BAcc': 'Balanced-Accuracy', 'F1': 'F-Measure'}
@@ -821,6 +822,7 @@ def prepare4train_seq(args, label_array, dl):
 
 def mll_prepare4train_seq(args, label_array, dl):
     from scipy.sparse import lil_matrix
+
     if not isinstance(label_array, lil_matrix):
         return prepare4train_seq(args, label_array, dl)
 
@@ -838,7 +840,7 @@ def mll_prepare4train_seq(args, label_array, dl):
         info_dict['Validation method'] = '5-fold cross validation'
     args.folds = construct_partition2two(label_array, args.folds_num, True)  # 固定交叉验证的每一折index
     if dl is False:
-        args.metric_index = Metric_Index[args.metric]
+        args.metric_index = Mll_Metric_Index[args.metric]
         info_dict['Metric for selection'] = Metric_dict[args.metric]
 
         if args.sp != 'none':

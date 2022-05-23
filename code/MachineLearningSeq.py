@@ -107,6 +107,23 @@ def params_select(params_list, out_dir):
     return params_list_selected
 
 
+def mll_params_select(params_list, out_dir):
+    print(params_list)
+    # exit()
+    evaluation = params_list[0].get('metric')
+    params_list_selected = params_list[0]
+    for i in range(len(params_list)):
+        if params_list[i].get('metric') > evaluation:
+            evaluation = params_list[i].get('metric')
+            params_list_selected = params_list[i]
+    del params_list_selected['metric']
+    # params_list_selected['PSI'] = metric
+    # table_params(params_list_selected, True)  # 打印选择后的参数
+    opt_params2file(params_list_selected, out_dir)  # 将最优参数写入文件
+
+    return params_list_selected
+
+
 def dl_process(args):
     # 从输入的向量文件获取特征向量，标签数组和样本数目
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
