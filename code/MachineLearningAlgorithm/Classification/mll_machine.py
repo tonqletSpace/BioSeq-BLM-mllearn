@@ -36,12 +36,20 @@ def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, params_dict):
         clf = get_mll_ml_model(mll, ml, params_dict)
 
         clf.fit(x_train, y_train)
+
+        # print('fs:')
+        # print(train_index)
+        # print(val_index)
+        # for c in clf.classifiers_:
+        #     print(c.classes_)
+
         y_val_ = clf.predict(x_val)
 
         # 'Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1'
         result = mll_performance(y_val, y_val_)
         results.append(result)
 
+    # exit()
     cv_results = np.array(results).mean(axis=0)
 
     # print('metric: ', metric)
@@ -83,3 +91,13 @@ def get_ml_model(ml, params_dict):
         return RandomForestClassifier(random_state=42, n_estimators=params_dict['tree'])
     else:
         raise ValueError('ml method err')
+
+
+# def get_label_inducing_data(vectors):
+#     e, q = vectors.shape[1], 1
+#     aux_data, aux_label = lil_matrix((2, e)), lil_matrix((2, q))
+#     return aux_data, [0, 1]
+
+
+# def mll_validate_data(label_arrays):
+    # for q dim label, assure the length of each dim is 2

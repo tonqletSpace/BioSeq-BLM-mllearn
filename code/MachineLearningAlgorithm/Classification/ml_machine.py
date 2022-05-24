@@ -161,12 +161,12 @@ def mll_ml_cv_results(mll, ml, vectors, labels, folds, out_dir, params_dict):
         clf = get_mll_ml_model(mll, ml, params_dict)
 
         clf.fit(x_train, y_train)
-        print(x_test.get_shape())
-        print(x_test.todense())
-        y_test_prob = clf.predict_proba(x_test)  # 这里应该是0吧？没有计算roc_auc
-        # print(y_test_prob)
-        # exit()
+
         y_test_ = clf.predict(x_test)
+        y_test_prob = clf.predict_proba(x_test)
+
+        # print(y_test_prob[0].todense())
+        # exit()
 
         # 'Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1'
         result = mll_performance(y_test, y_test_)
@@ -174,16 +174,18 @@ def mll_ml_cv_results(mll, ml, vectors, labels, folds, out_dir, params_dict):
 
         cv_labels.append(y_test)
         cv_prob.append(y_test_prob)
-        predicted_labels[test_index] = y_test_
-        predicted_prob[test_index] = y_test_prob
+        predicted_labels[test_index] = y_test_.todense()
+        predicted_prob[test_index] = y_test_prob.todense()
 
     final_results = np.array(results).mean(axis=0)
 
-    final_results_output(final_results, out_dir, ind=False)  # 将指标写入文件
+    mll_final_results_output(final_results, out_dir, ind=False)  # 将指标写入文件
     prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
 
     # 利用整个数据集训练并保存模型
     model = get_mll_ml_model(mll, ml, params_dict)
+
+    # for SVM XXX
     model_path = out_dir + 'cost_[' + str(params_dict['cost']) + ']_gamma_[' + str(
         params_dict['gamma']) + ']_' + mll.lower() + '_' + ml.lower() + '.model'
 

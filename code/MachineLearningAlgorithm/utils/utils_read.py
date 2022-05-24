@@ -106,8 +106,12 @@ def files2vectors_seq(file_list, in_format):
     return vectors
 
 
-def mll_files2vectors_seq(file_list, in_format):
+def mll_files2vectors_seq(args, file_list, in_format):
     vectors = files2vectors_seq(file_list, in_format)
+    if args.need_marginal_data:
+        # 增加两个边界数据，对应label分别是：(0...00)_q，(1...11)_q
+        marginal_vec = np.zeros((2, vectors.shape[1]), dtype=np.float32)
+        vectors = np.vstack((vectors, marginal_vec))
     return lil_matrix(vectors)
 
 

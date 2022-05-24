@@ -1,11 +1,13 @@
 import os
+
+import numpy as np
 from numpy import random
 import shutil
 import sys
 from collections import Counter
 from itertools import count, takewhile, product
 
-from MachineLearningAlgorithm.utils.utils_math import construct_partition2two
+from MachineLearningAlgorithm.utils.utils_math import construct_partition2two, mll_marginal_check
 
 # Alphabets of DNA, RNA, PROTEIN
 DNA = "ACGT"
@@ -838,7 +840,9 @@ def mll_prepare4train_seq(args, label_array, dl):
     else:
         args.folds_num = 5
         info_dict['Validation method'] = '5-fold cross validation'
-    args.folds = construct_partition2two(label_array, args.folds_num, True)  # 固定交叉验证的每一折index
+
+    args.folds = mll_marginal_check(label_array, args)  # 固定交叉验证的每一折index
+
     if dl is False:
         args.metric_index = Mll_Metric_Index[args.metric]
         info_dict['Metric for selection'] = Metric_dict[args.metric]
@@ -855,6 +859,7 @@ def mll_prepare4train_seq(args, label_array, dl):
 
     print_base_dict(info_dict)
     return args
+
 
 def print_base_dict(info_dict):
     print('\r')

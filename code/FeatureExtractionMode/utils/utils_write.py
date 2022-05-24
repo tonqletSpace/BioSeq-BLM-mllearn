@@ -302,9 +302,7 @@ def gen_label_array(sp_num_list, label_list):
 
 def mll_gen_label_matrix(seq_label_list):
     from scipy.sparse import lil_matrix
-    # print(seq_label_list[:3])
-    # exit()
-    seq_label_matrix = []
+    seq_label_matrix = []  # (N, q)
     for label in seq_label_list:
         row = []
         for e in label:
@@ -313,7 +311,26 @@ def mll_gen_label_matrix(seq_label_list):
             else:
                 row.append(0)
         seq_label_matrix.append(row)
-    return lil_matrix(seq_label_matrix)
+
+    tot = 0
+    q = len(seq_label_matrix[0])
+    for j in range(q):
+        cnt = -1
+        for row in seq_label_matrix:
+            if cnt == -1:
+                cnt = row[j]  # 0 or 1
+            elif cnt != row[j]:
+                cnt = 2
+                break
+        tot += cnt
+
+    if tot != 2*q:
+        seq_label_matrix.append(np.ones(q, np.int32).tolist())
+        seq_label_matrix.append(np.zeros(q, np.int32).tolist())
+        print('Auxiliary labels are provided. '
+              'For each dimension of label, as least two distinct samples are needed.')
+
+    return lil_matrix(seq_label_matrix), tot != 2*q
 
 
 def fixed_len_control(seq_len_list, fixed_len):

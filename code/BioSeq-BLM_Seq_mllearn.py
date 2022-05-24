@@ -45,9 +45,8 @@ def mll_ml_fe_process(args):
     # 统计样本数目和序列长度
     seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
     # 生成标签矩阵
-    label_array = mll_gen_label_matrix(seq_label_list)
-    # print(label_array.get_shape())
-    # exit()
+    label_array, args.need_marginal_data = mll_gen_label_matrix(seq_label_list)
+    # print('label_array.get_shape()', label_array.get_shape())
     # 控制序列的固定长度(只需要操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
 
@@ -75,7 +74,7 @@ def mll_ml_fe_process(args):
     # exit()
 
     # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
-    args = mll_prepare4train_seq(args, label_array, dl=False)
+    args.fold = mll_prepare4train_seq(args, label_array, dl=False)
 
     # 指定分析层面
     args.res = False
@@ -105,7 +104,7 @@ def mll_ml_fe_process(args):
     opt_files = opt_file_copy(params_selected['out_files'], args.results_dir)
 
     # 获取最优特征向量
-    opt_vectors = mll_files2vectors_seq(opt_files, args.format)
+    opt_vectors = mll_files2vectors_seq(args, opt_files, args.format)
     print(' Shape of Optimal Feature vectors: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0], opt_vectors.shape[1]))
     # 特征分析
     # if args.score == 'none':
@@ -125,7 +124,7 @@ def mll_one_ml_fe_process(args, input_one_file, labels, vec_files, folds, params
     # args.res = False
     mll_one_seq_fe_process(args, input_one_file, labels, vec_files, **params_dict)
     # 获取特征向量
-    vectors = mll_files2vectors_seq(vec_files, args.format)
+    vectors = mll_files2vectors_seq(args, vec_files, args.format)
     print(' Shape of Feature vectors: [%d, %d] '.center(66, '*') % (vectors.shape[0], vectors.shape[1]))
 
     # Feature Analysis 先忽略

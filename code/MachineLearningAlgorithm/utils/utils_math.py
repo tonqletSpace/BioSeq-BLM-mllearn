@@ -1,5 +1,6 @@
 from abc import ABC
 
+import numpy as np
 import torch
 import torch.nn as nn
 from imblearn.combine import SMOTETomek
@@ -37,6 +38,22 @@ def construct_partition2two(labels, folds_num, stratified=True):
 
         folds.append((train_index, test_index))
     return folds
+
+
+def mll_marginal_check(label_matrix, args):
+    if args.need_marginal_data:
+        raw_folds = construct_partition2two(label_matrix[:-2], args.folds_num, True)
+        n = label_matrix.get_shape()[0]
+
+        folds = []
+        for i in range(args.folds_num):
+            test_index = raw_folds[i][1]
+            train_index = np.append(raw_folds[i][0], [n - 2, n - 1])
+            folds.append((train_index, test_index))
+
+        return folds
+    else:
+        return construct_partition2two(label_matrix[:-2], args.folds_num, True)
 
 
 def sampling(mode, x_train, y_train):

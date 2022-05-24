@@ -193,7 +193,7 @@ def final_results_output(results, out_path, ind=False, multi=False):
         print('\n')
 
 
-def mll_final_results_output(results, out_path, ind=False, multi=False):
+def mll_final_results_output(results, out_path, ind=False):
     hamming_loss = 'Hamming loss = %.4f' % results[0]
     accuracy = 'Acc = %.4f' % results[1]
     jaccard_similarity = 'Jaccard similarity = %.4f' % results[2]
@@ -228,7 +228,7 @@ def prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False):
     with open(prob_file, 'w') as f:
         head = 'Sample index' + '\t' + 'True labels' + '\t' + 'predicted labels' + '\t' + 'probability values' + '\n'
         f.write(head)
-        for i, (k, m, n) in enumerate(zip(true_labels, predicted_labels, prob_list)):
+        for i, (k, m, n) in enumerate(zip(true_labels.todense(), predicted_labels, prob_list)):
             line = str(i + 1) + '\t' + str(k) + '\t' + str(m) + '\t' + str(n) + '\n'
             f.write(line)
     full_path = os.path.abspath(prob_file)
