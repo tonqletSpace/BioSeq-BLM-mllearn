@@ -75,7 +75,7 @@ def ml_results(args, vectors, labels, folds, vec_files, params_selected):
 
 
 def mll_ml_results(args, vectors, labels, folds, params_selected):
-    mll_ml_cv_results(args.mll, args.ml, vectors, labels, folds, args.results_dir, params_selected)
+    mll_ml_cv_results(args.mll, args.need_marginal_data, args.ml, vectors, labels, folds, args.results_dir, params_selected)
     return params_selected
 
 
@@ -108,17 +108,15 @@ def params_select(params_list, out_dir):
 
 
 def mll_params_select(params_list, out_dir):
-    print(params_list)
+    # print(params_list)
     # exit()
-    evaluation = params_list[0].get('metric')
-    params_list_selected = params_list[0]
+    evaluation = params_list[0].get()['metric']
+    params_list_selected = params_list[0].get()
     for i in range(len(params_list)):
-        if params_list[i].get('metric') > evaluation:
-            evaluation = params_list[i].get('metric')
-            params_list_selected = params_list[i]
+        if params_list[i].get()['metric'] > evaluation:
+            evaluation = params_list[i].get()['metric']
+            params_list_selected = params_list[i].get()
     del params_list_selected['metric']
-    # params_list_selected['PSI'] = metric
-    # table_params(params_list_selected, True)  # 打印选择后的参数
     opt_params2file(params_list_selected, out_dir)  # 将最优参数写入文件
 
     return params_list_selected

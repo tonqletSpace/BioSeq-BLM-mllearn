@@ -132,7 +132,7 @@ def ml_cv_results(ml, vectors, labels, folds, sp, multi, res, out_dir, params_di
     joblib.dump(model, model_path)  # 使用job lib保存模型
 
 
-def mll_ml_cv_results(mll, ml, vectors, labels, folds, out_dir, params_dict):
+def mll_ml_cv_results(mll, marginal_data, ml, vectors, labels, folds, out_dir, params_dict):
     assert isinstance(vectors, lil_matrix), 'error'
 
     results = []
@@ -151,8 +151,13 @@ def mll_ml_cv_results(mll, ml, vectors, labels, folds, out_dir, params_dict):
 
     cv_labels = []
     cv_prob = []
-    predicted_labels = np.zeros(labels.get_shape())  # (N, q)
-    predicted_prob = np.zeros(labels.get_shape())  # (N, q)
+
+    tmp_shape = labels.get_shape()
+    if marginal_data:
+        tmp_shape = (tmp_shape[0]-2, tmp_shape[1])
+    predicted_labels = np.zeros(tmp_shape, dtype=np.int32)  # (N, q)
+    predicted_prob = np.zeros(tmp_shape)  # (N, q)
+
     for train_index, test_index in folds:
         x_train, y_train, x_test, y_test = get_partition(vectors, labels, train_index, test_index)
         # if sp != 'none':
@@ -164,9 +169,6 @@ def mll_ml_cv_results(mll, ml, vectors, labels, folds, out_dir, params_dict):
 
         y_test_ = clf.predict(x_test)
         y_test_prob = clf.predict_proba(x_test)
-
-        # print(y_test_prob[0].todense())
-        # exit()
 
         # 'Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1'
         result = mll_performance(y_test, y_test_)
@@ -185,9 +187,12 @@ def mll_ml_cv_results(mll, ml, vectors, labels, folds, out_dir, params_dict):
     # 利用整个数据集训练并保存模型
     model = get_mll_ml_model(mll, ml, params_dict)
 
-    # for SVM XXX
-    model_path = out_dir + 'cost_[' + str(params_dict['cost']) + ']_gamma_[' + str(
-        params_dict['gamma']) + ']_' + mll.lower() + '_' + ml.lower() + '.model'
+    model_path = out_dir
+    if ml == 'SVM':
+        model_path += 'cost_[' + str(params_dict['cost']) + ']_gamma_[' + str(params_dict['gamma']) + ']'
+    else:
+        model_path += 'tree_' + str(params_dict['tree'])
+    model_path += '_' + mll.lower() + '_' + ml.lower() + '.model'
 
     # if sp != 'none':
     #     vectors, labels = sampling(sp, vectors, labels)

@@ -51,7 +51,7 @@ def mll_ml_fe_process(args):
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
 
     # 多进程计算
-    # pool = multiprocessing.Pool(args.cpu)
+    pool = multiprocessing.Pool(args.cpu)
     # 对每个mode的method进行检查
     seq_feature_check(args)
     # 对SVM或RF的参数进行检查并生成参数字典集合
@@ -69,8 +69,8 @@ def mll_ml_fe_process(args):
     # 列表字典 ---> 字典列表
     params_dict_list = make_params_dicts(all_params_list_dict)
 
-    print('for each run')
-    print(params_dict_list)
+    # print('for each run')
+    # print(params_dict_list)
     # exit()
 
     # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
@@ -89,15 +89,15 @@ def mll_ml_fe_process(args):
         vec_files = mll_out_seq_file(args.format, args.results_dir, params_dict, params_list_dict)
         params_dict['out_files'] = vec_files
         # 注意多进程计算的debug
-        params_dict_list_pro.append(mll_one_ml_fe_process(args, input_one_file, label_array, vec_files, args.folds, params_dict))
-        if i == 1:
+        # params_dict_list_pro.append(
+        #     mll_one_ml_fe_process(args, input_one_file, label_array, vec_files, args.folds, params_dict))
+        if i == 3:
             break
-        # params_dict_list_pro.append(pool.apply_async(mll_one_ml_fe_process,
-        #                         (args, input_one_file, label_array, vec_files, args.folds, params_dict)))
+        params_dict_list_pro.append(pool.apply_async(
+            mll_one_ml_fe_process, (args, input_one_file, label_array, vec_files, args.folds, params_dict)))
 
-    # pool.close()
-    # pool.join()
-    # exit()
+    pool.close()
+    pool.join()
     # 根据指标进行参数选择
     params_selected = mll_params_select(params_dict_list_pro, args.results_dir)
     # 将最优的特征向量文件从"all_fea_files/"文件夹下复制到主文件下
@@ -107,10 +107,10 @@ def mll_ml_fe_process(args):
     opt_vectors = mll_files2vectors_seq(args, opt_files, args.format)
     print(' Shape of Optimal Feature vectors: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0], opt_vectors.shape[1]))
     # 特征分析
-    # if args.score == 'none':
-    #     opt_vectors = fa_process(args, opt_vectors, label_array, after_ps=True, ind=False)
-    #     print(' Shape of Optimal Feature vectors after FA process: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0],
-    #                                                                                              opt_vectors.shape[1]))
+    if args.score == 'none':
+        opt_vectors = fa_process(args, opt_vectors, label_array, after_ps=True, ind=False)
+        print(' Shape of Optimal Feature vectors after FA process: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0],
+                                                                                                 opt_vectors.shape[1]))
     # 构建分类器
     mll_ml_results(args, opt_vectors, label_array, args.folds, params_selected)
     # -------- 独立测试-------- #
@@ -127,11 +127,10 @@ def mll_one_ml_fe_process(args, input_one_file, labels, vec_files, folds, params
     vectors = mll_files2vectors_seq(args, vec_files, args.format)
     print(' Shape of Feature vectors: [%d, %d] '.center(66, '*') % (vectors.shape[0], vectors.shape[1]))
 
-    # Feature Analysis 先忽略
-    # if args.score == 'none':
-    #     vectors = fa_process(args, vectors, labels, after_ps=False, ind=False)
-    #     print(' Shape of Feature vectors after FA process: [%d, %d] '.center(66, '*') % (vectors.shape[0],
-    #                                                                                      vectors.shape[1]))
+    if args.score == 'none':
+        vectors = fa_process(args, vectors, labels, after_ps=False, ind=False)
+        print(' Shape of Feature vectors after FA process: [%d, %d] '.center(66, '*') % (vectors.shape[0],
+                                                                                         vectors.shape[1]))
     params_dict = mll_one_ml_process(args, vectors, labels, folds, params_dict)
 
     return params_dict

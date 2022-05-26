@@ -318,10 +318,12 @@ def mll_gen_label_matrix(seq_label_list):
         cnt = -1
         for row in seq_label_matrix:
             if cnt == -1:
-                cnt = row[j]  # 0 or 1
+                cnt = row[j]  # cnt == 0 or 1
             elif cnt != row[j]:
                 cnt = 2
                 break
+        if cnt != 2:
+            break
         tot += cnt
 
     if tot != 2*q:
