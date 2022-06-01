@@ -2,6 +2,7 @@ import os
 import time
 import numpy as np
 import pandas as pd
+from scipy.sparse import lil_matrix
 from sklearn import preprocessing
 from sklearn.cluster import AffinityPropagation
 from sklearn.cluster import AgglomerativeClustering
@@ -70,6 +71,56 @@ def fa_process(args, feature_vectors, labels, after_ps=False, ind=False):
     else:
         # 仅仅展示特征分析结果，而不对特征向量进行降维
         return feature_vectors
+
+
+def mll_fa_process(args, feature_vectors, labels, after_ps=False, ind=False):
+    feature_vectors = feature_vectors.todense()
+
+    # normalization
+    if args.sn != 'none':
+        feature_vectors = normalization(feature_vectors, args.sn)
+
+    # clustering
+    if after_ps is True:
+        if args.cl != 'none':
+            assert args.nc is not None and args.nc <= feature_vectors.shape[0] and \
+                   args.nc <= feature_vectors.shape[1]
+            if args.nc is not None or args.cl == 'AP':
+                cluster = clustering(feature_vectors, args.cm, args.nc, args.cl, args.results_dir, ind)
+                save_cluster_result(cluster, args.results_dir, ind)
+                # plot_clustering_2d(feature_vectors, cluster, args.results_dir, args.cm, ind)
+
+    # feature select
+    if args.fs != 'none':
+        assert args.nf is not None and args.nf <= feature_vectors.shape[1]
+        fs_vectors, scores = feature_select(feature_vectors, labels, args.nf, args.fs)
+        if after_ps is True:
+            save_fs_result(scores, args.fs, args.results_dir, ind)
+            # # plot_fs(scores, args.nf, out_path, ind)
+            # plot_fs(scores, args.results_dir, ind)  # 修改为仅仅绘制前20重要的特征
+    else:
+        fs_vectors = feature_vectors
+
+    # dimension reduction
+    if args.dr != 'none':
+        assert args.np is not None and args.np <= feature_vectors.shape[1]
+        dr_vectors = dimension_reduction(feature_vectors, args.np, args.dr)
+        if after_ps is True:
+            save_dr_result(dr_vectors, args.results_dir, ind)
+            # plot_2d(dr_vectors, labels, args.results_dir, ind)
+            # plot_3d(dr_vectors, labels, args.results_dir, ind)
+    else:
+        dr_vectors = feature_vectors
+
+    if args.rdb == 'fs':
+        assert args.fs != 'none', "Can't reduce dimension by feature select since feature select method is none"
+        return lil_matrix(fs_vectors)
+    elif args.rdb == 'dr':
+        assert args.dr != 'none', "Can't reduce dimension by dimension reduce since dimension reduce method is none"
+        return lil_matrix(dr_vectors)
+    else:
+        # 仅仅展示特征分析结果，而不对特征向量进行降维
+        return lil_matrix(feature_vectors)
 
 
 def feature_select(vectors, labels, n_features, scoring_func):

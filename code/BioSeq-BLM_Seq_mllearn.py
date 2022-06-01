@@ -8,7 +8,7 @@ from CheckAll import Batch_Path_Seq, DeepLearning, Classification, Method_Semant
     Mll_Conventional_Algorithm, mll_prepare4train_seq
 from CheckAll import Method_One_Hot_Enc, Feature_Extract_Mode, check_contain_chinese, seq_sys_check, dl_params_check, \
     seq_feature_check, mode_params_check, results_dir_check, ml_params_check, make_params_dicts, Final_Path, All_Words
-from FeatureAnalysis import fa_process
+from FeatureAnalysis import fa_process, mll_fa_process
 from FeatureExtractionMode.utils.utils_write import seq_file2one, gen_label_array, out_seq_file, out_ind_file, \
     opt_file_copy, out_dl_seq_file, create_all_seq_file, fixed_len_control, mll_seq_file2one, mll_gen_label_matrix, \
     mll_out_seq_file, mll_out_ind_file
@@ -108,9 +108,10 @@ def mll_ml_fe_process(args):
     print(' Shape of Optimal Feature vectors: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0], opt_vectors.shape[1]))
     # 特征分析
     if args.score == 'none':
-        opt_vectors = fa_process(args, opt_vectors, label_array, after_ps=True, ind=False)
+        opt_vectors = mll_fa_process(args, opt_vectors, label_array, after_ps=True, ind=False)
         print(' Shape of Optimal Feature vectors after FA process: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0],
                                                                                                  opt_vectors.shape[1]))
+    exit()
     # 构建分类器
     mll_ml_results(args, opt_vectors, label_array, args.folds, params_selected)
     # -------- 独立测试-------- #
@@ -128,7 +129,7 @@ def mll_one_ml_fe_process(args, input_one_file, labels, vec_files, folds, params
     print(' Shape of Feature vectors: [%d, %d] '.center(66, '*') % (vectors.shape[0], vectors.shape[1]))
 
     if args.score == 'none':
-        vectors = fa_process(args, vectors, labels, after_ps=False, ind=False)
+        vectors = mll_fa_process(args, vectors, labels, after_ps=False, ind=False)
         print(' Shape of Feature vectors after FA process: [%d, %d] '.center(66, '*') % (vectors.shape[0],
                                                                                          vectors.shape[1]))
     params_dict = mll_one_ml_process(args, vectors, labels, folds, params_dict)
