@@ -151,6 +151,30 @@ def get_sequence_check_dna(f, alphabet):
     Return the sequence list.
     """
     sequence_list = []
+    for e in read_fasta_yield(f):
+        res = is_under_alphabet(e.seq, alphabet)
+        if res is not True:
+            print(e.name)
+            error_info = 'Error, sequence ' + str(e.no) \
+                         + ' has character ' + str(res) + '.(The character must be ' + alphabet + ').'
+            sys.exit(error_info)
+        else:
+            # print(e.no)
+            # print(e.name)
+            # print(e.seq)
+            sequence_list.append(e.seq)
+
+    return sequence_list
+
+
+def mll_get_sequence_check_dna(f, alphabet):
+    """Read the fasta file.
+
+    Input: f: HANDLE to input. e.g. sys.stdin, or open(<file>)
+
+    Return the sequence list.
+    """
+    sequence_list = []
     name_list = []
     for e in read_fasta_yield(f):
         res = is_under_alphabet(e.seq, alphabet)
@@ -200,7 +224,24 @@ def get_seqs(input_file, alphabet, desc=False):
     # modified at 2020/05/10
     if hasattr(input_file, 'read'):
         if desc is False:
-            return get_sequence_check_dna(input_file, alphabet) # mllearn
+            return get_sequence_check_dna(input_file, alphabet)
+        else:
+            return read_fasta_check_dna(input_file, alphabet)  # return Seq(name, seq, count)
+    elif isinstance(input_file, list):
+        input_data = is_sequence_list(input_file, alphabet)
+        if input_data is not False:
+            return input_data
+        else:
+            sys.exit(0)
+    else:
+        error_info = 'Sorry, the parameter in get_data method must be list or file type.'
+        sys.exit(error_info)
+
+
+def mll_get_seqs(input_file, alphabet, desc=False):
+    if hasattr(input_file, 'read'):
+        if desc is False:
+            return mll_get_sequence_check_dna(input_file, alphabet)
         else:
             return read_fasta_check_dna(input_file, alphabet)  # return Seq(name, seq, count)
     elif isinstance(input_file, list):

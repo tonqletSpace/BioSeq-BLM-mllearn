@@ -82,6 +82,10 @@ Metric_dict = {'Acc': 'Accuracy', 'MCC': 'Matthews Correlation Coefficient', 'AU
 def seq_sys_check(args, res=False):
     print('************************** PLEASE CHECK **************************')
     if args.mode != 'OHE':
+        # SequenceLabelling predictor 只能用 OHE 的特征提取。
+        # deep learning predictor 同理（因为包含在SequenceLabelling中
+        # 因为这些方法具有特异性or特征提取能力强，所以不需要其他特征提取，
+        # 换句话说 predictor 选用 deep learning or CRF 时，blm作为特征提取就没用了
         assert args.ml not in SequenceLabelling, 'The ' + Ml[args.ml] + ' machine learning algorithm can only ' \
                                                                         'construct predictor for one-hot feature!'
     print('Analysis category: %s sequence' % args.category)

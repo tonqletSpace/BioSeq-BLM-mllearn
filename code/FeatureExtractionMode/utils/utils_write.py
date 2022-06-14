@@ -5,7 +5,7 @@ import sys
 import numpy as np
 
 from ..utils.utils_const import DNA, RNA, PROTEIN
-from ..utils.utils_fasta import get_seqs
+from ..utils.utils_fasta import get_seqs, mll_get_seqs
 
 
 class FormatWrite(object):
@@ -243,7 +243,7 @@ def mll_seq_file2one(category, seq_files, out_file, label_cardinality=7, iid=Tru
     label_list = []  # list of label string
     for i in range(len(seq_files)):
         with open(seq_files[i], 'r') as in_f:
-            seq_all, seq_info_all = get_seqs(in_f, alphabet)  # list of sequence in alphabet (list[seq1, seq2, ...])
+            seq_all, seq_info_all = mll_get_seqs(in_f, alphabet)  # list of sequence in alphabet (list[seq1, seq2, ...])
             for seq in seq_all:
                 seq_len_list.append(len(seq))
             for info in seq_info_all:
