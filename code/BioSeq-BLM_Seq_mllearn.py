@@ -171,7 +171,7 @@ def mll_dl_fe_process(args):
     # 统计样本数目和序列长度
     seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
     # 生成标签数组
-    label_array, args.need_marginal_data = mll_gen_label_matrix(seq_label_list)
+    label_array, args.need_marginal_data = mll_gen_label_matrix(seq_label_list, need_marginal_data=False)
 
     # 控制序列的固定长度(仅仅需要在基准数据集上操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
@@ -199,11 +199,16 @@ def mll_dl_fe_process(args):
     # print("out_files", out_files)
     # exit()
     # 深度特征向量提取
+    # 深度特征向量提取
+    # one_seq_fe_process(args, input_one_file, label_array, out_files, sp_num_list, False, **params_dict)
     mll_one_seq_fe_process(args, input_one_file, label_array, out_files, **params_dict)
+    # exit()
     # 获取深度特征向量
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
     vectors, fixed_seq_len_list = mll_read_dl_vec4seq(args.fixed_len, out_files, return_sp=False)
 
+    # print(vectors.shape, vectors.dtype)
+    # exit()
     # print('vectors')
     # print(vectors.shape)  # (N, L*E)、(32, fixed_len * 4)
     # print(vectors[:3].todense()[:6])

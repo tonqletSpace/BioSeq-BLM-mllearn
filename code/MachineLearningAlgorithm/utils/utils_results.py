@@ -239,7 +239,8 @@ def prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False):
 
 
 def mll_prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False):
-    assert not issparse(true_labels) and not issparse(predicted_labels) and not issparse(prob_list)
+    assert issparse(true_labels) and not issparse(predicted_labels) and not issparse(prob_list)
+    true_labels = true_labels.toarray()
     prob_file = out_path + "prob_out.txt"
     if ind is True:
         prob_file = out_path + "ind_prob_out.txt"

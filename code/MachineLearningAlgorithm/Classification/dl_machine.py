@@ -10,7 +10,8 @@ from torch import nn, optim
 
 from ..utils.utils_net import TorchNetSeq, FORMER
 from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
-from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance
+from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
+    mll_final_results_output, mll_prob_output
 
 
 def get_partition(feature, target, length, train_index, val_index):
@@ -102,8 +103,8 @@ def mll_dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_
     cv_labels = []
     cv_prob = []
 
-    predicted_labels = np.zeros(len(seq_length_list))
-    predicted_prob = np.zeros(len(seq_length_list))
+    predicted_labels = np.zeros(labels.get_shape())
+    predicted_prob = np.zeros(labels.get_shape()[0])
 
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 
@@ -141,45 +142,45 @@ def mll_dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_
         mll_clf = BLMLabelPowerset(classifier=base_clf, require_dense=[True, True])
         # mll_clf = base_clf
 
-        output = mll_clf.fit(x_train, y_train)
+        print("mll_clf._label_count: {}".format(num_class).center(100, '*'))
+
+        mll_clf.fit(x_train, y_train)
 
         # blm是每个epoch都测试，选最好的测试结果
         # demo暂时是用fit后的结果来预测
         final_predict_list = mll_clf.predict(x_val)  # (N, q
         _, final_prob_list = mll_clf.predict_proba(x_val)  # (N, n
 
-        print('result')
-        print(final_predict_list.shape)
-        print(final_predict_list.toarray())
-        print(final_prob_list.shape)
-        print(final_prob_list)
-        exit()
-
-        # final_prob_list = final_prob_list[range(final_predict_list.shape[0]), final_predict_list]  # (N,
-        # assert final_target_list == y_val in blm
+        from scipy.sparse import issparse
+        assert issparse(final_predict_list) and not issparse(final_prob_list) and issparse(y_val)
         result = mll_performance(y_val, final_predict_list)
+
         # result = performance(y_val, final_predict_list, final_prob_list, multi=True, res=True)  # 换成 mll_performance
         results.append(result)
 
-        cv_labels.append(y_val)
+        cv_labels.append(y_val.toarray())
         cv_prob.append(final_prob_list)
 
         # 这里为保存概率文件准备
-        predicted_labels[val_index] = np.array(final_predict_list)
-        predicted_prob[val_index] = np.array(final_prob_list)
+        # predicted_labels[val_index] = np.array(final_predict_list)
+        print("final_predict_list.shape", final_predict_list.shape)
+        # exit()
+        predicted_labels[val_index] = final_predict_list.toarray()
+        predicted_prob[val_index] = final_prob_list
 
         count += 1
         print("Round[%d]: Accuracy = %.3f" % (count, result[0]))
 
     print('\n')
-    # plot_roc_curve(cv_labels, cv_prob, out_dir)  # 绘制ROC曲线
-    # plot_pr_curve(cv_labels, cv_prob, out_dir)  # 绘制PR曲线
-    #
-    # final_results = np.array(results).mean(axis=0)
-    # print_metric_dict(final_results, ind=False)
-    #
-    # final_results_output(final_results, out_dir, ind=False, multi=multi)  # 将指标写入文件
+    plot_roc_curve(cv_labels, cv_prob, out_dir)  # 绘制ROC曲线
+    plot_pr_curve(cv_labels, cv_prob, out_dir)  # 绘制PR曲线
+
+    final_results = np.array(results).mean(axis=0)
+    print_metric_dict(final_results, ind=False)
+    mll_final_results_output(final_results, out_dir, ind=False)  # 将指标写入文件
+
     # prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
+    mll_prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
 
 
 def dl_ind_process(ml, vectors, labels, seq_length_list, ind_vectors, ind_labels, ind_seq_length_list, max_len, out_dir,
