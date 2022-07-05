@@ -92,7 +92,7 @@ def mll_ml_fe_process(args):
         # 注意多进程计算的debug
         # params_dict_list_pro.append(
         #     mll_one_ml_fe_process(args, input_one_file, label_array, vec_files, args.folds, params_dict))
-        if i == 3:
+        if i == 2:
             break
         params_dict_list_pro.append(pool.apply_async(
             mll_one_ml_fe_process, (args, input_one_file, label_array, vec_files, args.folds, params_dict)))

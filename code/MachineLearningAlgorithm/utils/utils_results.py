@@ -1,6 +1,7 @@
 import math
 import os
 import sklearn.metrics as metrics
+from scipy.sparse import issparse
 from sklearn.metrics import roc_auc_score
 
 
@@ -84,14 +85,10 @@ def mll_performance(origin_labels, predicted_labels):
     :param predicted_labels: predicted values of the data set.
     """
     from scipy.sparse import lil_matrix
-    assert isinstance(origin_labels, lil_matrix)
-    assert isinstance(predicted_labels, lil_matrix)
+    assert issparse(origin_labels) and issparse(predicted_labels)
+
     if origin_labels.get_shape() != predicted_labels.get_shape():
         raise ValueError("The shape of the original labels must equal to that of the predicted labels.")
-
-    # print(origin_labels.todense())
-    # print(predicted_labels.todense())
-    # exit()
 
     # 'Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1'
     hamming_loss = metrics.hamming_loss(origin_labels, predicted_labels)
