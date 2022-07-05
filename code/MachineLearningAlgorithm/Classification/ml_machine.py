@@ -1,4 +1,4 @@
-from scipy.sparse import lil_matrix
+from scipy.sparse import lil_matrix, issparse
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
 import joblib
@@ -133,7 +133,7 @@ def ml_cv_results(ml, vectors, labels, folds, sp, multi, res, out_dir, params_di
 
 
 def mll_ml_cv_results(mll, marginal_data, ml, vectors, labels, folds, out_dir, params_dict):
-    assert isinstance(vectors, lil_matrix), 'error'
+    assert issparse(vectors) and issparse(labels), 'error'
 
     results = []
 
@@ -176,13 +176,13 @@ def mll_ml_cv_results(mll, marginal_data, ml, vectors, labels, folds, out_dir, p
 
         cv_labels.append(y_test)
         cv_prob.append(y_test_prob)
-        predicted_labels[test_index] = y_test_.todense()
-        predicted_prob[test_index] = y_test_prob.todense()
+        predicted_labels[test_index] = y_test_.toarray()
+        predicted_prob[test_index] = y_test_prob.toarray()
 
     final_results = np.array(results).mean(axis=0)
 
     mll_final_results_output(final_results, out_dir, ind=False)  # 将指标写入文件
-    prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
+    mll_prob_output(labels.toarray(), predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
 
     # 利用整个数据集训练并保存模型
     model = get_mll_ml_model(mll, ml, params_dict)

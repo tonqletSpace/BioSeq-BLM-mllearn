@@ -74,7 +74,7 @@ def fa_process(args, feature_vectors, labels, after_ps=False, ind=False):
 
 
 def mll_fa_process(args, feature_vectors, labels, after_ps=False, ind=False):
-    feature_vectors = feature_vectors.todense()
+    feature_vectors = feature_vectors.toarray()
 
     # normalization
     if args.sn != 'none':

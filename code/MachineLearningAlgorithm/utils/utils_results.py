@@ -239,17 +239,25 @@ def prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False):
 
 
 def mll_prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False):
+    assert not issparse(true_labels) and not issparse(predicted_labels) and not issparse(prob_list)
     prob_file = out_path + "prob_out.txt"
     if ind is True:
         prob_file = out_path + "ind_prob_out.txt"
+
+    def prob_style(*args, space=10):
+        return args[0].center(space, ' ') + \
+               args[1].center(2*space, ' ') +\
+               args[2].center(2*space, ' ') +\
+               args[3].center(3*space, ' ') + '\n'
+
     with open(prob_file, 'w') as f:
-        head = 'Sample index' + '\t' + 'True labels' + '\t' + 'predicted labels' + '\t' + 'probability values' + '\n'
-        f.write(head)
-        for i, (k, m, n) in enumerate(zip(true_labels.todense(),
-                                          predicted_labels.todense(),
-                                          prob_list.todense())):
-            line = str(i + 1) + '\t' + str(k) + '\t' + str(m) + '\t' + str(n) + '\n'
-            f.write(line)
+        head = ('Sample index', 'True labels', 'predicted labels', 'probability values')
+        f.write(prob_style(*head))
+        for i, (k, m, n) in enumerate(zip(true_labels,
+                                          predicted_labels,
+                                          prob_list)):
+            line = tuple(map(str, (i+1, k, m, n)))
+            f.write(prob_style(*line))
     full_path = os.path.abspath(prob_file)
     if os.path.isfile(full_path):
         print('The output file for probability values can be found:')

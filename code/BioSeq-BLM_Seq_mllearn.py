@@ -92,7 +92,7 @@ def mll_ml_fe_process(args):
         # 注意多进程计算的debug
         # params_dict_list_pro.append(
         #     mll_one_ml_fe_process(args, input_one_file, label_array, vec_files, args.folds, params_dict))
-        if i == 2:
+        if i == 1:
             break
         params_dict_list_pro.append(pool.apply_async(
             mll_one_ml_fe_process, (args, input_one_file, label_array, vec_files, args.folds, params_dict)))
@@ -112,7 +112,6 @@ def mll_ml_fe_process(args):
         opt_vectors = mll_fa_process(args, opt_vectors, label_array, after_ps=True, ind=False)
         print(' Shape of Optimal Feature vectors after FA process: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0],
                                                                                                  opt_vectors.shape[1]))
-    exit()
     # 构建分类器
     mll_ml_results(args, opt_vectors, label_array, args.folds, params_selected)
     # -------- 独立测试-------- #

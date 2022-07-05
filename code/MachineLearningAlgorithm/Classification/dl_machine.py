@@ -150,7 +150,7 @@ def mll_dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_
 
         print('result')
         print(final_predict_list.shape)
-        print(final_predict_list.todense())
+        print(final_predict_list.toarray())
         print(final_prob_list.shape)
         print(final_prob_list)
         exit()
