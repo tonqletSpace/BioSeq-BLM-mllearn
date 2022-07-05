@@ -2,6 +2,8 @@ import multiprocessing
 import os
 import time
 
+import numpy as np
+
 from CheckAll import Batch_Path_Seq, DeepLearning, Classification, Method_Semantic_Similarity, prepare4train_seq
 from CheckAll import Method_One_Hot_Enc, Feature_Extract_Mode, check_contain_chinese, seq_sys_check, dl_params_check, \
     seq_feature_check, mode_params_check, results_dir_check, ml_params_check, make_params_dicts, Final_Path, All_Words
@@ -154,6 +156,13 @@ def dl_fe_process(args):
     # 生成标签数组
     label_array = gen_label_array(sp_num_list, args.label)
 
+    # print(sp_num_list)
+    # print(len(seq_len_list))
+    # print(seq_len_list[:10])
+    # print(len(label_array))
+    # print(label_array[:10])
+    # exit()
+
     # 控制序列的固定长度(仅仅需要在基准数据集上操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
 
@@ -166,11 +175,20 @@ def dl_fe_process(args):
     params_dict = make_params_dicts(all_params_list_dict)[0]
     # 特征向量文件命名
     out_files = out_dl_seq_file(args.label, args.results_dir, ind=False)
+
+    # print(all_params_list_dict)
+    # print(params_dict)
+    # print(out_files)
+    # exit()
     # 深度特征向量提取
     one_seq_fe_process(args, input_one_file, label_array, out_files, sp_num_list, False, **params_dict)
     # 获取深度特征向量
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
     vectors, fixed_seq_len_list = read_dl_vec4seq(args.fixed_len, out_files, return_sp=False)
+
+    # print(vectors.shape)
+    # print(fixed_seq_len_list)
+    # exit()
 
     # 深度学习的独立测试和交叉验证分开
     if args.ind_seq_file is None:

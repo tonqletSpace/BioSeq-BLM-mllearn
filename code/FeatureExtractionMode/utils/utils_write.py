@@ -100,6 +100,13 @@ def res_vectors2file(vec, out_format, out_file):
 
 
 def dl_vec2file(res_mats, sample_num_list, out_files):
+    print('res_mats')
+    print(res_mats[:3, :5])
+    print('sample_num_list')
+    print(sample_num_list[:3])
+    print("out_files")
+    print(out_files)
+    # exit()
     count = 0
     # print(sample_num_list)
     # print(len(res_mats))
@@ -329,7 +336,7 @@ def mll_gen_label_matrix(seq_label_list):
     if tot != 2*q:
         seq_label_matrix.append(np.ones(q, np.int32).tolist())
         seq_label_matrix.append(np.zeros(q, np.int32).tolist())
-        print('Auxiliary labels are provided. '
+        print('Auxiliary labels are provided for mll task. '
               'For each dimension of label, as least two distinct samples are needed.')
 
     return lil_matrix(seq_label_matrix), tot != 2*q
@@ -452,6 +459,15 @@ def out_dl_seq_file(label, results_dir, ind=False):
         output_files.append(fea_path)
 
     return output_files
+
+
+def mll_out_dl_seq_file(results_dir, ind=False):
+    if ind is True:
+        fea_path = results_dir + 'ind_dl_features[' + 'mll' + ']_.txt'
+    else:
+        fea_path = results_dir + 'cv_dl_features[' + 'mll' + ']_.txt'
+    res = [fea_path]
+    return res
 
 
 def out_res_file(label, results_dir, out_format, fragment, ind):

@@ -83,6 +83,9 @@ def mll_performance(origin_labels, predicted_labels):
     :param origin_labels: true values of the data set.
     :param predicted_labels: predicted values of the data set.
     """
+    from scipy.sparse import lil_matrix
+    assert isinstance(origin_labels, lil_matrix)
+    assert isinstance(predicted_labels, lil_matrix)
     if origin_labels.get_shape() != predicted_labels.get_shape():
         raise ValueError("The shape of the original labels must equal to that of the predicted labels.")
 
@@ -228,7 +231,7 @@ def prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False):
     with open(prob_file, 'w') as f:
         head = 'Sample index' + '\t' + 'True labels' + '\t' + 'predicted labels' + '\t' + 'probability values' + '\n'
         f.write(head)
-        for i, (k, m, n) in enumerate(zip(true_labels.todense(), predicted_labels, prob_list)):
+        for i, (k, m, n) in enumerate(zip(true_labels, predicted_labels, prob_list)):
             line = str(i + 1) + '\t' + str(k) + '\t' + str(m) + '\t' + str(n) + '\n'
             f.write(line)
     full_path = os.path.abspath(prob_file)

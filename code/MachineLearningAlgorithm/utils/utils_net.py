@@ -115,6 +115,40 @@ class CNNSeq(nn.Module):
         return output
 
 
+class MllCNNSeq(nn.Module):
+    def __init__(self, inchannels, outchannels, kernel_size, n_classes, prob, embedding_size):
+        super(MllCNNSeq, self).__init__()
+        print('use MllCNNSeq for current trial!')
+        self.E = embedding_size
+        padding = (kernel_size - 1) // 2
+        print('in_channels', inchannels // self.E)
+        self.cnn = nn.Conv1d(in_channels=self.E,
+                             out_channels=outchannels,
+                             kernel_size=kernel_size,
+                             padding=padding,
+                             stride=1)
+        self.dropout = nn.Dropout(prob)
+        self.classifier = nn.Sequential(
+            nn.Linear(outchannels, 2 * outchannels),
+            nn.ReLU(),
+            nn.Linear(2 * outchannels, n_classes)
+        )
+
+    def forward(self, x):
+        # print('x', x.shape)
+        x = x.to(torch.float32)
+        input_data = x.reshape((-1, self.E, x.shape[1]//self.E))   # N, in_channels, L
+        # input_data = x.permute(0, 2, 1)  blm里的要删掉
+
+        output = self.cnn(input_data)
+        output = func.max_pool1d(output, kernel_size=output.shape[2])
+        output = output.transpose(1, 2).contiguous()
+        output = output.view(output.shape[0], -1)
+        output = self.dropout(output)
+        output = self.classifier(output)
+        return output
+
+
 # 定义CNN， CNN的实现有点问题,
 class CNNRes(nn.Module):
     def __init__(self, inchannels, outchannels, kernel_size, n_classes, prob):
@@ -347,7 +381,11 @@ class TorchNetSeq(object):
         elif self.net == 'CNN':
             out_channels = self.params_dict['out_channels']
             kernel_size = self.params_dict['kernel_size']
-            model = CNNSeq(in_dim, out_channels, kernel_size, n_classes, self.dropout)
+            # model = CNNSeq(in_dim, out_channels, kernel_size, n_classes, self.dropout)
+            print('out_channels', out_channels)  # 30
+            print('kernel_size', kernel_size)  # 3
+            print('n_classes', n_classes)  # 12
+            model = MllCNNSeq(in_dim, out_channels, kernel_size, n_classes, self.dropout, embedding_size=4)
         elif self.net == 'Transformer':
             n_layer = self.params_dict['n_layer']
             d_model = self.params_dict['d_model']

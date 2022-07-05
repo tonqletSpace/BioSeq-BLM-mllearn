@@ -11,10 +11,11 @@ from CheckAll import Method_One_Hot_Enc, Feature_Extract_Mode, check_contain_chi
 from FeatureAnalysis import fa_process, mll_fa_process
 from FeatureExtractionMode.utils.utils_write import seq_file2one, gen_label_array, out_seq_file, out_ind_file, \
     opt_file_copy, out_dl_seq_file, create_all_seq_file, fixed_len_control, mll_seq_file2one, mll_gen_label_matrix, \
-    mll_out_seq_file, mll_out_ind_file
+    mll_out_seq_file, mll_out_ind_file, mll_out_dl_seq_file
 from FeatureExtractionSeq import one_seq_fe_process, mll_one_seq_fe_process
 from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process, dl_ind_process, mll_dl_cv_process
-from MachineLearningAlgorithm.utils.utils_read import files2vectors_seq, read_dl_vec4seq, mll_files2vectors_seq
+from MachineLearningAlgorithm.utils.utils_read import files2vectors_seq, read_dl_vec4seq, mll_files2vectors_seq, \
+    mll_read_dl_vec4seq
 from MachineLearningSeq import one_ml_process, params_select, ml_results, ind_ml_results, mll_one_ml_process, \
     mll_ml_results, mll_ind_ml_results, mll_params_select
 
@@ -169,19 +170,20 @@ def mll_dl_fe_process(args):
     # 合并序列文件
     input_one_file = create_all_seq_file(args.seq_file, args.results_dir)
     # 统计样本数目和序列长度
-    sp_num_list, seq_len_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
+    seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
     # 生成标签数组
-    label_array, args.need_marginal_data = mll_gen_label_matrix(sp_num_list, args.label)
-
-    print(sp_num_list)
-    print(len(seq_len_list))
-    print(seq_len_list[:10])
-    print(len(label_array))
-    print(label_array[:10])
-    exit()
+    label_array, args.need_marginal_data = mll_gen_label_matrix(seq_label_list)
 
     # 控制序列的固定长度(仅仅需要在基准数据集上操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
+
+    # print(args.fixed_len)
+    # print(len(seq_len_list))
+    # print(seq_len_list[:10])
+    # print()
+    # print(label_array.shape)
+    # print(label_array[-10:].todense())
+    # exit()
 
     all_params_list_dict = {}
     all_params_list_dict = dl_params_check(args, all_params_list_dict)
@@ -191,30 +193,32 @@ def mll_dl_fe_process(args):
     # 列表字典 ---> 字典列表 --> 参数字典
     params_dict = make_params_dicts(all_params_list_dict)[0]
     # 特征向量文件命名
-    out_files = out_dl_seq_file(args.label, args.results_dir, ind=False)
+    out_files = mll_out_dl_seq_file(args.results_dir, ind=False)
 
     # print(all_params_list_dict)
-    print('params_dict', params_dict)
-    print("out_files", out_files)
+    # print('params_dict', params_dict)
+    # print("out_files", out_files)
     # exit()
     # 深度特征向量提取
-    one_seq_fe_process(args, input_one_file, label_array, out_files, sp_num_list, False, **params_dict)
+    mll_one_seq_fe_process(args, input_one_file, label_array, out_files, **params_dict)
     # 获取深度特征向量
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
-    vectors, fixed_seq_len_list = read_dl_vec4seq(args.fixed_len, out_files, return_sp=False)
+    vectors, fixed_seq_len_list = mll_read_dl_vec4seq(args.fixed_len, out_files, return_sp=False)
 
-    print(vectors.shape)
-    print(vectors[:2, :30])
-    print(vectors[:2].todense())
-    print()
-    print(label_array[:2])
-    print(label_array[:2].todense())
-    # print(fixed_seq_len_list)
-    exit()
+    # print('vectors')
+    # print(vectors.shape)  # (N, L*E)、(32, fixed_len * 4)
+    # print(vectors[:3].todense()[:6])
+    # print('label_array')
+    # print(label_array.shape)
+    # print(label_array[:3])  # sparse matrix of multi-label
+    # print(label_array[:3].todense())
+    # print('fixed_seq_len_list', fixed_seq_len_list)  # (N,) of fixed_len * 4
+    # exit()
 
     # 深度学习的独立测试和交叉验证分开
     if args.ind_seq_file is None:
         # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
+        args.need_marginal_data = False
         args = mll_prepare4train_seq(args, label_array, dl=True)
         # 构建深度学习分类器
         mll_dl_cv_process(args.ml, vectors, label_array, fixed_seq_len_list, args.fixed_len, args.folds, args.results_dir,

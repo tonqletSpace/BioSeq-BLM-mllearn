@@ -1,13 +1,20 @@
 import numpy as np
+import torch
+from sklearn.base import ClassifierMixin, BaseEstimator
+from sklearn.utils import check_X_y
+from sklearn.utils.multiclass import unique_labels
+from sklearn.utils.validation import check_array, check_is_fitted
+from skmultilearn.problem_transform import LabelPowerset
+from skorch import NeuralNetClassifier
 from torch import nn, optim
 
-from ..utils.utils_net import TorchNetSeq
+from ..utils.utils_net import TorchNetSeq, FORMER
 from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
-from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict
+from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance
 
 
 def get_partition(feature, target, length, train_index, val_index):
-    feature = np.array(feature)
+    # feature = np.array(feature)
     x_train = feature[train_index]
     x_val = feature[val_index]
     y_train = target[train_index]
@@ -76,6 +83,105 @@ def dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_dir,
     prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
 
 
+def get_lp_output_space_dim(y):
+    unique_combinations_ = {}
+
+    last_id = 0
+    for labels_applied in y.rows:
+        label_string = ",".join(map(str, labels_applied))
+
+        if label_string not in unique_combinations_:
+            unique_combinations_[label_string] = last_id
+            last_id += 1
+
+    return last_id  # output space {0,1,...,n_class-1}
+
+
+def mll_dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_dir, params_dict):
+    results = []
+    cv_labels = []
+    cv_prob = []
+
+    predicted_labels = np.zeros(len(seq_length_list))
+    predicted_prob = np.zeros(len(seq_length_list))
+
+    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
+
+    count = 0
+    in_dim = vectors.shape[-1]  # N
+    # num_class = len(set(labels.todense()))
+    # multi = True if num_class > 2 else False
+    multi = True
+
+    for train_index, val_index in folds:
+        print(vectors.shape)
+        print(labels.shape)
+        # exit()
+        x_train, x_val, y_train, y_val, train_length, test_length = get_partition(vectors, labels, seq_length_list,
+                                                                                  train_index, val_index)
+        # x_train = x_train.astype(np.float32)
+        # x_val = x_val.astype(np.float32)
+
+        num_class = get_lp_output_space_dim(y_train)
+
+        initialized_torch_model = TorchNetSeq(ml, max_len, None, params_dict).net_type(in_dim, num_class)
+        base_clf = NeuralNetClassifier(
+            initialized_torch_model,
+            criterion=nn.CrossEntropyLoss(),
+            batch_size=params_dict['batch_size'],
+            optimizer=optim.Adam,
+            optimizer__lr=params_dict['lr'],
+            device=DEVICE,
+            max_epochs=params_dict['epochs'],
+            iterator_train__shuffle=True
+        )
+
+        # from skmultilearn.problem_transform import LabelPowerset
+        from ..utils.utils_mll_lp import BLMLabelPowerset
+        mll_clf = BLMLabelPowerset(classifier=base_clf, require_dense=[True, True])
+        # mll_clf = base_clf
+
+        output = mll_clf.fit(x_train, y_train)
+
+        # blm是每个epoch都测试，选最好的测试结果
+        # demo暂时是用fit后的结果来预测
+        final_predict_list = mll_clf.predict(x_val)  # (N, q
+        _, final_prob_list = mll_clf.predict_proba(x_val)  # (N, n
+
+        print('result')
+        print(final_predict_list.shape)
+        print(final_predict_list.todense())
+        print(final_prob_list.shape)
+        print(final_prob_list)
+        exit()
+
+        # final_prob_list = final_prob_list[range(final_predict_list.shape[0]), final_predict_list]  # (N,
+        # assert final_target_list == y_val in blm
+        result = mll_performance(y_val, final_predict_list)
+        # result = performance(y_val, final_predict_list, final_prob_list, multi=True, res=True)  # 换成 mll_performance
+        results.append(result)
+
+        cv_labels.append(y_val)
+        cv_prob.append(final_prob_list)
+
+        # 这里为保存概率文件准备
+        predicted_labels[val_index] = np.array(final_predict_list)
+        predicted_prob[val_index] = np.array(final_prob_list)
+
+        count += 1
+        print("Round[%d]: Accuracy = %.3f" % (count, result[0]))
+
+    print('\n')
+    # plot_roc_curve(cv_labels, cv_prob, out_dir)  # 绘制ROC曲线
+    # plot_pr_curve(cv_labels, cv_prob, out_dir)  # 绘制PR曲线
+    #
+    # final_results = np.array(results).mean(axis=0)
+    # print_metric_dict(final_results, ind=False)
+    #
+    # final_results_output(final_results, out_dir, ind=False, multi=multi)  # 将指标写入文件
+    # prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
+
+
 def dl_ind_process(ml, vectors, labels, seq_length_list, ind_vectors, ind_labels, ind_seq_length_list, max_len, out_dir,
                    params_dict):
     criterion = nn.CrossEntropyLoss()
@@ -110,3 +216,4 @@ def dl_ind_process(ml, vectors, labels, seq_length_list, ind_vectors, ind_labels
 
     final_results_output(final_result, out_dir, ind=True, multi=multi)  # 将指标写入文件
     prob_output(final_target_list, final_predict_list, final_prob_list, out_dir)
+

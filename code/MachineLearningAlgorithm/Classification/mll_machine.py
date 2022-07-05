@@ -37,19 +37,12 @@ def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, params_dict):
 
         clf.fit(x_train, y_train)
 
-        # print('fs:')
-        # print(train_index)
-        # print(val_index)
-        # for c in clf.classifiers_:
-        #     print(c.classes_)
-
         y_val_ = clf.predict(x_val)
 
         # 'Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1'
         result = mll_performance(y_val, y_val_)
         results.append(result)
 
-    # exit()
     cv_results = np.array(results).mean(axis=0)
 
     # print('metric: ', metric)

@@ -195,7 +195,48 @@ def read_dl_vec4seq(fixed_len, in_files, return_sp):
         return vec_mat, fixed_seq_len_list
 
 
-def read_base_mat4res(in_file, fixed_len):
+def mll_read_dl_vec4seq(fixed_len, in_files, return_sp):
+    vectors_list = []
+    seq_len_list = []
+    sp_num_list = []
+    # print(in_files)
+    for in_file in in_files:
+        count = 0
+        f = open(in_file, 'r')
+        lines = f.readlines()
+        vectors = []
+        flag = 0
+
+        for line in lines:
+            if len(line.strip()) != 0:
+                if line[0] != '>':
+                    vector = line.strip().split('\t')
+                    vector = list(map(float, vector))
+                    vectors.append(vector)
+                    flag = 1
+                else:
+                    if flag == 1:
+                        seq_len_list.append(len(vectors))
+                        vectors_list.append(np.array(vectors))
+                        vectors = []
+                        count += 1
+                        flag = 0
+
+        f.close()
+        sp_num_list.append(count)
+
+    # print(len(vectors_list))
+    vec_mat, fixed_seq_len_list = fixed_opt(fixed_len, vectors_list, seq_len_list)
+
+    vec_vec = vec_mat.reshape(vec_mat.shape[0], -1)
+    vec_vec = lil_matrix(vec_vec)
+    if return_sp is True:
+        return vec_vec, sp_num_list, fixed_seq_len_list
+    else:
+        return vec_vec, fixed_seq_len_list
+
+
+def mll_read_base_mat4res(in_file, fixed_len):
     vectors_list = []
     seq_len_list = []
     # print(in_file)
