@@ -9,7 +9,7 @@ from skorch import NeuralNetClassifier
 from torch import nn, optim
 from scipy.sparse import issparse
 
-from ..utils.utils_net import TorchNetSeq, FORMER
+from ..utils.utils_net import TorchNetSeq, FORMER, MllBaseTorchNetSeq
 from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
 from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
     mll_final_results_output, mll_prob_output, mll_print_metric_dict
@@ -100,7 +100,7 @@ def get_lp_output_space_dim(y):
     return last_id  # output space {0,1,...,n_class-1}
 
 
-def mll_dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_dir, params_dict):
+def mll_dl_cv_process(ml, vectors, embed_size, labels, seq_length_list, max_len, folds, out_dir, params_dict):
     results = []
     cv_labels = []
     cv_prob = []
@@ -113,13 +113,12 @@ def mll_dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_
     count = 0
     in_dim = vectors.shape[-1]  # N
     multi = True  # 没意义，因为是mll
-    cnt=0
 
     for train_index, val_index in folds:
         x_train, x_val, y_train, y_val, train_length, test_length = get_partition(vectors, labels, seq_length_list,
                                                                                   train_index, val_index)
         num_class = get_lp_output_space_dim(y_train)
-        initialized_torch_model = TorchNetSeq(ml, max_len, None, params_dict).net_type(in_dim, num_class)
+        initialized_torch_model = MllBaseTorchNetSeq(ml, max_len, None, params_dict).net_type(in_dim, num_class, embed_size)
         base_clf = NeuralNetClassifier(
             initialized_torch_model,
             criterion=nn.CrossEntropyLoss(),
@@ -147,8 +146,6 @@ def mll_dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_
         cv_labels.append(y_val.toarray())
         cv_prob.append(final_prob_list.toarray())
 
-        cnt += x_val.get_shape()[0]
-
         # 这里为保存概率文件准备
         predicted_labels[val_index] = final_predict_list.toarray()
         predicted_prob[val_index] = final_prob_list.toarray()
@@ -157,7 +154,6 @@ def mll_dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_
         print("Round[%d]: Accuracy = %.3f" % (count, result[0]))
 
     print('\n')
-    print("cnt", cnt)
     final_results = np.array(results).mean(axis=0)
     mll_print_metric_dict(final_results, ind=False)
     mll_final_results_output(final_results, out_dir, ind=False)  # 将指标写入文件

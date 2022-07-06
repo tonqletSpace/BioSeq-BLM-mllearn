@@ -385,11 +385,7 @@ class TorchNetSeq(object):
         elif self.net == 'CNN':
             out_channels = self.params_dict['out_channels']
             kernel_size = self.params_dict['kernel_size']
-            print('out_channels', out_channels)  # 30
-            print('kernel_size', kernel_size)  # 3
-            print('n_classes', n_classes)  # 12
-            model = MllCNNSeq(in_dim, out_channels, kernel_size, n_classes, self.dropout, embedding_size=4)
-            # model = CNNSeq(in_dim, out_channels, kernel_size, n_classes, self.dropout)
+            model = CNNSeq(in_dim, out_channels, kernel_size, n_classes, self.dropout)
         elif self.net == 'Transformer':
             n_layer = self.params_dict['n_layer']
             d_model = self.params_dict['d_model']
@@ -593,3 +589,54 @@ class TorchNetRes(object):
             test_loss, correct, all_num,
             100. * correct / all_num))
         return predict, target_list, prob_list, test_loss, prob_list_format, predict_list_format
+
+
+class MllBaseTorchNetSeq(object):
+    def __init__(self, net, max_len, criterion, params_dict):
+        super(MllBaseTorchNetSeq, self).__init__()
+        self.net = net
+        self.dropout = params_dict['dropout']
+        self.batch_size = params_dict['batch_size']
+        self.max_len = max_len
+        self.criterion = criterion
+        self.params_dict = params_dict
+
+    def net_type(self, in_dim, n_classes, embedding_size):
+        if self.net == 'LSTM':
+            hidden_dim = self.params_dict['hidden_dim']
+            n_layer = self.params_dict['n_layer']
+
+            model = LSTMSeq(in_dim, hidden_dim, n_layer, n_classes, self.dropout)
+        elif self.net == 'GRU':
+            hidden_dim = self.params_dict['hidden_dim']
+            n_layer = self.params_dict['n_layer']
+            model = GRUSeq(in_dim, hidden_dim, n_layer, n_classes, self.dropout)
+        elif self.net == 'CNN':
+            out_channels = self.params_dict['out_channels']
+            kernel_size = self.params_dict['kernel_size']
+            model = MllCNNSeq(in_dim, out_channels, kernel_size, n_classes, self.dropout, embedding_size)
+        elif self.net == 'Transformer':
+            n_layer = self.params_dict['n_layer']
+            d_model = self.params_dict['d_model']
+            d_ff = self.params_dict['d_ff']
+            n_heads = self.params_dict['n_heads']
+            model = TransformerSeq(self.max_len, in_dim, n_layer, d_model, d_model, d_model,
+                                   d_ff, n_heads, n_classes, self.dropout, False)
+        elif self.net == 'Weighted-Transformer':
+            n_layer = self.params_dict['n_layer']
+            d_model = self.params_dict['d_model']
+            d_ff = self.params_dict['d_ff']
+            n_heads = self.params_dict['n_heads']
+            model = TransformerSeq(self.max_len, in_dim, n_layer, d_model, d_model, d_model,
+                                   d_ff, n_heads, n_classes, self.dropout, True)
+        else:
+            d_model = self.params_dict['d_model']
+            d_ff = self.params_dict['d_ff']
+            n_heads = self.params_dict['n_heads']
+            n_chunk = self.params_dict['n_chunk']
+            rounds = self.params_dict['rounds']
+            bucket_length = self.params_dict['bucket_length']
+            n_layer = self.params_dict['n_layer']
+            model = TransformerSeq(n_classes, self.max_len, d_model, d_ff, n_heads, n_chunk, rounds, bucket_length,
+                                   n_layer, self.dropout)
+        return model

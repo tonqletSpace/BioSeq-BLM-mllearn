@@ -228,12 +228,13 @@ def mll_read_dl_vec4seq(fixed_len, in_files, return_sp):
     # print(len(vectors_list))
     vec_mat, fixed_seq_len_list = fixed_opt(fixed_len, vectors_list, seq_len_list)
 
+    embed_size = vec_mat.shape[-1]
     vec_vec = vec_mat.reshape(vec_mat.shape[0], -1)
     vec_vec = lil_matrix(vec_vec)
     if return_sp is True:
-        return vec_vec, sp_num_list, fixed_seq_len_list
+        return vec_vec, embed_size, sp_num_list, fixed_seq_len_list
     else:
-        return vec_vec, fixed_seq_len_list
+        return vec_vec, embed_size, fixed_seq_len_list
 
 
 def mll_read_base_mat4res(in_file, fixed_len):

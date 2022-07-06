@@ -205,7 +205,7 @@ def mll_dl_fe_process(args):
     # exit()
     # 获取深度特征向量
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
-    vectors, fixed_seq_len_list = mll_read_dl_vec4seq(args.fixed_len, out_files, return_sp=False)
+    vectors, embed_size, fixed_seq_len_list = mll_read_dl_vec4seq(args.fixed_len, out_files, return_sp=False)
 
     # print(vectors.shape, vectors.dtype)
     # exit()
@@ -225,8 +225,8 @@ def mll_dl_fe_process(args):
         args.need_marginal_data = False
         args = mll_prepare4train_seq(args, label_array, dl=True)
         # 构建深度学习分类器
-        mll_dl_cv_process(args.ml, vectors, label_array, fixed_seq_len_list, args.fixed_len, args.folds, args.results_dir,
-                      params_dict)
+        mll_dl_cv_process(args.ml, vectors, embed_size, label_array, fixed_seq_len_list,
+                          args.fixed_len, args.folds, args.results_dir, params_dict)
     else:
         # 独立验证开始
         mll_ind_dl_fe_process(args, vectors, label_array, fixed_seq_len_list, params_dict)
