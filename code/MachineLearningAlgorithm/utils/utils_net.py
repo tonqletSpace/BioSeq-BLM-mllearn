@@ -29,6 +29,26 @@ class LSTMSeq(nn.Module):
         return out
 
 
+class MllLSTMSeq(nn.Module):
+    def __init__(self, in_dim, hidden_dim, n_layer, n_classes, prob=0.6):
+        super(MllLSTMSeq, self).__init__()
+        self.n_layer = n_layer
+        self.embed_size = in_dim
+        self.hidden_dim = hidden_dim // self.embed_size
+        self.rnn = nn.LSTM(self.embed_size, self.hidden_dim, n_layer, batch_first=True, dropout=prob, bidirectional=True)
+        self.classifier = nn.Sequential(
+            nn.ReLU(),
+            nn.Linear(2 * self.hidden_dim, n_classes)
+        )
+
+    def forward(self, x):  # torch.Size([50, 20, 4])  (batch, seq_len, input_size) --> batch_first=True
+        x = x.to(torch.float32).reshape(-1, x.shape[1] // self.embed_size, self.embed_size)
+        out, _ = self.rnn(x)  # [b_size, len, 2*hidden_dim]
+        out = out[:, -1, :]  # [b_size, 2*hidden_dim]
+        out = self.classifier(out)  # [b_size, num_classes]
+        return out
+
+
 # 残基层面的逻辑不一样，应该单拉出来写
 class LSTMRes(nn.Module):
     def __init__(self, in_dim, hidden_dim, n_layer, n_classes, prob=0.5):
@@ -61,6 +81,26 @@ class GRUSeq(nn.Module):
         )
 
     def forward(self, x):  # torch.Size([50, 20, 4])  (batch, seq_len, input_size) --> batch_first=True
+        out, _ = self.rnn(x)  # torch.Size([50, 20, 128])
+        out = out[:, -1, :]  # [b_size, 2*hidden_dim]
+        out = self.classifier(out)  # [b_size, num_classes]
+        return out
+
+
+class MllGRUSeq(nn.Module):
+    def __init__(self, in_dim, hidden_dim, n_layer, n_classes, prob=0.6):
+        super(MllGRUSeq, self).__init__()
+        self.n_layer = n_layer
+        self.embed_size = in_dim
+        self.hidden_dim = hidden_dim // self.embed_size
+        self.rnn = nn.GRU(self.embed_size, self.hidden_dim, n_layer, batch_first=True, dropout=prob, bidirectional=True)
+        self.classifier = nn.Sequential(
+            nn.ReLU(),
+            nn.Linear(2 * self.hidden_dim, n_classes)
+        )
+
+    def forward(self, x):  # torch.Size([50, 20, 4])  (batch, seq_len, input_size) --> batch_first=True
+        x = x.to(torch.float32).reshape(-1, x.shape[1] // self.embed_size, self.embed_size)
         out, _ = self.rnn(x)  # torch.Size([50, 20, 128])
         out = out[:, -1, :]  # [b_size, 2*hidden_dim]
         out = self.classifier(out)  # [b_size, num_classes]
@@ -105,11 +145,8 @@ class CNNSeq(nn.Module):
         )
 
     def forward(self, x):
-        # print('x', x.shape, x.dtype)
         input_data = x.permute(0, 2, 1)
-        # print('input_data', input_data.shape, input_data.dtype)
         output = self.cnn(input_data)
-        # exit()
         output = func.max_pool1d(output, kernel_size=output.shape[2])
         output = output.transpose(1, 2).contiguous()
         output = output.view(output.shape[0], -1)
@@ -119,13 +156,11 @@ class CNNSeq(nn.Module):
 
 
 class MllCNNSeq(nn.Module):
-    def __init__(self, inchannels, outchannels, kernel_size, n_classes, prob, embedding_size):
+    def __init__(self, inchannels, outchannels, kernel_size, n_classes, prob):
         super(MllCNNSeq, self).__init__()
-        print('use MllCNNSeq for current trial!')
-        self.E = embedding_size
+        self.embed_size = inchannels
         padding = (kernel_size - 1) // 2
-        print('in_channels', inchannels // self.E)
-        self.cnn = nn.Conv1d(in_channels=self.E,
+        self.cnn = nn.Conv1d(in_channels=self.embed_size,
                              out_channels=outchannels,
                              kernel_size=kernel_size,
                              padding=padding,
@@ -138,12 +173,8 @@ class MllCNNSeq(nn.Module):
         )
 
     def forward(self, x):
-        x = x.to(torch.float32)
-        # print('x', x.shape, x.dtype)
-        input_data = x.reshape((-1, self.E, x.shape[1]//self.E))   # N, in_channels, L
-        # input_data = x.permute(0, 2, 1)  blm里的要删掉
-        # print('input_data', input_data.shape, input_data.dtype)
-        # exit()
+        x = x.to(torch.float32).reshape(-1, x.shape[1]//self.embed_size, self.embed_size)   # N, L, in_channels(embed_sz)
+        input_data = x.permute(0, 2, 1)
         output = self.cnn(input_data)
         output = func.max_pool1d(output, kernel_size=output.shape[2])
         output = output.transpose(1, 2).contiguous()
@@ -601,20 +632,19 @@ class MllBaseTorchNetSeq(object):
         self.criterion = criterion
         self.params_dict = params_dict
 
-    def net_type(self, in_dim, n_classes, embedding_size):
+    def net_type(self, in_dim, n_classes):
         if self.net == 'LSTM':
             hidden_dim = self.params_dict['hidden_dim']
             n_layer = self.params_dict['n_layer']
-
-            model = LSTMSeq(in_dim, hidden_dim, n_layer, n_classes, self.dropout)
+            model = MllLSTMSeq(in_dim, hidden_dim, n_layer, n_classes, self.dropout)
         elif self.net == 'GRU':
             hidden_dim = self.params_dict['hidden_dim']
             n_layer = self.params_dict['n_layer']
-            model = GRUSeq(in_dim, hidden_dim, n_layer, n_classes, self.dropout)
+            model = MllGRUSeq(in_dim, hidden_dim, n_layer, n_classes, self.dropout)
         elif self.net == 'CNN':
             out_channels = self.params_dict['out_channels']
             kernel_size = self.params_dict['kernel_size']
-            model = MllCNNSeq(in_dim, out_channels, kernel_size, n_classes, self.dropout, embedding_size)
+            model = MllCNNSeq(in_dim, out_channels, kernel_size, n_classes, self.dropout)
         elif self.net == 'Transformer':
             n_layer = self.params_dict['n_layer']
             d_model = self.params_dict['d_model']

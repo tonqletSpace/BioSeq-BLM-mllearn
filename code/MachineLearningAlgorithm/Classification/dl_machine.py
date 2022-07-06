@@ -111,14 +111,14 @@ def mll_dl_cv_process(ml, vectors, embed_size, labels, seq_length_list, max_len,
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 
     count = 0
-    in_dim = vectors.shape[-1]  # N
     multi = True  # 没意义，因为是mll
 
     for train_index, val_index in folds:
         x_train, x_val, y_train, y_val, train_length, test_length = get_partition(vectors, labels, seq_length_list,
                                                                                   train_index, val_index)
         num_class = get_lp_output_space_dim(y_train)
-        initialized_torch_model = MllBaseTorchNetSeq(ml, max_len, None, params_dict).net_type(in_dim, num_class, embed_size)
+        initialized_torch_model = MllBaseTorchNetSeq(
+            ml, max_len, None, params_dict).net_type(embed_size, num_class)
         base_clf = NeuralNetClassifier(
             initialized_torch_model,
             criterion=nn.CrossEntropyLoss(),
