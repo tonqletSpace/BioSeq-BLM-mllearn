@@ -7,11 +7,13 @@ from sklearn.utils.validation import check_array, check_is_fitted
 from skmultilearn.problem_transform import LabelPowerset
 from skorch import NeuralNetClassifier
 from torch import nn, optim
+from scipy.sparse import issparse
 
 from ..utils.utils_net import TorchNetSeq, FORMER
 from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
 from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
-    mll_final_results_output, mll_prob_output
+    mll_final_results_output, mll_prob_output, mll_print_metric_dict
+from ..utils.utils_mll_lp import BLMLabelPowerset
 
 
 def get_partition(feature, target, length, train_index, val_index):
@@ -104,27 +106,19 @@ def mll_dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_
     cv_prob = []
 
     predicted_labels = np.zeros(labels.get_shape())
-    predicted_prob = np.zeros(labels.get_shape()[0])
+    predicted_prob = np.zeros(labels.get_shape())
 
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
 
     count = 0
     in_dim = vectors.shape[-1]  # N
-    # num_class = len(set(labels.todense()))
-    # multi = True if num_class > 2 else False
-    multi = True
+    multi = True  # 没意义，因为是mll
+    cnt=0
 
     for train_index, val_index in folds:
-        print(vectors.shape)
-        print(labels.shape)
-        # exit()
         x_train, x_val, y_train, y_val, train_length, test_length = get_partition(vectors, labels, seq_length_list,
                                                                                   train_index, val_index)
-        # x_train = x_train.astype(np.float32)
-        # x_val = x_val.astype(np.float32)
-
         num_class = get_lp_output_space_dim(y_train)
-
         initialized_torch_model = TorchNetSeq(ml, max_len, None, params_dict).net_type(in_dim, num_class)
         base_clf = NeuralNetClassifier(
             initialized_torch_model,
@@ -134,52 +128,40 @@ def mll_dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_
             optimizer__lr=params_dict['lr'],
             device=DEVICE,
             max_epochs=params_dict['epochs'],
-            iterator_train__shuffle=True
+            iterator_train__shuffle=True,
+            train_split=False
         )
 
-        # from skmultilearn.problem_transform import LabelPowerset
-        from ..utils.utils_mll_lp import BLMLabelPowerset
         mll_clf = BLMLabelPowerset(classifier=base_clf, require_dense=[True, True])
-        # mll_clf = base_clf
-
-        print("mll_clf._label_count: {}".format(num_class).center(100, '*'))
-
         mll_clf.fit(x_train, y_train)
 
         # blm是每个epoch都测试，选最好的测试结果
         # demo暂时是用fit后的结果来预测
         final_predict_list = mll_clf.predict(x_val)  # (N, q
-        _, final_prob_list = mll_clf.predict_proba(x_val)  # (N, n
+        final_prob_list, _ = mll_clf.predict_proba(x_val)  # (N, n
 
-        from scipy.sparse import issparse
-        assert issparse(final_predict_list) and not issparse(final_prob_list) and issparse(y_val)
+        assert issparse(final_predict_list) and issparse(final_prob_list) and issparse(y_val)
         result = mll_performance(y_val, final_predict_list)
-
-        # result = performance(y_val, final_predict_list, final_prob_list, multi=True, res=True)  # 换成 mll_performance
         results.append(result)
 
         cv_labels.append(y_val.toarray())
-        cv_prob.append(final_prob_list)
+        cv_prob.append(final_prob_list.toarray())
+
+        cnt += x_val.get_shape()[0]
 
         # 这里为保存概率文件准备
-        # predicted_labels[val_index] = np.array(final_predict_list)
-        print("final_predict_list.shape", final_predict_list.shape)
-        # exit()
         predicted_labels[val_index] = final_predict_list.toarray()
-        predicted_prob[val_index] = final_prob_list
+        predicted_prob[val_index] = final_prob_list.toarray()
 
         count += 1
         print("Round[%d]: Accuracy = %.3f" % (count, result[0]))
 
     print('\n')
-    plot_roc_curve(cv_labels, cv_prob, out_dir)  # 绘制ROC曲线
-    plot_pr_curve(cv_labels, cv_prob, out_dir)  # 绘制PR曲线
-
+    print("cnt", cnt)
     final_results = np.array(results).mean(axis=0)
-    print_metric_dict(final_results, ind=False)
+    mll_print_metric_dict(final_results, ind=False)
     mll_final_results_output(final_results, out_dir, ind=False)  # 将指标写入文件
 
-    # prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
     mll_prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
 
 

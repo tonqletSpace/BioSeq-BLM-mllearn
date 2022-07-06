@@ -53,7 +53,7 @@ def mll_marginal_check(label_matrix, args):
 
         return folds
     else:
-        return construct_partition2two(label_matrix[:-2], args.folds_num, True)
+        return construct_partition2two(label_matrix, args.folds_num, True)
 
 
 def sampling(mode, x_train, y_train):
