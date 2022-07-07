@@ -319,7 +319,6 @@ def batch_seq(data):
         inputs.append(torch.FloatTensor(feature).unsqueeze(0))  # [fixed_Len, fea_dim]
         # print(length)
         inputs_length.append(torch.LongTensor(np.array(length, dtype=np.int)))  # [1]
-        # print(inputs_length)
         mask = sequence_mask(torch.LongTensor(np.array(length, dtype=np.int)), max_len)
         input_mask.append(torch.FloatTensor(mask))  # [1, max_len]
         targets.append(torch.LongTensor(np.array([target], dtype=np.int)))  # [1]
