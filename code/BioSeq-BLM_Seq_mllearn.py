@@ -176,14 +176,6 @@ def mll_dl_fe_process(args):
     # 控制序列的固定长度(仅仅需要在基准数据集上操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
 
-    # print(args.fixed_len)
-    # print(len(seq_len_list))
-    # print(seq_len_list[:10])
-    # print()
-    # print(label_array.shape)
-    # print(label_array[-10:].todense())
-    # exit()
-
     all_params_list_dict = {}
     all_params_list_dict = dl_params_check(args, all_params_list_dict)
     # 对每个mode的words和method的参数进行检查
@@ -200,9 +192,7 @@ def mll_dl_fe_process(args):
     # exit()
     # 深度特征向量提取
     # 深度特征向量提取
-    # one_seq_fe_process(args, input_one_file, label_array, out_files, sp_num_list, False, **params_dict)
     mll_one_seq_fe_process(args, input_one_file, label_array, out_files, **params_dict)
-    # exit()
     # 获取深度特征向量
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
     vectors, embed_size, fixed_seq_len_list = mll_read_dl_vec4seq(args.fixed_len, out_files, return_sp=False)

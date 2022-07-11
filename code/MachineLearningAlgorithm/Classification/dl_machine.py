@@ -9,7 +9,7 @@ from skorch import NeuralNetClassifier
 from torch import nn, optim
 from scipy.sparse import issparse
 
-from ..utils.utils_net import TorchNetSeq, FORMER, MllBaseTorchNetSeq
+from ..utils.utils_net import TorchNetSeq, FORMER, MllBaseTorchNetSeq, sequence_mask, TrmDataset
 from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
 from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
     mll_final_results_output, mll_prob_output, mll_print_metric_dict
@@ -116,6 +116,7 @@ def mll_dl_cv_process(ml, vectors, embed_size, labels, seq_length_list, max_len,
     for train_index, val_index in folds:
         x_train, x_val, y_train, y_val, train_length, test_length = get_partition(vectors, labels, seq_length_list,
                                                                                   train_index, val_index)
+        # x_train, x_test = x_transform(ml, max_len, x_train, train_length, x_val, test_length)
         num_class = get_lp_output_space_dim(y_train)
         initialized_torch_model = MllBaseTorchNetSeq(
             ml, max_len, None, params_dict).net_type(embed_size, num_class)
@@ -132,12 +133,17 @@ def mll_dl_cv_process(ml, vectors, embed_size, labels, seq_length_list, max_len,
         )
 
         mll_clf = BLMLabelPowerset(classifier=base_clf, require_dense=[True, True])
-        mll_clf.fit(x_train, y_train)
 
-        # blm是每个epoch都测试，选最好的测试结果
-        # demo暂时是用fit后的结果来预测
-        final_predict_list = mll_clf.predict(x_val)  # (N, q
-        final_prob_list, _ = mll_clf.predict_proba(x_val)  # (N, n
+        if ml not in FORMER:
+            mll_clf.fit(x_train, y_train)
+            # blm是每个epoch都测试，选最好的测试结果
+            # demo暂时是用fit后的结果来预测
+            final_predict_list = mll_clf.predict(x_val)  # (N, q
+            final_prob_list, _ = mll_clf.predict_proba(x_val)  # (N, n
+        else:
+            mll_clf.fit(TrmDataset(x_train, y_train, train_length, max_len))
+            final_predict_list = mll_clf.predict(TrmDataset(x_val, None, test_length, max_len))  # (N, q
+            final_prob_list, _ = mll_clf.predict_proba(TrmDataset(x_val, None, test_length, max_len))  # (N, n
 
         assert issparse(final_predict_list) and issparse(final_prob_list) and issparse(y_val)
         result = mll_performance(y_val, final_predict_list)

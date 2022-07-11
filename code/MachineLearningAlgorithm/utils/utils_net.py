@@ -225,6 +225,40 @@ class TransformerSeq(nn.Module):
 
     def forward(self, inputs, seq_mask, mask=False, return_attn=False):
         # inputs = inputs.view(inputs.size()[0], -1)
+        # print("inputs", inputs.shape)
+        # print("seq_mask", seq_mask.shape)
+        # print(seq_mask)
+        # exit()
+        output, _ = self.transformer(inputs, seq_mask, mask, return_attn)
+        # 注意这里的self-attention不是取最后一个，因为self-attention和LSTM其实不太一样，这里直接将self-attention转变大小考虑了，因此初始化时多了一个fixed_len参数
+        output = output.view(output.shape[0], -1)
+        # print('经过transformer模型的大小', output.shape)
+        output = self.classifier(output)
+        # print('经过分类模型的大小', output.shape)
+        return output
+
+
+class MllTransformerSeq(nn.Module):
+    def __init__(self, fixed_len, feature_dim, n_layers, d_k, d_v, d_model, d_ff, n_heads, n_classes, dropout=0.1,
+                 weighted=False):
+        super(MllTransformerSeq, self).__init__()
+        self.embed_size = feature_dim
+        self.transformer = Transformer(feature_dim, n_layers, d_k, d_v, d_model, d_ff, n_heads, dropout, weighted)
+        self.classifier = nn.Sequential(
+            nn.Linear(d_model * fixed_len, d_model),
+            nn.ReLU(),
+            nn.Linear(d_model, n_classes)
+        )
+
+    def forward(self, inputs, seq_mask, mask=False, return_attn=False):
+        # print("inputs", inputs.shape)
+        # print("seq_mask", seq_mask.shape)
+        # print("seq_mask", seq_mask.data[:10])
+        # exit()
+        inputs = inputs.to(torch.float32).reshape(-1, inputs.shape[1]//self.embed_size, self.embed_size)
+        # print("inputs", inputs.shape)
+        # exit()
+        # inputs = inputs.view(inputs.size()[0], -1)
         output, _ = self.transformer(inputs, seq_mask, mask, return_attn)
         # 注意这里的self-attention不是取最后一个，因为self-attention和LSTM其实不太一样，这里直接将self-attention转变大小考虑了，因此初始化时多了一个fixed_len参数
         output = output.view(output.shape[0], -1)
@@ -649,8 +683,8 @@ class MllBaseTorchNetSeq(object):
             d_model = self.params_dict['d_model']
             d_ff = self.params_dict['d_ff']
             n_heads = self.params_dict['n_heads']
-            model = TransformerSeq(self.max_len, in_dim, n_layer, d_model, d_model, d_model,
-                                   d_ff, n_heads, n_classes, self.dropout, False)
+            model = MllTransformerSeq(self.max_len, in_dim, n_layer, d_model, d_model,
+                                      d_model, d_ff, n_heads, n_classes, self.dropout, False)
         elif self.net == 'Weighted-Transformer':
             n_layer = self.params_dict['n_layer']
             d_model = self.params_dict['d_model']
@@ -669,3 +703,37 @@ class MllBaseTorchNetSeq(object):
             model = TransformerSeq(n_classes, self.max_len, d_model, d_ff, n_heads, n_chunk, rounds, bucket_length,
                                    n_layer, self.dropout)
         return model
+
+
+class TrmDataset(Dataset):
+    def __init__(self, feature, target, length, max_len):
+        self.feature = feature
+        self.target = target
+        self.length = length
+        self.max_len = max_len
+
+    def __getitem__(self, index):
+        seq_feat = torch.FloatTensor(self.feature[index:index+1]).squeeze(0)
+        # print(torch.LongTensor(np.array(self.length[index:index+1], dtype=np.int)).shape)
+        # print(np.array(self.length[index:index+1], dtype=np.int))
+        # exit()
+
+        mask = sequence_mask(torch.LongTensor(np.array(self.length[index:index+1], dtype=np.int)), self.max_len)
+        seq_mask = torch.FloatTensor(mask).squeeze(0)
+
+        x_dict = {'inputs': seq_feat, 'seq_mask': seq_mask}
+
+        # print(seq_feat.shape)
+        # print(seq_mask.shape)
+        # print(seq_mask.data[:10)
+        # exit()
+        if self.target is None:
+            # print(x_dict.keys())
+            # print(x_dict['inputs'].shape, x_dict['seq_mask'].shape)
+            # exit()
+            return x_dict, -1
+        else:
+            return x_dict, self.target[index]
+
+    def __len__(self):
+        return len(self.feature)
