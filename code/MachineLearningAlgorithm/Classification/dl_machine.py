@@ -13,7 +13,7 @@ from ..utils.utils_net import TorchNetSeq, FORMER, MllBaseTorchNetSeq, sequence_
 from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
 from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
     mll_final_results_output, mll_prob_output, mll_print_metric_dict
-from ..utils.utils_mll_lp import BLMLabelPowerset
+from ..utils.utils_mll import BLMLabelPowerset
 
 
 def get_partition(feature, target, length, train_index, val_index):
@@ -116,7 +116,6 @@ def mll_dl_cv_process(ml, vectors, embed_size, labels, seq_length_list, max_len,
     for train_index, val_index in folds:
         x_train, x_val, y_train, y_val, train_length, test_length = get_partition(vectors, labels, seq_length_list,
                                                                                   train_index, val_index)
-        # x_train, x_test = x_transform(ml, max_len, x_train, train_length, x_val, test_length)
         num_class = get_lp_output_space_dim(y_train)
         initialized_torch_model = MllBaseTorchNetSeq(
             ml, max_len, None, params_dict).net_type(embed_size, num_class)
