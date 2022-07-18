@@ -48,7 +48,7 @@ def mll_marginal_check(label_matrix, args):
         folds = []
         for i in range(args.folds_num):
             test_index = raw_folds[i][1]
-            train_index = np.append(raw_folds[i][0], [n - 2, n - 1])
+            train_index = np.append(raw_folds[i][0], [n - 2, n - 1])  # marginal_data index
             folds.append((train_index, test_index))
 
         return folds

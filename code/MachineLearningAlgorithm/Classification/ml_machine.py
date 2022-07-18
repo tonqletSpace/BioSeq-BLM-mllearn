@@ -182,7 +182,7 @@ def mll_ml_cv_results(mll, marginal_data, ml, vectors, labels, folds, out_dir, p
     final_results = np.array(results).mean(axis=0)
 
     mll_final_results_output(final_results, out_dir, ind=False)  # 将指标写入文件
-    mll_prob_output(labels.toarray(), predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
+    mll_prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
 
     # 利用整个数据集训练并保存模型
     model = get_mll_ml_model(mll, ml, params_dict)

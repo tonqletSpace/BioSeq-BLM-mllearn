@@ -162,12 +162,12 @@ def one_seq_fe_process(args, input_one_file, labels, vec_files, sample_num_list,
 def mll_one_seq_fe_process(args, input_one_file, labels, vec_files, **params_dict):
     print_fe_dict(params_dict)  # 输出特征提取参数详细信息
 
-    sample_num_list = [labels.get_shape()[0]]  # 可以复用blm对二分类的特征提取
-    args.dl = 1  # deep learning + mll 也使用扁平数据
-    print('input_one_file', input_one_file)
-    print("vec_files", vec_files)
-    print("labels", labels.get_shape())
-    # exit()
+    # data长度，复用blm对二分类的特征提取
+    if not args.need_marginal_data:
+        sample_num_list = [labels.get_shape()[0]]
+    else:
+        sample_num_list = [labels.get_shape()[0] - 2]
+
     if args.mode == 'OHE':
         from FeatureExtractionMode.OHE.OHE4vec import ohe2seq_vec, ohe2seq_mat
         for out_file in vec_files:

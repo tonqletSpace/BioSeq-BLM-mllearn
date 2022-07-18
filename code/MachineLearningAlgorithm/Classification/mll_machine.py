@@ -38,6 +38,8 @@ def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, params_dict):
         clf.fit(x_train, y_train)
 
         y_val_ = clf.predict(x_val)
+        # print("y_val_\n", y_val_.toarray())
+        # exit()
 
         # 'Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1'
         result = mll_performance(y_val, y_val_)

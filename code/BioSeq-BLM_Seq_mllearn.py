@@ -46,7 +46,7 @@ def mll_ml_fe_process(args):
     # 统计样本数目和序列长度
     seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
     # 生成标签矩阵
-    label_array, args.need_marginal_data = mll_gen_label_matrix(seq_label_list)
+    label_array, args.need_marginal_data = mll_gen_label_matrix(seq_label_list, args.mll)
     # print('label_array.get_shape()', label_array.get_shape())
     # 控制序列的固定长度(只需要操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
@@ -92,7 +92,7 @@ def mll_ml_fe_process(args):
         # 注意多进程计算的debug
         # params_dict_list_pro.append(
         #     mll_one_ml_fe_process(args, input_one_file, label_array, vec_files, args.folds, params_dict))
-        if i == 1:
+        if i == 2:
             break
         params_dict_list_pro.append(pool.apply_async(
             mll_one_ml_fe_process, (args, input_one_file, label_array, vec_files, args.folds, params_dict)))
@@ -171,7 +171,7 @@ def mll_dl_fe_process(args):
     # 统计样本数目和序列长度
     seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
     # 生成标签数组
-    label_array, args.need_marginal_data = mll_gen_label_matrix(seq_label_list, need_marginal_data=False)
+    label_array, args.need_marginal_data = mll_gen_label_matrix(seq_label_list, args.mll)
 
     # 控制序列的固定长度(仅仅需要在基准数据集上操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
@@ -189,33 +189,31 @@ def mll_dl_fe_process(args):
     # print(all_params_list_dict)
     # print('params_dict', params_dict)
     # print("out_files", out_files)
+    print("label_array.shape", label_array.shape)
     # exit()
     # 深度特征向量提取
     # 深度特征向量提取
     mll_one_seq_fe_process(args, input_one_file, label_array, out_files, **params_dict)
+    # exit()
     # 获取深度特征向量
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
-    vectors, embed_size, fixed_seq_len_list = mll_read_dl_vec4seq(args.fixed_len, out_files, return_sp=False)
+    vectors, embed_size, fixed_seq_len_list = mll_read_dl_vec4seq(args, args.fixed_len, out_files)
 
     # print(vectors.shape, vectors.dtype)
-    # exit()
-    # print('vectors')
-    # print(vectors.shape)  # (N, L*E)、(32, fixed_len * 4)
-    # print(vectors[:3].todense()[:6])
-    # print('label_array')
-    # print(label_array.shape)
-    # print(label_array[:3])  # sparse matrix of multi-label
-    # print(label_array[:3].todense())
-    # print('fixed_seq_len_list', fixed_seq_len_list)  # (N,) of fixed_len * 4
+    print("vectors.shape", vectors.shape)  # (N, L*E)、(32, fixed_len * 4)
+    print("label_array.shape", label_array.shape)
+    print('fixed_seq_len_list', len(fixed_seq_len_list))  # (N,) of fixed_len * 4
     # exit()
 
     # 深度学习的独立测试和交叉验证分开
     if args.ind_seq_file is None:
         # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
-        args.need_marginal_data = False
+        # args.need_marginal_data = False
+        # print("args.need_marginal_data", args.need_marginal_data)
+
         args = mll_prepare4train_seq(args, label_array, dl=True)
         # 构建深度学习分类器
-        mll_dl_cv_process(args.ml, vectors, embed_size, label_array, fixed_seq_len_list,
+        mll_dl_cv_process(args.mll, args.ml, vectors, embed_size, label_array, fixed_seq_len_list,
                           args.fixed_len, args.folds, args.results_dir, params_dict)
     else:
         # 独立验证开始

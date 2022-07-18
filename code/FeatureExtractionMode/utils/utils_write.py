@@ -100,17 +100,7 @@ def res_vectors2file(vec, out_format, out_file):
 
 
 def dl_vec2file(res_mats, sample_num_list, out_files):
-    # print('res_mats')
-    # print(res_mats[:3, :5])
-    # print('sample_num_list')
-    # print(sample_num_list[:3])
-    # print("out_files")
-    # print(out_files)
-    # exit()
     count = 0
-    # print(sample_num_list)
-    # print(len(res_mats))
-    # print(len(res_mats[0]))
     for out_file in out_files:
         with open(out_file, 'w') as f:
             for i in range(sample_num_list[count]):
@@ -307,7 +297,14 @@ def gen_label_array(sp_num_list, label_list):
     return np.array(labels)
 
 
-def mll_gen_label_matrix(seq_label_list, need_marginal_data=True):
+def mll_gen_label_matrix(seq_label_list, mll):
+    """
+    need_marginal_data 是由方法和数据共同决定的
+    """
+    need_marginal_data = False
+    if mll in ['BR', 'CC']:
+        need_marginal_data = True
+
     from scipy.sparse import lil_matrix
     seq_label_matrix = []  # (N, q)
     for label in seq_label_list:
@@ -333,13 +330,14 @@ def mll_gen_label_matrix(seq_label_list, need_marginal_data=True):
             break
         tot += cnt
 
-    if tot != 2*q and need_marginal_data:
+    need_marginal_data = tot != 2 * q and need_marginal_data
+    if need_marginal_data:
         seq_label_matrix.append(np.ones(q, np.int32).tolist())
         seq_label_matrix.append(np.zeros(q, np.int32).tolist())
         print('Auxiliary labels are provided for mll task. '
               'For each dimension of label, as least two distinct samples are needed.')
 
-    return lil_matrix(seq_label_matrix), tot != 2*q and need_marginal_data
+    return lil_matrix(seq_label_matrix), need_marginal_data
 
 
 def fixed_len_control(seq_len_list, fixed_len):
