@@ -173,6 +173,8 @@ class MllCNNSeq(nn.Module):
         )
 
     def forward(self, x):
+        print("x.shape", x.shape)
+        # exit()
         x = x.to(torch.float32).reshape(-1, x.shape[1]//self.embed_size, self.embed_size)   # N, L, in_channels(embed_sz)
         input_data = x.permute(0, 2, 1)
         output = self.cnn(input_data)
