@@ -208,8 +208,6 @@ def mll_dl_fe_process(args):
     # 深度学习的独立测试和交叉验证分开
     if args.ind_seq_file is None:
         # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
-        # args.need_marginal_data = False
-        # print("args.need_marginal_data", args.need_marginal_data)
 
         args = mll_prepare4train_seq(args, label_array, dl=True)
         # 构建深度学习分类器

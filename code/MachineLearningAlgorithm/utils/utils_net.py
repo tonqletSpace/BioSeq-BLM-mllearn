@@ -690,18 +690,18 @@ class MllBaseTorchNetSeq(object):
             d_model = self.params_dict['d_model']
             d_ff = self.params_dict['d_ff']
             n_heads = self.params_dict['n_heads']
-            model = TransformerSeq(self.max_len, in_dim, n_layer, d_model, d_model, d_model,
-                                   d_ff, n_heads, n_classes, self.dropout, True)
+            model = MllTransformerSeq(self.max_len, in_dim, n_layer, d_model, d_model,
+                                      d_model, d_ff, n_heads, n_classes, self.dropout, True)
         else:
+            n_layer = self.params_dict['n_layer']
             d_model = self.params_dict['d_model']
             d_ff = self.params_dict['d_ff']
             n_heads = self.params_dict['n_heads']
             n_chunk = self.params_dict['n_chunk']
             rounds = self.params_dict['rounds']
             bucket_length = self.params_dict['bucket_length']
-            n_layer = self.params_dict['n_layer']
-            model = TransformerSeq(n_classes, self.max_len, d_model, d_ff, n_heads, n_chunk, rounds, bucket_length,
-                                   n_layer, self.dropout)
+            model = MllTransformerSeq(n_classes, self.max_len, d_model, d_ff, n_heads,
+                                      n_chunk, rounds, bucket_length, n_layer, self.dropout)
         return model
 
 
