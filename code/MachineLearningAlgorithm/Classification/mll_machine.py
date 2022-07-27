@@ -1,3 +1,4 @@
+from skmultilearn.adapt import MLARAM, BRkNNaClassifier, MLkNN, BRkNNbClassifier
 from skmultilearn.problem_transform import BinaryRelevance, ClassifierChain, LabelPowerset
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
@@ -9,9 +10,12 @@ import numpy as np
 # from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
 # from ..utils.utils_math import sampling
 # from ..utils.utils_read import FormatRead
-from scipy.sparse import lil_matrix
+from scipy.sparse import lil_matrix, issparse
 
 from ..utils.utils_results import mll_performance
+
+from warnings import simplefilter
+simplefilter(action='ignore', category=FutureWarning)
 
 Metric_List = ['Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1']
 
@@ -19,38 +23,36 @@ Metric_List = ['Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1']
 def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, params_dict):
     assert isinstance(vectors, lil_matrix), 'error'
 
+    if ml:
+        print_len = 40
+        if ml == 'SVM':
+            temp_str1 = '  cost = 2 ** ' + str(params_dict['cost']) + ' | ' + 'gamma = 2 ** ' + \
+                        str(params_dict['gamma']) + '  '
+        else:
+            temp_str1 = '  tree = ' + str(params_dict['tree']) + '  '
+        print(temp_str1.center(print_len, '+'))
+
     print_len = 40
-    if ml == 'SVM':
-        temp_str1 = '  cost = 2 ** ' + str(params_dict['cost']) + ' | ' + 'gamma = 2 ** ' + \
-                    str(params_dict['gamma']) + '  '
-    else:
-        temp_str1 = '  tree = ' + str(params_dict['tree']) + '  '
-    print(temp_str1.center(print_len, '+'))
+    print(str(params_dict).center(print_len, '+'))
 
     results = []
     for train_index, val_index in folds:
-        x_train, y_train, x_val, y_val = get_partition(vectors, labels, train_index, val_index)
+        # x_train, y_train, x_val, y_val =
+        x_train, y_train, x_val, y_val = mll_sparse_check(mll, *get_partition(vectors, labels, train_index, val_index))
+
         # if sp != 'none':
         #     x_train, y_train = sampling(sp, x_train, y_train)
 
         clf = get_mll_ml_model(mll, ml, params_dict)
-
         clf.fit(x_train, y_train)
-
-        y_val_ = clf.predict(x_val)
-        # print("y_val_\n", y_val_.toarray())
-        # exit()
-
+        y_val_ = mll_result_sparse_check(mll, clf.predict(x_val))
         # 'Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1'
         result = mll_performance(y_val, y_val_)
         results.append(result)
 
     cv_results = np.array(results).mean(axis=0)
 
-    # print('metric: ', metric)
-    # print('cv_results: ', cv_results)
-    params_dict['metric'] = cv_results[metric]  # this is metric_index
-    # print('params_dict: ', params_dict)
+    params_dict['metric'] = cv_results[metric]
     temp_str2 = '  metric value: ' + Metric_List[metric] + ' = ' + '%.3f  ' % cv_results[metric]
     print(temp_str2.center(print_len, '*'))
     # print('\n')
@@ -69,17 +71,21 @@ def get_partition(vectors, labels, train_index, val_index):
 
 
 def get_mll_ml_model(mll, ml, params_dict):
-    if mll == 'BR':
-        return BinaryRelevance(classifier=get_ml_model(ml, params_dict), require_dense=[False, True])
-    elif mll == 'CC':
-        return ClassifierChain(classifier=get_ml_model(ml, params_dict), require_dense=[False, True])
-    elif mll == 'LP':
-        return LabelPowerset(classifier=get_ml_model(ml, params_dict), require_dense=[False, True])
-    else:
-        raise ValueError('mll method err')
+    if ml:
+        if mll == 'BR':
+            return BinaryRelevance(classifier=ml_model_factory(ml, params_dict), require_dense=[True, True])
+        elif mll == 'CC':
+            return ClassifierChain(classifier=ml_model_factory(ml, params_dict), require_dense=[True, True])
+        elif mll == 'LP':
+            return LabelPowerset(classifier=ml_model_factory(ml, params_dict), require_dense=[True, True])
+        else:
+            raise ValueError('mll ml method err')
+
+    # ml is None, no ml base clf
+    return mll_model_factory(mll, params_dict)
 
 
-def get_ml_model(ml, params_dict):
+def ml_model_factory(ml, params_dict):
     if ml == 'SVM':
         return svm.SVC(C=2 ** params_dict['cost'], gamma=2 ** params_dict['gamma'], probability=True)
     elif ml == 'RF':
@@ -87,6 +93,35 @@ def get_ml_model(ml, params_dict):
     else:
         raise ValueError('ml method err')
 
+
+def mll_model_factory(mll, params_dict):
+    if mll == 'MLkNN':
+        return MLkNN(k=params_dict['mll_kNN_k'],
+                     s=params_dict['MLkNN_s'],
+                     ignore_first_neighbours=params_dict['MLkNN_ignore_first_neighbours'])
+    elif mll == 'BRkNNaClassifier':
+        return BRkNNaClassifier(k=params_dict['mll_kNN_k'])
+    elif mll == 'BRkNNbClassifier':
+        return BRkNNbClassifier(k=params_dict['mll_kNN_k'])
+    elif mll == 'MLARAM':
+        return MLARAM(vigilance=params_dict['MLARAM_vigilance'],
+                      threshold=params_dict['MLARAM_threshold'],
+                      neurons=params_dict['MLARAM_neurons'] if 'MLARAM_neurons' in params_dict.keys()
+                      else None)
+    else:
+        raise ValueError('mll method err')
+
+
+def mll_sparse_check(mll, x_train, y_train, x_val, y_val):
+    if mll in ['MLARAM']:
+        return x_train.tocsc(), y_train.tocsc(), x_val.tocsc(), y_val.tocsc()
+
+    return x_train, y_train, x_val, y_val
+
+
+def mll_result_sparse_check(mll, res):
+    if mll in ['MLARAM'] and not issparse(res):
+        return lil_matrix(res)
 
 # def get_label_inducing_data(vectors):
 #     e, q = vectors.shape[1], 1

@@ -631,7 +631,9 @@ class TorchNetRes(object):
 
             test_loss += self.criterion(output, target, inputs_length, input_mask)
             output = func.softmax(output, dim=-1)
+            print("output.shape after softmax", output.shape)  # rescale to prob
             predict_label = torch.max(output, dim=-1)[1]
+            # (N, L) of label indicator
             num = 0
             for i in range(len(input_mask)):
                 pred_list = []

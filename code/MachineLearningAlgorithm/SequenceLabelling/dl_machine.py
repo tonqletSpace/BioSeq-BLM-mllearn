@@ -29,17 +29,24 @@ def dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_dir,
 
     # predicted_labels = np.zeros(len(seq_length_list))
     # predicted_prob = np.zeros(len(seq_length_list))
-
+    print("vectors.shape", vectors.shape)
+    print("labels.shape", labels.shape)
+    # exit()
     count = 0
     criterion = criterion_func
     in_dim = vectors.shape[-1]
+    print('in MachineLearningAlgorithm.SequenceLabelling.dl_machine\n', 'num_class=2 fixed')
     num_class = 2
     multi = True if num_class > 2 else False
+
+    eval_cnt = 0
     for train_index, val_index in folds:
         x_train, x_val, y_train, y_val, train_length, test_length = get_partition(vectors, labels, seq_length_list,
                                                                                   train_index, val_index)
-        # print(y_train)
-        # print(y_val)
+        # print("x_train", x_train.shape)
+        # print("y_train", y_train.shape)
+        # print("x_val", x_val.shape)
+        # print("y_val", y_val.shape)
         # exit()
         model = TorchNetRes(ml, max_len, criterion, params_dict).net_type(in_dim, num_class)
         optimizer = optim.Adam(model.parameters(), lr=params_dict['lr'])
@@ -71,6 +78,7 @@ def dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_dir,
         all_true_labels.extend(final_target_list)
         all_pre_labels.extend(final_predict_list)
         all_prob.extend(final_predict_list)
+        eval_cnt += len(final_predict_list)  # 15241
 
         # 这里为保存概率文件准备
         count += 1
@@ -79,6 +87,11 @@ def dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_dir,
     # plot_roc_curve(cv_labels, cv_prob, out_dir)  # 绘制ROC曲线
     # plot_pr_curve(cv_labels, cv_prob, out_dir)  # 绘制PR曲线
 
+    print("cv_labels", len(cv_labels))
+    print("cv_prob", len(cv_prob))
+    # print("result", len(result))
+    print("eval_cnt", eval_cnt)
+    exit()
     final_results = np.array(results).mean(axis=0)
     # table_metric(final_results, True)
     print_metric_dict(final_results, ind=False)

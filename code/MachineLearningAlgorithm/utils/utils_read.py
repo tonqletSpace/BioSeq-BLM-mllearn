@@ -238,7 +238,7 @@ def mll_read_dl_vec4seq(args, fixed_len, in_files):
     return vec_vec, embed_size, fixed_seq_len_list
 
 
-def mll_read_base_mat4res(in_file, fixed_len):
+def read_base_mat4res(in_file, fixed_len):
     vectors_list = []
     seq_len_list = []
     # print(in_file)

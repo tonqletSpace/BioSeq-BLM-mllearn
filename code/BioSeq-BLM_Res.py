@@ -2,6 +2,8 @@ import multiprocessing
 import os
 import time
 
+import numpy as np
+
 from CheckAll import results_dir_check, check_contain_chinese, seq_sys_check, ml_params_check, make_params_dicts, \
     res_feature_check, Machine_Learning_Algorithm, DeepLearning, Final_Path, dl_params_check, Batch_Path_Res, \
     Method_Res, prepare4train_res, prepare4train_seq, crf_params_check
@@ -37,7 +39,7 @@ def res_cl_fe_process(args, fragment):
     vectors_list = read_base_vec_list4res(args.fea_file)
     # fragment判断,生成对应的特征向量
     if fragment == 0:
-        assert args.window is not None, "If -fragment is 0, lease set window size!"
+        assert args.window is not None, "If -fragment is 0, please set window size!"
         # 在fragment=0时,通过滑窗技巧为每个残基生成特征
         sliding_win2files(vectors_list, args.res_labels_list, args.window, args.format, out_files)
     else:
@@ -45,6 +47,8 @@ def res_cl_fe_process(args, fragment):
         mat_list2frag_array(vectors_list, args.res_labels_list, args.fixed_len, args.format, out_files)
     # 读取特征向量文件
     vectors, sp_num_list = files2vectors_res(out_files, args.format)
+    print("sp_num_list", sp_num_list)
+    print("args.label", args.label)
     # 根据不同标签样本数目生成标签数组
     label_array = res_label_read(sp_num_list, args.label)
     # ** 残基层面特征提取和标签数组生成完毕 ** #
@@ -58,18 +62,21 @@ def res_cl_fe_process(args, fragment):
     # SVM/RF参数字典
     params_dict_list = args.params_dict_list
     # 多进程控制
-    pool = multiprocessing.Pool(args.cpu)
+    # pool = multiprocessing.Pool(args.cpu)
     params_dict_list_pro = []
     print('\n')
     print('Parameter Selection Processing...')
     print('\n')
     for i in range(len(params_dict_list)):
         params_dict = params_dict_list[i]
-        params_dict_list_pro.append(pool.apply_async(one_cl_process, (args, vectors, label_array, args.folds,
-                                                                      params_dict)))
+        # debug
+        params_dict_list_pro.append(one_cl_process(args, vectors, label_array, args.folds, params_dict))
+        break
+        # params_dict_list_pro.append(pool.apply_async(one_cl_process, (args, vectors, label_array, args.folds,
+        #                                                               params_dict)))
 
-    pool.close()
-    pool.join()
+    # pool.close()
+    # pool.join()
     # ** 筛选结束 ** #
 
     # 根据指标进行参数选择
@@ -286,6 +293,9 @@ def main(args):
     # 读取序列文件里每条序列的长度
     seq_len_list = read_res_seq_file(args.seq_file, args.category)
     # 读取标签列表和标签长度列表  res_labels_list --> list[list1, list2,..]
+    # print("seq_len_list", len(seq_len_list))
+    # print("cnt", np.asarray(seq_len_list).sum())
+    # exit()
     args.res_labels_list, label_len_list = read_res_label_file(args.label_file)
     # fragment=0: 判断标签是否有缺失且最短序列长度是否大于5; fragment=1: 判断标签是否唯一
     res_file_check(seq_len_list, label_len_list, args.fragment)
@@ -311,6 +321,10 @@ def main(args):
         all_params_list_dict = crf_params_check(args, all_params_list_dict)
         args.params_dict_list = make_params_dicts(all_params_list_dict)
 
+    print('all_params_list_dict', all_params_list_dict)
+    print('args.params_dict_list', args.params_dict_list)
+    # exit()
+
     # 所有res特征在基准数据集上的基础输出文件
     args.fea_file = args.results_dir + 'res_features.txt'
     # 提取残基层面特征,生成向量文件
@@ -319,12 +333,15 @@ def main(args):
 
     if args.ml in DeepLearning:
         if args.fragment == 0:
+            print('res dl, fragment=0')
             res_dl_fe_process(args)
         else:
             frag_dl_fe_process(args)
     elif args.ml in ['SVM', 'RF']:
+        print('res ml')
         res_cl_fe_process(args, args.fragment)
     else:
+        print('res crf')
         res_crf_fe_process(args)
 
     print("Done.")

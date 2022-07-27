@@ -4,8 +4,8 @@ import time
 
 
 
-from CheckAll import Batch_Path_Seq, DeepLearning, Classification, Method_Semantic_Similarity, prepare4train_seq, \
-    Mll_Conventional_Algorithm, mll_prepare4train_seq
+from CheckAll import Batch_Path_Seq, DeepLearning, Classification, Method_Semantic_Similarity, prepare4train_seq \
+    , mll_prepare4train_seq, Mll_Algorithm, mll_seq_sys_check, mll_params_check
 from CheckAll import Method_One_Hot_Enc, Feature_Extract_Mode, check_contain_chinese, seq_sys_check, dl_params_check, \
     seq_feature_check, mode_params_check, results_dir_check, ml_params_check, make_params_dicts, Final_Path, All_Words
 from FeatureAnalysis import fa_process, mll_fa_process
@@ -51,13 +51,12 @@ def mll_ml_fe_process(args):
     # 控制序列的固定长度(只需要操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
 
-    # 多进程计算
-    pool = multiprocessing.Pool(args.cpu)
     # 对每个mode的method进行检查
     seq_feature_check(args)
     # 对SVM或RF的参数进行检查并生成参数字典集合
     all_params_list_dict = {}
     all_params_list_dict = ml_params_check(args, all_params_list_dict)
+    mll_params_check(args, all_params_list_dict)
     # 对每个mode的words和method的参数进行检查
     # params_list_dict 为只包括特征提取的参数的字典， all_params_list_dict为包含所有参数的字典
     params_list_dict, all_params_list_dict = mode_params_check(args, all_params_list_dict)
@@ -80,25 +79,28 @@ def mll_ml_fe_process(args):
     # 指定分析层面
     args.res = False
 
+    # 多进程计算
+    # pool = multiprocessing.Pool(args.cpu)
     params_dict_list_pro = []
     print('\n')
     print('Parameter Selection Processing...')
     print('\n')
     for i in range(len(params_dict_list)):
         params_dict = params_dict_list[i]
+        print("cur params_dict\n", params_dict)
         # 生成特征向量文件名
         vec_files = mll_out_seq_file(args.format, args.results_dir, params_dict, params_list_dict)
         params_dict['out_files'] = vec_files
         # 注意多进程计算的debug
-        # params_dict_list_pro.append(
-        #     mll_one_ml_fe_process(args, input_one_file, label_array, vec_files, args.folds, params_dict))
-        if i == 2:
-            break
-        params_dict_list_pro.append(pool.apply_async(
-            mll_one_ml_fe_process, (args, input_one_file, label_array, vec_files, args.folds, params_dict)))
+        params_dict_list_pro.append(
+            mll_one_ml_fe_process(args, input_one_file, label_array, vec_files, args.folds, params_dict))
+        # if i == 2:
+        #     break
+        # params_dict_list_pro.append(pool.apply_async(
+        #     mll_one_ml_fe_process, (args, input_one_file, label_array, vec_files, args.folds, params_dict)))
 
-    pool.close()
-    pool.join()
+    # pool.close()
+    # pool.join()
     # 根据指标进行参数选择
     params_selected = mll_params_select(params_dict_list_pro, args.results_dir)
     # 将最优的特征向量文件从"all_fea_files/"文件夹下复制到主文件下
@@ -253,7 +255,8 @@ def main(args):
     check_contain_chinese(current_path)
 
     # 判断mode和ml的组合是否合理
-    seq_sys_check(args)
+    # seq_sys_check(args)
+    mll_seq_sys_check(args)
 
     # 生成结果文件夹
     args.results_dir = create_results_dir(args, args.current_dir)
@@ -399,11 +402,7 @@ if __name__ == '__main__':
                             " 'fs'---apply feature selection to parameter selection procedure;\n"
                             " 'dr'---apply dimension reduction to parameter selection procedure.\n")
     # ----------------------- parameters for MachineLearning---------------------- #
-    # parameters for conventional methods
-    parse.add_argument('-mll', type=str, choices=Mll_Conventional_Algorithm, required=True,
-                       help="The multi-label learning algorithm, for example: Binary Relevance(BR).")
-    # ----------------------- parameters for MachineLearning---------------------- #
-    parse.add_argument('-ml', type=str, choices=Classification, required=True,
+    parse.add_argument('-ml', type=str, choices=Classification, required=False,
                        help="The machine learning algorithm, for example: Support Vector Machine(SVM).")
     parse.add_argument('-grid', type=int, nargs='*', choices=[0, 1], default=0,
                        help="grid = 0 for rough grid search, grid = 1 for meticulous grid search.")
@@ -474,5 +473,28 @@ if __name__ == '__main__':
     parse.add_argument('-bp', type=int, choices=[0, 1], default=0,
                        help="Select use batch mode or not, the parameter will change the directory for generating file "
                             "based on the method you choose.")
+    # parameters for mll methods
+    parse.add_argument('-mll', type=str, choices=Mll_Algorithm, required=True,
+                       help="The multi-label learning algorithm, for example: Binary Relevance(BR).")
+
+    parse.add_argument("-mll_k", "--mll_kNN_k", nargs='*', type=int,
+                       help="number of neighbours of each input instance to take into account")
+    parse.add_argument("-mll_s", "--MLkNN_s", nargs='*', type=float,
+                       help="the smoothing parameter")
+    parse.add_argument("-mll_ifn", "--MLkNN_ignore_first_neighbours", nargs='*', type=int,
+                       help="ability to ignore first N neighbours, "
+                            "useful for comparing with other classification software")
+    parse.add_argument("-mll_v", "--MLARAM_vigilance", nargs='*', type=float,
+                       help="parameter for adaptive resonance theory networks, "
+                            "controls how large a hyperbox can be, 1 it is small (no compression), "
+                            "0 should assume all range. Normally set between 0.8 and 0.999, "
+                            "it is dataset dependent. It is responsible for the creation of the prototypes,"
+                            " therefore training of the network ")
+    parse.add_argument("-mll_t", "--MLARAM_threshold", nargs='*', type=float,
+                       help="controls how many prototypes participate by the prediction, "
+                            "can be changed for the testing phase")
+    parse.add_argument("-mll_n", "--MLARAM_neurons", nargs='*', type=list,
+                       help="the neurons in the network")
+
     argv = parse.parse_args()
     main(argv)

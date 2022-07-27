@@ -6,7 +6,7 @@ import os
 import numpy as np
 from skmultilearn.problem_transform import BinaryRelevance, ClassifierChain, LabelPowerset
 
-from .mll_machine import get_mll_ml_model
+from .mll_machine import get_mll_ml_model, mll_sparse_check, mll_result_sparse_check
 from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
     mll_final_results_output, mll_prob_output, mll_print_metric_dict
 from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
@@ -14,6 +14,11 @@ from ..utils.utils_math import sampling
 from ..utils.utils_read import FormatRead
 
 Metric_List = ['Acc', 'MCC', 'AUC', 'BAcc', 'Sn', 'Sp', 'Pr', 'Rc', 'F1']
+Mll_Instance_Based_Methods = [ 'MLkNN', 'BRkNNaClassifier', 'BRkNNbClassifier']
+
+
+def is_mll_instance_methods(mll):
+    return mll in Mll_Instance_Based_Methods
 
 
 def ml_cv_process(ml, vectors, labels, folds, metric, sp, multi, res, params_dict):
@@ -36,6 +41,7 @@ def ml_cv_process(ml, vectors, labels, folds, metric, sp, multi, res, params_dic
         else:
             clf = RandomForestClassifier(random_state=42, n_estimators=params_dict['tree'])
         clf.fit(x_train, y_train)
+
         y_val_prob = clf.predict_proba(x_val)[:, 1]  # 这里为什么是1呢
 
         y_val_ = clf.predict(x_val)
@@ -135,19 +141,17 @@ def ml_cv_results(ml, vectors, labels, folds, sp, multi, res, out_dir, params_di
 def mll_ml_cv_results(mll, marginal_data, ml, vectors, labels, folds, out_dir, params_dict):
     assert issparse(vectors) and issparse(labels), 'error'
 
-    results = []
-
     print_len = 60
     print('\n')
     if ml == 'SVM':
         print('  The optimal parameters for SVM are as follows  '.center(print_len, '*'))
         temp_str1 = '    cost = 2 ** ' + str(params_dict['cost']) + ' | ' + 'gamma = 2 ** ' + \
                     str(params_dict['gamma']) + '    '
-    else:
+        print(temp_str1.center(print_len, '*'), '\n')
+    elif ml == 'RF':
         print('The optimal parameters for RF is as follows'.center(print_len, '*'))
         temp_str1 = '    tree = ' + str(params_dict['tree']) + '    '
-    print(temp_str1.center(print_len, '*'))
-    print('\n')
+        print(temp_str1.center(print_len, '*'), '\n')
 
     cv_labels = []
     cv_prob = []
@@ -158,31 +162,33 @@ def mll_ml_cv_results(mll, marginal_data, ml, vectors, labels, folds, out_dir, p
     predicted_labels = np.zeros(tmp_shape, dtype=np.int32)  # (N, q)
     predicted_prob = np.zeros(tmp_shape)  # (N, q)
 
+    results = []
     for train_index, test_index in folds:
-        x_train, y_train, x_test, y_test = get_partition(vectors, labels, train_index, test_index)
+        x_train, y_train, x_test, y_test = mll_sparse_check(mll, *get_partition(vectors, labels, train_index, test_index))
         # if sp != 'none':
         #     x_train, y_train = sampling(sp, x_train, y_train)
 
         clf = get_mll_ml_model(mll, ml, params_dict)
-
         clf.fit(x_train, y_train)
 
-        y_test_ = clf.predict(x_test)
-        y_test_prob = clf.predict_proba(x_test)
-
+        y_test_ = mll_result_sparse_check(mll, clf.predict(x_test))
         # 'Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1'
         result = mll_performance(y_test, y_test_)
         results.append(result)
 
         cv_labels.append(y_test)
-        cv_prob.append(y_test_prob)
         predicted_labels[test_index] = y_test_.toarray()
-        predicted_prob[test_index] = y_test_prob.toarray()
+
+        if not is_mll_instance_methods(mll):
+            y_test_prob = mll_result_sparse_check(mll, clf.predict_proba(x_test))
+            cv_prob.append(y_test_prob)
+            predicted_prob[test_index] = y_test_prob.toarray()
 
     final_results = np.array(results).mean(axis=0)
 
     mll_final_results_output(final_results, out_dir, ind=False)  # 将指标写入文件
-    mll_prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
+    if not is_mll_instance_methods(mll):
+        mll_prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
 
     # 利用整个数据集训练并保存模型
     model = get_mll_ml_model(mll, ml, params_dict)
@@ -190,9 +196,14 @@ def mll_ml_cv_results(mll, marginal_data, ml, vectors, labels, folds, out_dir, p
     model_path = out_dir
     if ml == 'SVM':
         model_path += 'cost_[' + str(params_dict['cost']) + ']_gamma_[' + str(params_dict['gamma']) + ']'
-    else:
+    elif ml == 'RF':
         model_path += 'tree_' + str(params_dict['tree'])
-    model_path += '_' + mll.lower() + '_' + ml.lower() + '.model'
+    else:
+        model_path += 'mll_params_todo_final'
+    model_path += '_' + str(mll).lower() + '_' + str(ml).lower() + '.model'
+
+    print(model_path)
+    exit()
 
     # if sp != 'none':
     #     vectors, labels = sampling(sp, vectors, labels)

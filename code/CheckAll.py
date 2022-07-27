@@ -60,7 +60,7 @@ DeepLearning = ['CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Re
 Classification = ['SVM', 'RF', 'CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer']
 SequenceLabelling = ['CRF', 'CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer']
 
-Mll_Conventional_Algorithm = ['BR', 'CC', 'LP']
+Mll_Algorithm = ['BR', 'CC', 'LP', 'MLkNN', 'BRkNNaClassifier', 'BRkNNbClassifier', 'MLARAM']
 
 # 路径
 Final_Path = '/results/'
@@ -96,6 +96,14 @@ def seq_sys_check(args, res=False):
     print('Machine learning algorithm: ', Ml[args.ml])
     print('*******************************************************************')
     print('\n')
+
+
+def mll_seq_sys_check(args):
+    if args.ml:
+        seq_sys_check(args)
+
+    # print("args.mll_k", args.mll_kNN_k)
+    # exit()
 
 
 def check_contain_chinese(check_str):
@@ -730,9 +738,76 @@ def rf_params_check(tree, grid='r', param_list_dict=None):  # 'm': meticulous; '
 def ml_params_check(args, all_params_list_dict):
     if args.ml == 'SVM':
         all_params_list_dict = svm_params_check(args.cost, args.gamma, args.grid, all_params_list_dict)
-    else:
+    elif args.ml == 'RF':
         all_params_list_dict = rf_params_check(args.tree, args.grid, all_params_list_dict)
     return all_params_list_dict
+
+
+def mll_params_check(args, all_params_list_dict):
+    if args.ml:
+        return
+
+    # only check mll adaptation methods whose ml is None
+    if args.mll == 'MLkNN':
+        MLkNN_params_check(args.mll_kNN_k, args.MLkNN_s,
+                           args.MLkNN_ignore_first_neighbours,
+                           all_params_list_dict)
+    elif args.mll == 'BRkNNaClassifier':
+        BRkNNaClassifier_params_check(args.mll_kNN_k, all_params_list_dict)
+    elif args.mll == 'BRkNNbClassifier':
+        BRkNNbClassifier_params_check(args.mll_kNN_k, all_params_list_dict)
+    elif args.mll == 'MLARAM':
+        MLARAM_params_check(args.MLARAM_vigilance,
+                            args.MLARAM_threshold,
+                            args.MLARAM_neurons,
+                            all_params_list_dict)
+    else:
+        raise ValueError('err')
+
+
+def MLkNN_params_check(k, s, ifn, param_list_dict):
+    param_helper(k, 'mll_kNN_k', param_list_dict, default_value=10)
+    param_helper(s, 'MLkNN_s', param_list_dict, default_value=1.0)
+    param_helper(ifn, 'MLkNN_ignore_first_neighbours', param_list_dict, default_value=0)
+
+
+def BRkNNaClassifier_params_check(k, param_list_dict):
+    param_helper(k, 'mll_kNN_k', param_list_dict, default_value=10)
+
+
+def BRkNNbClassifier_params_check(k, param_list_dict):
+    param_helper(k, 'mll_kNN_k', param_list_dict, default_value=10)
+
+
+def MLARAM_params_check(v, s, n, param_list_dict):
+    param_helper(v, 'MLARAM_vigilance', param_list_dict, default_value=0.9)
+    param_helper(s, 'MLARAM_threshold', param_list_dict, default_value=0.02)
+    if n:
+        param_list_dict['MLARAM_neurons'] = n  # list
+    # else: NoneType
+
+
+def param_helper(p_range, p_name, param_list_dict, default_value, default_span=1):
+    """
+    p_range =（b, e=b, s=default_span)
+    => range[b, e+s, s]
+    """
+    # 1: meticulous; 0: 'rough'.
+    if p_range:
+        if len(p_range) == 1:
+            t_range = range(p_range[0], p_range[0] + default_span, default_span)
+        elif len(p_range) == 2:
+            t_range = range(p_range[0], p_range[1] + default_span, default_span)
+        elif len(p_range) == 3:
+            t_range = range(p_range[0], p_range[1] + p_range[2], p_range[2])
+        else:
+            error_info = 'The number of input value of parameter {} should be no more than 3!'.format(p_name)
+            sys.stderr.write(error_info)
+            raise ValueError(error_info)
+    else:
+        t_range = np.arange(default_value, default_value+default_span*3, default_span)
+
+    param_list_dict[p_name] = list(t_range)
 
 
 # 深度学习的参数检查
