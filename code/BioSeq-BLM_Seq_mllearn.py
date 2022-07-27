@@ -61,10 +61,10 @@ def mll_ml_fe_process(args):
     # params_list_dict 为只包括特征提取的参数的字典， all_params_list_dict为包含所有参数的字典
     params_list_dict, all_params_list_dict = mode_params_check(args, all_params_list_dict)
 
-    print('for feat extraction')
-    print(params_list_dict)
-    print('all param')
-    print(all_params_list_dict)
+    # print('for feat extraction')
+    # print(params_list_dict)
+    # print('all param')
+    # print(all_params_list_dict)
 
     # 列表字典 ---> 字典列表
     params_dict_list = make_params_dicts(all_params_list_dict)
@@ -80,7 +80,7 @@ def mll_ml_fe_process(args):
     args.res = False
 
     # 多进程计算
-    # pool = multiprocessing.Pool(args.cpu)
+    pool = multiprocessing.Pool(args.cpu)
     params_dict_list_pro = []
     print('\n')
     print('Parameter Selection Processing...')
@@ -92,15 +92,15 @@ def mll_ml_fe_process(args):
         vec_files = mll_out_seq_file(args.format, args.results_dir, params_dict, params_list_dict)
         params_dict['out_files'] = vec_files
         # 注意多进程计算的debug
-        params_dict_list_pro.append(
-            mll_one_ml_fe_process(args, input_one_file, label_array, vec_files, args.folds, params_dict))
+        # params_dict_list_pro.append(
+        #     mll_one_ml_fe_process(args, input_one_file, label_array, vec_files, args.folds, params_dict))
         # if i == 2:
         #     break
-        # params_dict_list_pro.append(pool.apply_async(
-        #     mll_one_ml_fe_process, (args, input_one_file, label_array, vec_files, args.folds, params_dict)))
+        params_dict_list_pro.append(pool.apply_async(
+            mll_one_ml_fe_process, (args, input_one_file, label_array, vec_files, args.folds, params_dict)))
 
-    # pool.close()
-    # pool.join()
+    pool.close()
+    pool.join()
     # 根据指标进行参数选择
     params_selected = mll_params_select(params_dict_list_pro, args.results_dir)
     # 将最优的特征向量文件从"all_fea_files/"文件夹下复制到主文件下

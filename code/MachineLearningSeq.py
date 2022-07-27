@@ -108,14 +108,14 @@ def params_select(params_list, out_dir):
 
 
 def mll_params_select(params_list, out_dir):
-    # print(params_list)
-    # exit()
-    evaluation = params_list[0]['metric']
-    params_list_selected = params_list[0]
+    # .get()应用于 muti-thread
+    # 单线程要去掉.get()
+    evaluation = params_list[0].get()['metric']
+    params_list_selected = params_list[0].get()
     for i in range(len(params_list)):
-        if params_list[i]['metric'] > evaluation:
-            evaluation = params_list[i]['metric']
-            params_list_selected = params_list[i]
+        if params_list[i].get()['metric'] > evaluation:
+            evaluation = params_list[i].get()['metric']
+            params_list_selected = params_list[i].get()
     del params_list_selected['metric']
     opt_params2file(params_list_selected, out_dir)  # 将最优参数写入文件
 

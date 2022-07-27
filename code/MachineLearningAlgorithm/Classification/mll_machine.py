@@ -115,13 +115,13 @@ def mll_model_factory(mll, params_dict):
 def mll_sparse_check(mll, x_train, y_train, x_val, y_val):
     if mll in ['MLARAM']:
         return x_train.tocsc(), y_train.tocsc(), x_val.tocsc(), y_val.tocsc()
-
     return x_train, y_train, x_val, y_val
 
 
 def mll_result_sparse_check(mll, res):
     if mll in ['MLARAM'] and not issparse(res):
         return lil_matrix(res)
+    return res
 
 # def get_label_inducing_data(vectors):
 #     e, q = vectors.shape[1], 1
