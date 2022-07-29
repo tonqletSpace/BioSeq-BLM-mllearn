@@ -7,7 +7,7 @@ import copy
 from scipy.sparse import issparse, lil_matrix, hstack
 
 from .utils_net import TrmDataset
-
+Mll_Instance_Based_Methods = [ 'MLkNN', 'BRkNNaClassifier', 'BRkNNbClassifier']
 
 class MllDeepNetSeq(object):
     def __init__(self, mll_type, require_dense=[True, True]):
@@ -151,86 +151,6 @@ class BLMBinaryRelavence(BinaryRelevance):
         return hstack(predictions)
 
 
-# class BLMClassifierChain(ClassifierChain):
-#     def __init__(self, classifier=None, require_dense=None, order=None):
-#         super(BLMClassifierChain, self).__init__(classifier, require_dense, order)
-#
-#     def fit(self, X, y=None, order=None):
-#         ds = None
-#         if isinstance(X, TrmDataset):
-#             ds = X
-#             X = ds.feature
-#             y = ds.target
-#
-#         X_extended = self._ensure_input_format(X, sparse_format='csc', enforce_sparse=True)
-#         y = self._ensure_output_format(y, sparse_format='csc', enforce_sparse=True)
-#
-#         self._label_count = y.shape[1]
-#         self.classifiers_ = [None for x in range(self._label_count)]
-#
-#         for label in self._order():
-#             self.classifier = copy.deepcopy(self.classifier)
-#             y_subset = self._generate_data_subset(y, label, axis=1)
-#
-#             # X_extended =/
-#             # y_subset =
-#             self.classifier.n
-#             self.classifiers_[label] = self.classifier.fit(
-#                 get_ds_or_x(ds, self._ensure_input_format(X_extended), self._ensure_output_format(y_subset)),
-#                 None if ds else self._ensure_output_format(y_subset))
-#             # print(X_extended.shape)
-#             # print(y_subset.shape)
-#             # print(y_subset.toarray())
-#             # exit()
-#             X_extended = hstack([X_extended, y_subset])
-#
-#         return self
-#
-#     def predict_proba(self, X):  # 原本是
-#         ds = None
-#         if isinstance(X, TrmDataset):
-#             ds = X
-#             X = ds.feature
-#
-#         X_extended = self._ensure_input_format(
-#             X, sparse_format='csc', enforce_sparse=True)
-#
-#         results = []
-#         for label in self._order():
-#             X_extended = self._ensure_input_format(X_extended)
-#             prediction = self.classifiers_[label].predict(get_ds_or_x(ds, X_extended))
-#
-#             prediction = self._ensure_output_format(
-#                 prediction, sparse_format='csc', enforce_sparse=True)
-#
-#             X_extended = self._ensure_input_format(X_extended)
-#             prediction_proba = self.classifiers_[label].predict_proba(get_ds_or_x(ds, X_extended))
-#
-#             prediction_proba = self._ensure_output_format(
-#                 prediction_proba, sparse_format='csc', enforce_sparse=True)[:, 1]
-#
-#             X_extended = hstack([X_extended, prediction]).tocsc()
-#             results.append(prediction_proba)
-#
-#         return hstack(results)
-#
-#     def predict(self, X):
-#         ds = None
-#         if isinstance(X, TrmDataset):
-#             ds = X
-#             X = ds.feature
-#
-#         X_extended = self._ensure_input_format(
-#             X, sparse_format='csc', enforce_sparse=True)
-#
-#         for label in self._order():
-#             X_extended = self._ensure_input_format(X_extended)
-#             prediction = self.classifiers_[label].predict(get_ds_or_x(ds, X_extended))
-#             prediction = self._ensure_multi_label_from_single_class(prediction)
-#             X_extended = hstack([X_extended, prediction])
-#         return X_extended[:, -self._label_count:]
-
-
 def get_ds_or_x(ds, x, y=None):
     if ds is None:
         return x
@@ -238,3 +158,7 @@ def get_ds_or_x(ds, x, y=None):
         ds.feature = x
         ds.target = y
         return ds
+
+
+def is_mll_instance_methods(mll):
+    return mll in Mll_Instance_Based_Methods

@@ -7,6 +7,7 @@ import numpy as np
 from skmultilearn.problem_transform import BinaryRelevance, ClassifierChain, LabelPowerset
 
 from .mll_machine import get_mll_ml_model, mll_sparse_check, mll_result_sparse_check
+from ..utils.utils_mll import is_mll_instance_methods
 from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
     mll_final_results_output, mll_prob_output, mll_print_metric_dict
 from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
@@ -14,11 +15,6 @@ from ..utils.utils_math import sampling
 from ..utils.utils_read import FormatRead
 
 Metric_List = ['Acc', 'MCC', 'AUC', 'BAcc', 'Sn', 'Sp', 'Pr', 'Rc', 'F1']
-Mll_Instance_Based_Methods = [ 'MLkNN', 'BRkNNaClassifier', 'BRkNNbClassifier']
-
-
-def is_mll_instance_methods(mll):
-    return mll in Mll_Instance_Based_Methods
 
 
 def ml_cv_process(ml, vectors, labels, folds, metric, sp, multi, res, params_dict):
@@ -202,12 +198,9 @@ def mll_ml_cv_results(mll, marginal_data, ml, vectors, labels, folds, out_dir, p
         model_path += 'mll_params_todo_final'
     model_path += '_' + str(mll).lower() + '_' + str(ml).lower() + '.model'
 
-    print(model_path)
-    exit()
-
     # if sp != 'none':
     #     vectors, labels = sampling(sp, vectors, labels)
-    model.fit(vectors, labels)
+    model.fit(*mll_sparse_check(mll, vectors, labels))
     joblib.dump(model, model_path)  # 使用job lib保存模型
 
 
