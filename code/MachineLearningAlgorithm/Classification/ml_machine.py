@@ -7,7 +7,7 @@ import numpy as np
 from skmultilearn.problem_transform import BinaryRelevance, ClassifierChain, LabelPowerset
 
 from .mll_machine import get_mll_ml_model, mll_sparse_check, mll_result_sparse_check
-from ..utils.utils_mll import is_mll_instance_methods
+from ..utils.utils_mll import is_mll_instance_methods, is_mll_proba_output_methods
 from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
     mll_final_results_output, mll_prob_output, mll_print_metric_dict
 from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
@@ -175,7 +175,7 @@ def mll_ml_cv_results(mll, marginal_data, ml, vectors, labels, folds, out_dir, p
         cv_labels.append(y_test)
         predicted_labels[test_index] = y_test_.toarray()
 
-        if not is_mll_instance_methods(mll):
+        if is_mll_proba_output_methods(mll):
             y_test_prob = mll_result_sparse_check(mll, clf.predict_proba(x_test))
             cv_prob.append(y_test_prob)
             predicted_prob[test_index] = y_test_prob.toarray()

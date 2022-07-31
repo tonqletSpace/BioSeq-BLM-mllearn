@@ -7,7 +7,9 @@ import copy
 from scipy.sparse import issparse, lil_matrix, hstack
 
 from .utils_net import TrmDataset
-Mll_Instance_Based_Methods = [ 'MLkNN', 'BRkNNaClassifier', 'BRkNNbClassifier']
+Mll_Instance_Based_Methods = ['MLkNN', 'BRkNNaClassifier', 'BRkNNbClassifier']
+Mll_MEKA_Methods = ['CLR', 'FW', 'RT']
+
 
 class MllDeepNetSeq(object):
     def __init__(self, mll_type, require_dense=[True, True]):
@@ -162,3 +164,11 @@ def get_ds_or_x(ds, x, y=None):
 
 def is_mll_instance_methods(mll):
     return mll in Mll_Instance_Based_Methods
+
+
+def is_mll_meka_methods(mll):
+    return mll in Mll_MEKA_Methods
+
+
+def is_mll_proba_output_methods(mll):
+    return not is_mll_instance_methods(mll) and not is_mll_meka_methods(mll)

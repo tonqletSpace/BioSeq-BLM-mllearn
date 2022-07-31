@@ -5,7 +5,7 @@ import time
 
 
 from CheckAll import Batch_Path_Seq, DeepLearning, Classification, Method_Semantic_Similarity, prepare4train_seq \
-    , mll_prepare4train_seq, Mll_Algorithm, mll_seq_sys_check, mll_params_check
+    , mll_prepare4train_seq, Mll_Algorithm, mll_seq_sys_check, mll_params_check, mll_meka_check
 from CheckAll import Method_One_Hot_Enc, Feature_Extract_Mode, check_contain_chinese, seq_sys_check, dl_params_check, \
     seq_feature_check, mode_params_check, results_dir_check, ml_params_check, make_params_dicts, Final_Path, All_Words
 from FeatureAnalysis import fa_process, mll_fa_process
@@ -87,6 +87,7 @@ def mll_ml_fe_process(args):
     print('\n')
     for i in range(len(params_dict_list)):
         params_dict = params_dict_list[i]
+        mll_meka_check(args, params_dict)
         print("cur params_dict\n", params_dict)
         # 生成特征向量文件名
         vec_files = mll_out_seq_file(args.format, args.results_dir, params_dict, params_list_dict)

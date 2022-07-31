@@ -5,7 +5,7 @@ from sklearn.ensemble import RandomForestClassifier
 import joblib
 import os
 import numpy as np
-from skmultilearn.ext import Meka
+from skmultilearn.ext import Meka, download_meka
 
 # from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict
 # from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
@@ -13,7 +13,7 @@ from skmultilearn.ext import Meka
 # from ..utils.utils_read import FormatRead
 from scipy.sparse import lil_matrix, issparse
 
-from ..utils.utils_mll import is_mll_instance_methods
+from ..utils.utils_mll import is_mll_instance_methods, is_mll_meka_methods
 from ..utils.utils_results import mll_performance
 
 from warnings import simplefilter
@@ -47,6 +47,7 @@ def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, params_dict):
         clf = get_mll_ml_model(mll, ml, params_dict)
         clf.fit(x_train, y_train)
         y_val_ = mll_result_sparse_check(mll, clf.predict(x_val))
+
         # 'Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1'
         result = mll_performance(y_val, y_val_)
         results.append(result)
@@ -96,7 +97,10 @@ def ml_model_factory(ml, params_dict):
 
 
 def mll_model_factory(mll, params_dict):
-    meka_classpath = '/Users/maiqi/mll/aux_pkgs/meka'
+    if is_mll_meka_methods(mll):
+        # meka_classpath = download_meka()
+        java_command = '/usr/bin/java'  # path to java executable
+
     if mll == 'MLkNN':
         return MLkNN(k=params_dict['mll_kNN_k'],
                      s=params_dict['MLkNN_s'],
@@ -110,12 +114,12 @@ def mll_model_factory(mll, params_dict):
                       threshold=params_dict['MLARAM_threshold'],
                       neurons=params_dict['MLARAM_neurons'] if 'MLARAM_neurons' in params_dict.keys()
                       else None)
-    elif mll == 'CLR':
+    elif mll == 'FW':
         return Meka(
-            meka_classifier="meka.classifiers.multilabel.BR",  # Binary Relevance
+            meka_classifier="meka.classifiers.multilabel.FW",  # Binary Relevance
             weka_classifier="weka.classifiers.bayes.NaiveBayesMultinomial",  # with Naive Bayes single-label classifier
-            meka_classpath=meka_classpath,  # obtained via download_meka
-            java_command='/usr/bin/java'  # path to java executable
+            meka_classpath=params_dict['meka_classpath'],  # obtained via download_meka
+            java_command=params_dict['which_java']
         )
     else:
         raise ValueError('mll method err')
@@ -123,15 +127,9 @@ def mll_model_factory(mll, params_dict):
 
 def mll_sparse_check(mll, *data_list):
     if mll in ['MLARAM']:
-        # 2 usage of this transformation
-        # x_train, y_train, x_val, y_va)
-        # x_train, y_train
         data_list = [e.tocsc() for e in data_list]
 
-    if len(data_list) == 2:
-        return data_list[0], data_list[1]
-    if len(data_list) == 4:
-        return data_list[0], data_list[1], data_list[2], data_list[3]
+    return data_list
 
 
 def mll_result_sparse_check(mll, res):
@@ -140,12 +138,6 @@ def mll_result_sparse_check(mll, res):
     return res
 
 
-def mll_ml_fit(mll, clf, x_train, y_train):
-    if is_mll_instance_methods(mll):
-        print(" in ".center(100, '*'))
-        clf.fit(x_train, y_train)
-    else:
-        clf.fit(x_train, y_train)
 
 
 # def get_label_inducing_data(vectors):

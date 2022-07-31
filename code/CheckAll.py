@@ -7,9 +7,13 @@ import sys
 from collections import Counter
 from itertools import count, takewhile, product
 
+from skmultilearn.ext import download_meka
+
 from MachineLearningAlgorithm.utils.utils_math import construct_partition2two, mll_marginal_check
 
 # Alphabets of DNA, RNA, PROTEIN
+from MachineLearningAlgorithm.utils.utils_mll import is_mll_meka_methods
+
 DNA = "ACGT"
 RNA = "ACGU"
 PROTEIN = "ACDEFGHIKLMNPQRSTVWY"
@@ -60,7 +64,7 @@ DeepLearning = ['CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Re
 Classification = ['SVM', 'RF', 'CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer']
 SequenceLabelling = ['CRF', 'CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer']
 
-Mll_Algorithm = ['BR', 'CC', 'LP', 'MLkNN', 'BRkNNaClassifier', 'BRkNNbClassifier', 'MLARAM']
+Mll_Algorithm = ['BR', 'CC', 'LP', 'MLkNN', 'BRkNNaClassifier', 'BRkNNbClassifier', 'MLARAM', 'CLR', 'FW', 'RT']
 
 # 路径
 Final_Path = '/results/'
@@ -99,11 +103,20 @@ def seq_sys_check(args, res=False):
 
 
 def mll_seq_sys_check(args):
+    # meka
+    if is_mll_meka_methods(args.mll):
+        args.meka_classpath = download_meka()
+        args.which_java = '/usr/bin/java'  # should read from path
+
+    # blm
     if args.ml:
         seq_sys_check(args)
 
-    # print("args.mll_k", args.mll_kNN_k)
-    # exit()
+
+def mll_meka_check(args, params_dict):
+    if is_mll_meka_methods(args.mll):
+        params_dict['meka_classpath'] = args.meka_classpath
+        params_dict['which_java'] = args.which_java
 
 
 def check_contain_chinese(check_str):
@@ -762,7 +775,8 @@ def mll_params_check(args, all_params_list_dict):
                             args.MLARAM_neurons,
                             all_params_list_dict)
     else:
-        raise ValueError('err')
+        # raise ValueError('err')
+        print('a new mll method {}'.format(args.mll))
 
 
 def MLkNN_params_check(k, s, ifn, param_list_dict):
