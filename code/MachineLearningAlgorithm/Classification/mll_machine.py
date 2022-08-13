@@ -13,7 +13,7 @@ from skmultilearn.ext import Meka, download_meka
 # from ..utils.utils_read import FormatRead
 from scipy.sparse import lil_matrix, issparse
 
-from ..utils.utils_mll import is_mll_instance_methods, is_mll_meka_methods
+from ..utils.utils_mll import is_mll_instance_methods, is_mll_meka_methods, BLMMeka
 from ..utils.utils_results import mll_performance
 
 from warnings import simplefilter
@@ -39,7 +39,6 @@ def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, params_dict):
 
     results = []
     for train_index, val_index in folds:
-        # x_train, y_train, x_val, y_val =
         x_train, y_train, x_val, y_val = mll_sparse_check(mll, *get_partition(vectors, labels, train_index, val_index))
 
         # if sp != 'none':
@@ -74,33 +73,66 @@ def get_partition(vectors, labels, train_index, val_index):
 
 def get_mll_ml_model(mll, ml, params_dict):
     if ml:
-        if mll == 'BR':
-            return BinaryRelevance(classifier=ml_model_factory(ml, params_dict), require_dense=[True, True])
-        elif mll == 'CC':
-            return ClassifierChain(classifier=ml_model_factory(ml, params_dict), require_dense=[True, True])
-        elif mll == 'LP':
-            return LabelPowerset(classifier=ml_model_factory(ml, params_dict), require_dense=[True, True])
-        else:
-            raise ValueError('mll ml method err')
-
-    # ml is None, no ml base clf
-    return mll_model_factory(mll, params_dict)
+        return mll_ml_model_factory(mll, ml, params_dict)
+    else:
+        return mll_model_factory(mll, params_dict)
 
 
-def ml_model_factory(ml, params_dict):
+def mll_ml_model_factory(mll, ml, params_dict):
+    # if is_mll_meka_methods(mll):
+    #     # 优化写法
+    #     # meka_classpath = download_meka()
+    #     # java_command = '/usr/bin/java'  # path to java executable
+
+    if mll == 'BR':
+        return BinaryRelevance(classifier=ml_model_factory(ml, params_dict), require_dense=[True, True])
+    elif mll == 'CC':
+        return ClassifierChain(classifier=ml_model_factory(ml, params_dict), require_dense=[True, True])
+    elif mll == 'LP':
+        return LabelPowerset(classifier=ml_model_factory(ml, params_dict), require_dense=[True, True])
+    elif mll == 'FW':
+        return BLMMeka(
+            meka_classifier="meka.classifiers.multilabel.FW",  # Binary Relevance
+            weka_classifier=ml_model_factory(ml, params_dict, True),  # with Naive Bayes single-label classifier
+            meka_classpath=params_dict['meka_classpath'],  # obtained via download_meka
+            java_command=params_dict['which_java']
+        )
+    elif mll == 'RT':
+        return BLMMeka(
+            meka_classifier="meka.classifiers.multilabel.RT",  # Binary Relevance
+            weka_classifier=ml_model_factory(ml, params_dict, True),  # with Naive Bayes single-label classifier
+            meka_classpath=params_dict['meka_classpath'],  # obtained via download_meka
+            java_command=params_dict['which_java']
+        )
+    elif mll == 'CLR':
+        return BLMMeka(
+            meka_classifier="meka.classifiers.multilabel.MULAN -S CLR",  # Binary Relevance
+            weka_classifier=ml_model_factory(ml, params_dict, True),  # with Naive Bayes single-label classifier
+            meka_classpath=params_dict['meka_classpath'],  # obtained via download_meka
+            java_command=params_dict['which_java']
+        )
+    else:
+        raise ValueError('mll_ml method parameter error')
+
+
+def ml_model_factory(ml, params_dict, is_weka_ml=False):
     if ml == 'SVM':
+        if is_weka_ml:
+            return "weka.classifiers.functions.SMO -C {}" \
+                   " -K \"weka.classifiers.functions.supportVector.RBFKernel -G {}\"".\
+                       format(2 ** params_dict['cost'], 2 ** params_dict['gamma'])
+
         return svm.SVC(C=2 ** params_dict['cost'], gamma=2 ** params_dict['gamma'], probability=True)
     elif ml == 'RF':
+        if is_weka_ml:
+            return "weka.classifiers.trees.RandomForest -S {} -I {}".format(42, params_dict['tree'])
+
         return RandomForestClassifier(random_state=42, n_estimators=params_dict['tree'])
     else:
         raise ValueError('ml method err')
 
 
 def mll_model_factory(mll, params_dict):
-    if is_mll_meka_methods(mll):
-        # meka_classpath = download_meka()
-        java_command = '/usr/bin/java'  # path to java executable
-
     if mll == 'MLkNN':
         return MLkNN(k=params_dict['mll_kNN_k'],
                      s=params_dict['MLkNN_s'],
@@ -114,13 +146,8 @@ def mll_model_factory(mll, params_dict):
                       threshold=params_dict['MLARAM_threshold'],
                       neurons=params_dict['MLARAM_neurons'] if 'MLARAM_neurons' in params_dict.keys()
                       else None)
-    elif mll == 'FW':
-        return Meka(
-            meka_classifier="meka.classifiers.multilabel.FW",  # Binary Relevance
-            weka_classifier="weka.classifiers.bayes.NaiveBayesMultinomial",  # with Naive Bayes single-label classifier
-            meka_classpath=params_dict['meka_classpath'],  # obtained via download_meka
-            java_command=params_dict['which_java']
-        )
+
+
     else:
         raise ValueError('mll method err')
 

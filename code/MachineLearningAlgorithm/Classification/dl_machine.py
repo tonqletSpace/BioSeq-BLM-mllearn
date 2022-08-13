@@ -144,7 +144,6 @@ def mll_dl_cv_process(mll, ml, vectors, embed_size, labels, seq_length_list, max
             final_prob_list = mll_clf.predict_proba(x_val)  # (N, n
         else:
             mll_clf.fit(TrmDataset(x_train, y_train, train_length, max_len))
-            exit()
             final_predict_list = mll_clf.predict(TrmDataset(x_val, None, test_length, max_len))  # (N, q
             final_prob_list = mll_clf.predict_proba(TrmDataset(x_val, None, test_length, max_len))  # (N, n
 

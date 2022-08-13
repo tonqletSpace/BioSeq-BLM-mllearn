@@ -103,7 +103,7 @@ def seq_sys_check(args, res=False):
 
 
 def mll_seq_sys_check(args):
-    # meka
+    # check meka
     if is_mll_meka_methods(args.mll):
         args.meka_classpath = download_meka()
         args.which_java = '/usr/bin/java'  # should read from path

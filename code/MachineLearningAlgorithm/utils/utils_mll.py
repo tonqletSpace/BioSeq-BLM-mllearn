@@ -1,4 +1,9 @@
+import shlex
+import subprocess
+import sys
+
 from skmultilearn.base import MLClassifierBase
+from skmultilearn.ext import Meka
 from skmultilearn.problem_transform import LabelPowerset, BinaryRelevance, ClassifierChain
 import numpy as np
 from scipy import sparse
@@ -153,6 +158,53 @@ class BLMBinaryRelavence(BinaryRelevance):
         return hstack(predictions)
 
 
+class BLMMeka(Meka):
+    def __init__(self, meka_classifier=None, weka_classifier=None,
+                 java_command=None, meka_classpath=None):
+        super(BLMMeka, self).__init__(meka_classifier, weka_classifier,
+                                   java_command, meka_classpath)
+
+    def _run_meka_command(self, args):
+        command_args = [
+            self.java_command,
+            '-cp', '"{}*"'.format(self.meka_classpath),
+            self.meka_classifier,
+        ]
+
+        if self.weka_classifier is not None:
+            # acadTags issue #198
+            weka_classfier_name = self.weka_classifier.split(' ')[0]
+            weka_classfier_param = ' '.join(self.weka_classifier.split(' ')[1:])
+            command_args += ['-W', weka_classfier_name]
+        else:
+            weka_classfier_param = ''
+
+        command_args += args
+
+        # acadTags issue #198
+        if weka_classfier_param != '':
+            command_args += ['--', weka_classfier_param]
+
+        meka_command = " ".join(command_args)
+        # print(meka_command)
+
+        if sys.platform != 'win32':
+            meka_command = shlex.split(meka_command)
+
+        pipes = subprocess.Popen(meka_command,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 universal_newlines=True)
+        self.output_, self._error = pipes.communicate()
+        if type(self.output_) == bytes:
+            self.output_ = self.output_.decode(sys.stdout.encoding)
+        if type(self._error) == bytes:
+            self._error = self._error.decode(sys.stdout.encoding)
+
+        if pipes.returncode != 0:
+            raise Exception(self.output_ + self._error)
+
+
 def get_ds_or_x(ds, x, y=None):
     if ds is None:
         return x
@@ -172,3 +224,5 @@ def is_mll_meka_methods(mll):
 
 def is_mll_proba_output_methods(mll):
     return not is_mll_instance_methods(mll) and not is_mll_meka_methods(mll)
+
+

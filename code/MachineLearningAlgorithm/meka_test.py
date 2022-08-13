@@ -1,3 +1,6 @@
+import shlex
+import subprocess
+import sys
 import zipfile
 
 from sklearn.datasets import make_multilabel_classification
@@ -6,6 +9,14 @@ from sklearn.model_selection import train_test_split
 from skmultilearn.ext import Meka, download_meka
 import os
 
+from .utils.utils_mll import BLMMeka
+
+
+def param_meka():
+    meka_classpath = os.environ.get('MEKA_CLASSPATH')
+
+    if meka_classpath is None:
+        raise ValueError("No meka classpath defined")
 
 def debug_setting_up_MEKA():
     data_home = os.environ.get('SCIKIT_ML_LEARN_DATA',
@@ -37,38 +48,10 @@ def debug_setting_up_MEKA():
 def setting_up_MEKA():
     meka_classpath = download_meka()
     print(meka_classpath)
+    return meka_classpath
 
 
 def get_data_home(data_home=None, subdirectory=''):
-    """Return the path of the scikit-multilearn data dir.
-
-    This folder is used by some large dataset loaders to avoid
-    downloading the data several times.
-
-    By default the :code:`data_home` is set to a folder named
-    :code:`'scikit_ml_learn_data'` in the user home folder.
-
-    Alternatively, it can be set by the :code:`'SCIKIT_ML_LEARN_DATA'`
-    environment variable or programmatically by giving an explicit
-    folder path. The :code:`'~'` symbol is expanded to the user home
-    folder.
-
-    If the folder does not already exist, it is automatically created.
-
-    Parameters
-    ----------
-    data_home : str (default is None)
-        the path to the directory in which scikit-multilearn data sets
-        should be stored, if None the path is generated as stated above
-
-    subdirectory : str, default ''
-        return path subdirectory under data_home if data_home passed or under default if not passed
-
-    Returns
-    --------
-    str
-        the path to the data home
-    """
     if data_home is None:
         if len(subdirectory) > 0:
             data_home = os.environ.get('SCIKIT_ML_LEARN_DATA', os.path.join('~', 'scikit_ml_learn_data', subdirectory))
@@ -85,12 +68,24 @@ def use_meka_via_sk_mllearn(meka_classpath):
     X_train, y_train, _, _ = load_dataset('scene', 'train')
     X_test, y_test, _, _ = load_dataset('scene', 'test')
 
-    meka = Meka(
-        meka_classifier="meka.classifiers.multilabel.BR",  # Binary Relevance
-        weka_classifier="weka.classifiers.bayes.NaiveBayesMultinomial",  # with Naive Bayes single-label classifier
+    # meka = BLMMeka(
+    #     meka_classifier="meka.classifiers.multilabel.MULAN -S CLR",  # No!
+    #     weka_classifier="weka.classifiers.trees.RandomForest -I 3",  # with Naive Bayes single-label classifier
+    #     meka_classpath=meka_classpath,  # obtained via download_meka
+    #     java_command='/usr/bin/java'  # path to java executable
+    # )
+
+    meka = BLMMeka(
+        meka_classifier="meka.classifiers.multilabel.MULAN -S CLR",  # No!
+        weka_classifier="weka.classifiers.functions.SMO -C 0.1"
+                        " -K \"weka.classifiers.functions.supportVector.RBFKernel -G 0.1\"",
         meka_classpath=meka_classpath,  # obtained via download_meka
         java_command='/usr/bin/java'  # path to java executable
     )
+    # " -- -G 0.1"
+    # weka.classifiers.trees.RandomForest -I 3
+    #
+
     print(meka)
 
     meka.fit(X_train, y_train)
@@ -99,7 +94,8 @@ def use_meka_via_sk_mllearn(meka_classpath):
     print(hamming_loss(y_test, predictions))
 
 
+
 if __name__ == '__main__':
-    # setting_up_MEKA()
-    meka_classpath = '/Users/maiqi/scikit_ml_learn_data/meka/meka-release-1.9.2/lib/'
+    # meka_classpath = '/Users/maiqi/scikit_ml_learn_data/meka/meka-release-1.9.2/lib/'
+    meka_classpath = setting_up_MEKA()
     use_meka_via_sk_mllearn(meka_classpath)
