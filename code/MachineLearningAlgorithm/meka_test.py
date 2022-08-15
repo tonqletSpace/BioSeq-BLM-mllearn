@@ -18,6 +18,7 @@ def param_meka():
     if meka_classpath is None:
         raise ValueError("No meka classpath defined")
 
+
 def debug_setting_up_MEKA():
     data_home = os.environ.get('SCIKIT_ML_LEARN_DATA',
                                os.path.join('~', 'scikit_ml_learn_data', 'meka'))
