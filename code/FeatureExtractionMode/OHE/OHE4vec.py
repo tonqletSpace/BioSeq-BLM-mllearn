@@ -106,7 +106,7 @@ def mat_list2mat_array(mat_list, fixed_len):
 
 
 def sliding_win2files(res_mats, res_labels_list, win_size, out_format, out_files):
-    width = res_mats[0].shape[1]
+    width = res_mats[0].shape[1]  # 第三维 E
     win_ctrl = win_size // 2
     pos_vec = []
     neg_vec = []
@@ -116,15 +116,16 @@ def sliding_win2files(res_mats, res_labels_list, win_size, out_format, out_files
         assert seq_len > win_size, "The size of window should be no more than the length of sequence[%d]." % i
         # print('seq_len: %d' % seq_len)
         for j in range(seq_len):
-            temp_mat = np.zeros((win_size, width))
+            temp_mat = np.zeros((win_size, width))  # prepare sliding window
             if j <= win_ctrl:
                 # print(j+win_ctrl+1)
                 temp_mat[:j+win_ctrl+1, :] = res_mat[: j+win_ctrl+1, :]
             elif j >= seq_len - win_ctrl:
                 temp_mat[:seq_len-j+win_ctrl, :] = res_mat[j-win_ctrl: seq_len, :]
             else:
-                temp_mat[:, :] = res_mat[j-win_ctrl: j+win_ctrl+1]
-            temp_vec = temp_mat.flatten().tolist()
+                temp_mat[:, :] = res_mat[j-win_ctrl: j+win_ctrl+1]  # context for residue_j
+
+            temp_vec = temp_mat.tolist()  # seq matrix to vector
             if res_labels_list[i][j] == 0:
                 neg_vec.append(temp_vec)
             else:
@@ -132,6 +133,34 @@ def sliding_win2files(res_mats, res_labels_list, win_size, out_format, out_files
     print('The output files can be found here:')
     res_vectors2file(np.array(pos_vec), out_format, out_files[0])
     res_vectors2file(np.array(neg_vec), out_format, out_files[1])
+    print('\n')
+
+
+def mll_sliding_win2files(res_mats, res_labels_list, win_size, out_format, out_files):
+    width = res_mats[0].shape[1]  # 第三维 E
+    win_ctrl = win_size // 2
+
+    data = []
+
+    for i in range(len(res_mats)):
+        res_mat = res_mats[i]
+        seq_len = len(res_mat)
+        assert seq_len > win_size, "The size of window should be no more than the length of sequence[%d]." % i
+        # print('seq_len: %d' % seq_len)
+        for j in range(seq_len):
+            temp_mat = np.zeros((win_size, width))  # prepare sliding window
+            if j <= win_ctrl:
+                # print(j+win_ctrl+1)
+                temp_mat[:j+win_ctrl+1, :] = res_mat[: j+win_ctrl+1, :]
+            elif j >= seq_len - win_ctrl:
+                temp_mat[:seq_len-j+win_ctrl, :] = res_mat[j-win_ctrl: seq_len, :]
+            else:
+                temp_mat[:, :] = res_mat[j-win_ctrl: j+win_ctrl+1]  # context for residue_j
+            temp_vec = temp_mat.flatten().tolist()  # seq matrix to vector
+            data.append(temp_vec)
+    print('The output files can be found here:')
+    print(out_files)
+    res_vectors2file(np.array(data), out_format, out_files[0])  # mll_output
     print('\n')
 
 

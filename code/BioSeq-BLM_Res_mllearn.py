@@ -6,11 +6,13 @@ import numpy as np
 
 from CheckAll import results_dir_check, check_contain_chinese, seq_sys_check, ml_params_check, make_params_dicts, \
     res_feature_check, Machine_Learning_Algorithm, DeepLearning, Final_Path, dl_params_check, Batch_Path_Res, \
-    Method_Res, prepare4train_res, prepare4train_seq, crf_params_check
+    Method_Res, prepare4train_res, prepare4train_seq, crf_params_check, Mll_Algorithm
 from FeatureAnalysis import fa_process
-from FeatureExtractionMode.OHE.OHE4vec import ohe2res_base, sliding_win2files, mat_list2frag_array
+from FeatureExtractionMode.OHE.OHE4vec import ohe2res_base, sliding_win2files, mat_list2frag_array, \
+    mll_sliding_win2files
 from FeatureExtractionMode.utils.utils_write import read_res_seq_file, read_res_label_file, fixed_len_control, \
-    res_file_check, out_res_file, out_dl_frag_file, res_base2frag_vec, gen_label_array
+    res_file_check, out_res_file, out_dl_frag_file, res_base2frag_vec, gen_label_array, mll_gen_label_matrix, \
+    mll_read_res_seq_file, mll_out_seq_file, mll_out_res_file
 from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process as seq_dcp
 from MachineLearningAlgorithm.Classification.dl_machine import dl_ind_process as seq_dip
 from MachineLearningAlgorithm.SequenceLabelling.dl_machine import dl_cv_process as res_dcp
@@ -18,65 +20,31 @@ from MachineLearningAlgorithm.SequenceLabelling.dl_machine import dl_ind_process
 from MachineLearningAlgorithm.Classification.ml_machine import ml_cv_results, ml_ind_results
 from MachineLearningAlgorithm.SequenceLabelling.ml_machine import crf_cv_process, crf_ind_process
 from MachineLearningAlgorithm.utils.utils_read import files2vectors_res, read_base_mat4res, read_base_vec_list4res, \
-    res_label_read, read_dl_vec4seq, res_dl_label_read
-from MachineLearningRes import one_cl_process, params_select
+    res_label_read, read_dl_vec4seq, res_dl_label_read, mll_files2vectors_seq
+from MachineLearningRes import one_cl_process, params_select, mll_one_cl_process
+from FeatureExtractionRes import create_results_dir
+from MachineLearningSeq import mll_ml_results
 
 
-def create_results_dir(args, cur_dir):
-    if args.bp == 1:
-        results_dir = cur_dir + Batch_Path_Res + str(args.category) + "/" + str(args.method) + "/"
-    else:
-        results_dir = cur_dir + Final_Path
-    results_dir_check(results_dir)
-    return results_dir
+def mll_ind_ml_fe_process(args, opt_vectors, label_array, params_selected):
+    pass
 
 
-def res_cl_fe_process(args, fragment):
+def mll_res_fe_process(args, label_array):
+    # convert res mll problem to seq mll problem
     # ** 残基层面特征提取和标签数组生成开始 ** #
     # 为存储SVM和RF输入特征的文件命名
-    out_files = out_res_file(args.label, args.results_dir, args.format, args.fragment, ind=False)
+    out_files = mll_out_res_file(args.results_dir, args.format, ind=False)
+
     # 读取base特征文件, 待写入
     vectors_list = read_base_vec_list4res(args.fea_file)
 
-    print("vectors_list", len(vectors_list))
-    print("vectors_list L", len(vectors_list[0]), len(vectors_list[-1]))
-    print("vectors_list E", len(vectors_list[0][0]), len(vectors_list[-1][0]))
-    print("args.res_labels_list", len(args.res_labels_list))
-    # (N, L', E) L'变长
-    print("args.res_labels_list L", len(args.res_labels_list[0]), len(args.res_labels_list[-1]))
-    print("args.res_labels_list L", args.res_labels_list[0][:3])
-    # exit()
-
     # fragment判断,生成对应的特征向量
-    if fragment == 0:
-        print('without fragment')
-        assert args.window is not None, "If -fragment is 0, please set window size!"
-        # 在fragment=0时,通过滑窗技巧为每个残基生成特征
-        sliding_win2files(vectors_list, args.res_labels_list, args.window, args.format, out_files)
-    else:
-        print('use fragment')
-        # 在fragment=1时, 将每个残基片段的base特征进行flatten
-        mat_list2frag_array(vectors_list, args.res_labels_list, args.fixed_len, args.format, out_files)
-
-    print('after sliding window process'.center(100, '*'))
-    print("vectors_list", len(vectors_list))
-    print("vectors_list L", len(vectors_list[0]), len(vectors_list[-1]))
-    print("vectors_list E", len(vectors_list[0][0]), len(vectors_list[-1][0]))
-    print("args.res_labels_list", len(args.res_labels_list))
-    print("args.res_labels_list L", len(args.res_labels_list[0]), len(args.res_labels_list[-1]))
-    print("args.res_labels_list L", args.res_labels_list[0][:3])
+    assert args.window is not None, "please set window size!"
+    mll_sliding_win2files(vectors_list, label_array, args.window, args.format, out_files)
 
     # 读取特征向量文件
-    vectors, sp_num_list = files2vectors_res(out_files, args.format)
-    print("vectors.shape", vectors.shape)
-    print("sp_num_list", sp_num_list)
-    print("args.label", args.label)
-    # 根据不同标签样本数目生成标签数组
-    label_array = res_label_read(sp_num_list, args.label)
-    print("label_array", label_array.shape)
-    # exit()
-
-    # ** 残基层面特征提取和标签数组生成完毕 ** #
+    vectors = mll_files2vectors_seq(args, out_files, args.format)
 
     # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
     args = prepare4train_res(args, label_array, dl=False)
@@ -94,11 +62,10 @@ def res_cl_fe_process(args, fragment):
     print('\n')
     for i in range(len(params_dict_list)):
         params_dict = params_dict_list[i]
-        # tonqlet debug
         # params_dict_list_pro.append(one_cl_process(args, vectors, label_array, args.folds, params_dict))
         # break
-        params_dict_list_pro.append(pool.apply_async(one_cl_process, (args, vectors, label_array, args.folds,
-                                                                      params_dict)))
+        params_dict_list_pro.append(pool.apply_async(mll_one_cl_process,
+                                                     (args, vectors, label_array, args.folds, params_dict)))
         if i == 1:
             break
 
@@ -118,186 +85,15 @@ def res_cl_fe_process(args, fragment):
                                                                                          vectors.shape[1]))
 
     # 构建分类器
-    ml_cv_results(args.ml, vectors, label_array, args.folds, args.sp, args.multi, args.res, args.results_dir,
-                  params_selected)
-
+    mll_ml_results(args, vectors, label_array, args.folds, params_selected)
     # -------- 独立测试-------- #
     # 即，将独立测试数据集在最优的model上进行测试
     if args.ind_seq_file is not None:
-        res_ind_cl_fe_process(args, params_selected)
-    # -------- 独立测试-------- #
+        mll_ind_ml_fe_process(args, vectors, label_array, params_selected)
 
 
-def res_ind_cl_fe_process(args, params_selected):
-    print('########################## Independent Test Begin ##########################\n')
-
-    # 为独立测试集配置参数
-    args = ind_preprocess(args)
-    # 为存储独立测试数据集SVM和RF输入特征的文件命名
-    ind_out_files = out_res_file(args.label, args.results_dir, args.format, args.fragment, ind=False)
-    # 读取独立测试数据集base特征文件, 待写入
-    ind_vectors_list = read_base_vec_list4res(args.ind_fea_file)
-    # fragment判断,生成对应的特征向量
-    if args.fragment == 0:
-        assert args.window is not None, "If -fragment is 0, lease set window size!"
-        # 在fragment=0时,通过滑窗技巧为独立测试数据集每个残基生成特征
-        sliding_win2files(ind_vectors_list, args.ind_res_labels_list, args.window, args.format, ind_out_files)
-    else:
-        # 在fragment=1时, 将独立测试数据集每个残基片段的base特征进行flatten
-        mat_list2frag_array(ind_vectors_list, args.ind_res_labels_list, args.fixed_len, args.format, ind_out_files)
-    # 读取独立测试数据集特征向量文件
-    ind_vectors, ind_sp_num_list = files2vectors_res(ind_out_files, args.format)
-    # 根据不同标签样本数目生成独立测试数据集标签数组
-    ind_label_array = res_label_read(ind_sp_num_list, args.label)
-
-    # 独立测试集特征分析
-    print(' Shape of Ind Feature vectors: [%d, %d] '.center(66, '*') % (ind_vectors.shape[0], ind_vectors.shape[1]))
-    print('\n')
-    if args.score == 'none':
-        ind_vectors = fa_process(args, ind_vectors, ind_label_array, True, True)
-        print(' Shape of Ind Feature vectors after FA process: [%d, %d] '.center(66, '*') % (ind_vectors.shape[0],
-                                                                                             ind_vectors.shape[1]))
-    # 构建独立测试集的分类器
-    ml_ind_results(args.ml, ind_vectors, ind_label_array, args.multi, args.res, args.results_dir, params_selected)
-
-    print('########################## Independent Test Finish ##########################\n')
-
-
-def res_crf_fe_process(args):
-    # 深度学习参数字典
-    params_dict = args.params_dict_list[0]
-    # 读取base文件向量,对向量矩阵和序列长度数组进行处理
-    vec_mat, fixed_seq_len_list = read_base_mat4res(args.fea_file, args.fixed_len)
-
-    # 这一步将所有残基的标签转换为固定长度，需要在评测时注意
-    res_label_mat = res_dl_label_read(args.res_labels_list, args.fixed_len)
-
-    # 不同于SVM/RF, 深度学习
-    if args.ind_seq_file is None:
-        # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
-        args = prepare4train_res(args, args.res_labels_list, dl=True)
-
-        crf_cv_process(vec_mat, res_label_mat, fixed_seq_len_list, args.folds, args.results_dir, params_dict)
-    else:
-        ind_res_crf_fe_process(args, vec_mat, res_label_mat, params_dict)
-
-
-def ind_res_crf_fe_process(args, vec_mat, res_label_mat, params_dict):
-    print('########################## Independent Test Begin ##########################\n')
-    # 为独立测试集配置参数
-    args = ind_preprocess(args)
-    ind_vec_mat, ind_fixed_seq_len_list = read_base_mat4res(args.ind_fea_file, args.fixed_len)
-
-    # 这一步将独立测试集所有残基的标签转换为固定长度，需要在评测时注意
-    ind_res_label_mat = res_dl_label_read(args.ind_res_labels_list, args.fixed_len)
-
-    crf_ind_process(vec_mat, res_label_mat, ind_vec_mat, ind_res_label_mat, ind_fixed_seq_len_list,
-                    args.results_dir, params_dict)
-
-    print('########################## Independent Test Finish ##########################\n')
-
-
-def res_dl_fe_process(args):
-    # 深度学习参数字典
-    params_dict = args.params_dict_list[0]
-    # 读取base文件向量,对向量矩阵和序列长度数组进行处理
-    vec_mat, fixed_seq_len_list = read_base_mat4res(args.fea_file, args.fixed_len)
-
-    # 这一步将所有残基的标签转换为固定长度，需要在评测时注意
-    res_label_mat = res_dl_label_read(args.res_labels_list, args.fixed_len)
-
-    # 不同于SVM/RF, 深度学习
-    if args.ind_seq_file is None:
-        # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
-        args = prepare4train_res(args, args.res_labels_list, dl=True)
-
-        res_dcp(args.ml, vec_mat, res_label_mat, fixed_seq_len_list, args.fixed_len, args.folds,
-                args.results_dir, params_dict)
-    else:
-        ind_res_dl_fe_process(args, vec_mat, res_label_mat, fixed_seq_len_list, params_dict)
-
-
-def ind_res_dl_fe_process(args, vec_mat, res_label_mat, fixed_seq_len_list, params_dict):
-    print('########################## Independent Test Begin ##########################\n')
-    # 为独立测试集配置参数
-    args = ind_preprocess(args)
-    ind_vec_mat, ind_fixed_seq_len_list = read_base_mat4res(args.ind_fea_file, args.fixed_len)
-
-    # 这一步将独立测试集所有残基的标签转换为固定长度，需要在评测时注意
-    ind_res_label_mat = res_dl_label_read(args.ind_res_labels_list, args.fixed_len)
-
-    res_dip(args.ml, vec_mat, res_label_mat, fixed_seq_len_list, ind_vec_mat, ind_res_label_mat,
-            ind_fixed_seq_len_list, args.fixed_len, args.results_dir, params_dict)
-
-    print('########################## Independent Test Finish ##########################\n')
-
-
-def frag_dl_fe_process(args):
-    # ** 当fragment为1,且选则深度学习特征提取方法时进行下列操作 ** #
-
-    # 生成特征向量文件名
-    out_files = out_dl_frag_file(args.label, args.results_dir, ind=False)
-    # 生成深度特征向量文件
-    res_base2frag_vec(args.fea_file, args.res_labels_list, args.fixed_len, out_files)
-
-    # 获取深度特征向量; fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
-    vectors, sp_num_list, fixed_seq_len_list = read_dl_vec4seq(args.fixed_len, out_files, return_sp=True)
-    # 生成标签数组
-    label_array = gen_label_array(sp_num_list, args.label)
-
-    # 深度学习参数字典
-    params_dict = args.params_dict_list[0]
-
-    # 深度学习的独立测试和交叉验证分开
-    if args.ind_seq_file is None:
-        # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
-        args = prepare4train_seq(args, label_array, dl=True)
-        # 构建深度学习分类器
-        seq_dcp(args.ml, vectors, label_array, fixed_seq_len_list, args.fixed_len, args.folds, args.results_dir,
-                params_dict)
-    else:
-        # 独立验证开始
-        ind_frag_dl_fe_process(args, vectors, label_array, fixed_seq_len_list, params_dict)
-
-
-def ind_frag_dl_fe_process(args, vectors, label_array, fixed_seq_len_list, params_dict):
-    print('########################## Independent Test Begin ##########################\n')
-
-    # 生成特征向量文件名
-    ind_out_files = out_dl_frag_file(args.label, args.results_dir, ind=False)
-
-    # 生成深度特征向量文件
-    res_base2frag_vec(args.ind_fea_file, args.ind_res_labels_list, args.fixed_len, ind_out_files)
-
-    # 获取深度特征向量; fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
-    ind_vectors, ind_sp_num_list, ind_fixed_seq_len_list = read_dl_vec4seq(args.fixed_len, ind_out_files,
-                                                                           return_sp=True)
-    # 生成标签数组
-    ind_label_array = gen_label_array(ind_sp_num_list, args.label)
-
-    # 为独立测试构建深度学习分类器
-    seq_dip(args.ml, vectors, label_array, fixed_seq_len_list, ind_vectors, ind_label_array, ind_fixed_seq_len_list,
-            args.fixed_len, args.results_dir, params_dict)
-
-    print('########################## Independent Test Finish ##########################\n')
-
-
-def ind_preprocess(args):
-    """ 为独立测试步骤生成特征 """
-    # 读取独立测试集序列文件里每条序列的长度
-    ind_seq_len_list = read_res_seq_file(args.ind_seq_file, args.category)
-    # 读取独立测试集标签列表和标签长度列表  res_labels_list --> list[list1, list2,..]
-    args.ind_res_labels_list, ind_label_len_list = read_res_label_file(args.ind_label_file)
-    # 在独立测试集进行同样的判断
-    res_file_check(ind_seq_len_list, ind_label_len_list, args.fragment)
-
-    # 所有res特征在独立测试集上的基础输出文件
-    args.ind_fea_file = args.results_dir + 'ind_res_features.txt'
-    # 提取独立测试集残基层面特征,生成向量文件
-    ohe2res_base(args.ind_seq_file, args.category, args.method, args.current_dir, args.pp_file, args.rss_file,
-                 args.ind_fea_file, args.cpu)
-
-    return args
+def mll_res_ind_cl_fe_process(args, params_selected):
+    return 0
 
 
 def main(args):
@@ -318,16 +114,14 @@ def main(args):
     args.results_dir = create_results_dir(args, args.current_dir)
 
     # 读取序列文件里每条序列的长度
-    seq_len_list = read_res_seq_file(args.seq_file, args.category)
-    # 读取标签列表和标签长度列表  res_labels_list --> list[list1, list2,..]
-    # print("seq_len_list", len(seq_len_list))
-    # print("cnt", np.asarray(seq_len_list).sum())
+    # seq_len_list = read_res_seq_file(args.seq_file, args.category)
+    seq_len_list, res_label_list = mll_read_res_seq_file(args.seq_file, args.label_file, args.category)
+    label_array, args.need_marginal_data = mll_gen_label_matrix(res_label_list, args.mll)
+
+    print("seq_len_list", len(seq_len_list))
+    print("label_array.shape", label_array.shape)
     # exit()
-    args.res_labels_list, label_len_list = read_res_label_file(args.label_file)
-    # fragment=0: 判断标签是否有缺失且最短序列长度是否大于5; fragment=1: 判断标签是否唯一
-    res_file_check(seq_len_list, label_len_list, args.fragment)
-    # 这里直接针对残基问题设置标签
-    args.label = [1, 0]
+
     # 控制序列的固定长度(只需要在benchmark dataset上操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
 
@@ -343,10 +137,6 @@ def main(args):
         all_params_list_dict = ml_params_check(args, all_params_list_dict)
         # 列表字典 ---> 字典列表
         args.params_dict_list = make_params_dicts(all_params_list_dict)
-    else:
-        # CRF 无需任何参数
-        all_params_list_dict = crf_params_check(args, all_params_list_dict)
-        args.params_dict_list = make_params_dicts(all_params_list_dict)
 
     print('all_params_list_dict', all_params_list_dict)
     print('args.params_dict_list', args.params_dict_list)
@@ -358,18 +148,7 @@ def main(args):
     ohe2res_base(args.seq_file, args.category, args.method, args.current_dir, args.pp_file, args.rss_file,
                  args.fea_file, args.cpu)
 
-    if args.ml in DeepLearning:
-        if args.fragment == 0:
-            print('res dl, fragment=0')
-            res_dl_fe_process(args)
-        else:
-            frag_dl_fe_process(args)
-    elif args.ml in ['SVM', 'RF']:
-        print('res ml')
-        res_cl_fe_process(args, args.fragment)
-    else:
-        print('res crf')
-        res_crf_fe_process(args)
+    mll_res_fe_process(args, label_array)
 
     print("Done.")
     print(("Used time: %.2fs" % (time.time() - start_time)))
@@ -391,8 +170,6 @@ if __name__ == '__main__':
     parse.add_argument('-window', type=int,
                        help="The sliding window technique will allocate every label a short sequence. "
                             "The window size equals to the length of short sequence.")
-    parse.add_argument('-fragment', type=int, default=0, choices=[0, 1],
-                       help="Please choose whether use the fragment method, 1 is yes while 0 is no.")
 
     # parameters for one-hot encoding
     parse.add_argument('-cpu', type=int, default=1,
@@ -495,5 +272,29 @@ if __name__ == '__main__':
     parse.add_argument('-bp', type=int, choices=[0, 1], default=0,
                        help="Select use batch mode or not, the parameter will change the directory for generating file "
                             "based on the method you choose.")
+
+    # parameters for mll methods
+    parse.add_argument('-mll', type=str, choices=Mll_Algorithm, required=True,
+                       help="The multi-label learning algorithm, for example: Binary Relevance(BR).")
+
+    parse.add_argument("-mll_k", "--mll_kNN_k", nargs='*', type=int,
+                       help="number of neighbours of each input instance to take into account")
+    parse.add_argument("-mll_s", "--MLkNN_s", nargs='*', type=float,
+                       help="the smoothing parameter")
+    parse.add_argument("-mll_ifn", "--MLkNN_ignore_first_neighbours", nargs='*', type=int,
+                       help="ability to ignore first N neighbours, "
+                            "useful for comparing with other classification software")
+    parse.add_argument("-mll_v", "--MLARAM_vigilance", nargs='*', type=float,
+                       help="parameter for adaptive resonance theory networks, "
+                            "controls how large a hyperbox can be, 1 it is small (no compression), "
+                            "0 should assume all range. Normally set between 0.8 and 0.999, "
+                            "it is dataset dependent. It is responsible for the creation of the prototypes,"
+                            " therefore training of the network ")
+    parse.add_argument("-mll_t", "--MLARAM_threshold", nargs='*', type=float,
+                       help="controls how many prototypes participate by the prediction, "
+                            "can be changed for the testing phase")
+    parse.add_argument("-mll_n", "--MLARAM_neurons", nargs='*', type=list,
+                       help="the neurons in the network")
+
     argv = parse.parse_args()
     main(argv)

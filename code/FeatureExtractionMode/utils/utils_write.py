@@ -226,6 +226,8 @@ def create_all_seq_file(seq_files, tgt_dir, ind=False):
         return tgt_dir + '/' + 'ind_all_seq_file' + suffix
 
 
+# TODO
+# label_cardinality？？
 def mll_seq_file2one(category, seq_files, out_file, label_cardinality=7, iid=True):
     # 暂时支持单数据文件输入
     if category == 'DNA':
@@ -295,6 +297,19 @@ def gen_label_array(sp_num_list, label_list):
     for i in range(len(sp_num_list)):
         labels += [int(label_list[i])] * sp_num_list[i]
     return np.array(labels)
+
+
+# def mll_gen_label_matrix(seq_label_list, mll, is_res=False):
+#     if is_res:
+#         # sequence and label are in two separate .fa file
+#         return mll_gen_label_matrix_res_file()
+#     else:
+#         # sequence and label are in one common .fa file
+#         return mll_gen_label_matrix_seq_file(seq_label_list, mll)
+#
+#
+# def mll_gen_label_matrix_res_file(seq_label_list, mll):
+#     return 0
 
 
 def mll_gen_label_matrix(seq_label_list, mll):
@@ -487,6 +502,15 @@ def out_res_file(label, results_dir, out_format, fragment, ind):
     return output_files
 
 
+def mll_out_res_file(results_dir, out_format, ind):
+    if ind is True:
+        fea_path = results_dir + 'ind_res_features[mll]_' + str(out_format) + '.txt'
+    else:
+        fea_path = results_dir + 'cv_res_features[mll]_' + str(out_format) + '.txt'
+
+    return [fea_path]
+
+
 def out_dl_frag_file(label, results_dir, ind=False):
     output_files = []
     for i in range(len(label)):
@@ -544,6 +568,39 @@ def read_res_seq_file(seq_file, category):
     return seq_len_list
 
 
+def mll_read_res_seq_file(seq_file, label_file, category):
+    # 暂时支持单数据文件输入
+    if category == 'DNA':
+        alphabet = DNA
+    elif category == 'RNA':
+        alphabet = RNA
+    else:
+        alphabet = PROTEIN
+
+    seq_len_list = []  # list of sequence length integer (list[len(seq1), len(seq2), ...])
+    seq_name_list = []  # list of seq_id (list[len(seq1), len(seq2), ...])
+    with open(seq_file, 'r') as in_f:
+        seq_all, seq_name_all = mll_get_seqs(in_f, alphabet)  # list of sequence in alphabet (list[seq1, seq2, ...])
+        for seq in seq_all:
+            seq_len_list.append(len(seq))
+        for seq_name in seq_name_all:
+            seq_name_list.append(seq_name)
+
+    res_label_list = []  # list of residue label string
+    label_len_list = []
+    with open(label_file, 'r') as in_f:
+        seq_label_all, seq_name_all_b = mll_get_seqs(in_f, alphabet, False)
+
+        for seq_label in seq_label_all:
+            seq_labels = seq_label.strip().split()
+            label_len_list.append(len(seq_labels))
+            res_label_list.extend(seq_labels)
+
+    mll_res_file_check(seq_len_list, label_len_list, seq_name_list, seq_name_all_b)
+
+    return seq_len_list, res_label_list
+
+
 def read_res_label_file(label_file):
 
     res_labels_list = []
@@ -575,3 +632,18 @@ def res_file_check(seq_len_list, label_len_list, fragment):
             assert label_len >= 5, 'The number of labels for sequence[' + str(count+1) + '] should not less than 5'
         else:
             assert label_len == 1, 'If -fragment is 1, each sequence should have only one label!'
+
+
+def mll_res_file_check(seq_len_list, label_len_list, seq_name_list_a, seq_name_list_b):
+    count = 0
+    assert len(seq_len_list) == len(label_len_list), "The number of sequence should be equal to it's label!"
+
+    for seq_len, label_len in zip(seq_len_list, label_len_list):
+        assert seq_len == label_len, 'The length of sequence[' + str(count + 1) + '] is not equal to corresponding ' \
+                                                                                  'labels'
+        assert label_len >= 5, 'The number of labels for sequence[' + str(count + 1) + '] should not less than 5'
+
+    assert len(seq_name_list_a) == len(seq_name_list_b), "error of fasta head in input data!"
+
+    for a, b in zip(seq_name_list_a, seq_name_list_b):
+        assert a.strip() == b.strip(), "error of order in input data(sequences and labels)!"

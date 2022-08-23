@@ -4,7 +4,7 @@ import time
 
 from CheckAll import Machine_Learning_Algorithm, DeepLearning, prepare4train_res, dl_params_check, make_params_dicts
 from FeatureExtractionMode.utils.utils_write import opt_params2file, read_res_label_file
-from MachineLearningAlgorithm.Classification.ml_machine import ml_cv_process
+from MachineLearningAlgorithm.Classification.ml_machine import ml_cv_process, mll_ml_cv_process
 from MachineLearningAlgorithm.Classification.ml_machine import ml_cv_results, ml_ind_results
 from MachineLearningAlgorithm.SequenceLabelling.dl_machine import dl_cv_process as res_dcp
 from MachineLearningAlgorithm.SequenceLabelling.dl_machine import dl_ind_process as res_dip
@@ -95,6 +95,12 @@ def ind_res_dl_fe_process(args, vec_mat, res_labels_list, fixed_seq_len_list, pa
 def one_cl_process(args, vectors, labels, folds, params_dict):
     params_dict = ml_cv_process(args.ml, vectors, labels, folds, args.metric_index, args.sp, args.multi, args.res,
                                 params_dict)
+    return params_dict
+
+
+def mll_one_cl_process(args, vectors, labels, folds, params_dict):
+    params_dict = mll_ml_cv_process(args.mll, args.ml, vectors, labels, folds,
+                                    args.metric_index, args.sp, args.multi, args.res, params_dict)
     return params_dict
 
 

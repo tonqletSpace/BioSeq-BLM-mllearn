@@ -184,11 +184,18 @@ def mll_get_sequence_check_dna(f, alphabet):
                          + ' has character ' + str(res) + '.(The character must be ' + alphabet + ').'
             sys.exit(error_info)
         else:
-            # print(e.no)
-            # print(e.name)
-            # print(e.seq)
             sequence_list.append(e.seq)
             name_list.append(e.name)
+
+    return sequence_list, name_list
+
+
+def mll_get_sequence_without_check(f):
+    sequence_list = []
+    name_list = []
+    for e in read_fasta_yield(f):
+        sequence_list.append(e.seq)
+        name_list.append(e.name)
 
     return sequence_list, name_list
 
@@ -238,18 +245,9 @@ def get_seqs(input_file, alphabet, desc=False):
         sys.exit(error_info)
 
 
-def mll_get_seqs(input_file, alphabet, desc=False):
-    if hasattr(input_file, 'read'):
-        if desc is False:
-            return mll_get_sequence_check_dna(input_file, alphabet)
-        else:
-            return read_fasta_check_dna(input_file, alphabet)  # return Seq(name, seq, count)
-    elif isinstance(input_file, list):
-        input_data = is_sequence_list(input_file, alphabet)
-        if input_data is not False:
-            return input_data
-        else:
-            sys.exit(0)
+def mll_get_seqs(input_file, alphabet, is_seq_res_data=True):
+    if is_seq_res_data:
+        return mll_get_sequence_check_dna(input_file, alphabet)
     else:
-        error_info = 'Sorry, the parameter in get_data method must be list or file type.'
-        sys.exit(error_info)
+        # read labels
+        return mll_get_sequence_without_check(input_file)

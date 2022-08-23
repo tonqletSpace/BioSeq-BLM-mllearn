@@ -26,6 +26,10 @@ def get_partition(feature, target, length, train_index, val_index):
 
 
 def crf_cv_process(vectors, labels, seq_length_list, folds, out_dir, params_dict):
+    print("vectors.shape", vectors.shape)
+    print("labels.shape", labels.shape)
+    # exit()
+
     results = []
     cv_labels = []
     cv_prob = []

@@ -63,6 +63,9 @@ def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, params_dict):
 
 
 def get_partition(vectors, labels, train_index, val_index):
+    # print("vectors.shape", vectors.shape)
+    # print("labels.shape", labels.shape)
+    # exit()
     x_train = vectors[train_index]
     x_val = vectors[val_index]
     y_train = labels[train_index]
@@ -146,8 +149,6 @@ def mll_model_factory(mll, params_dict):
                       threshold=params_dict['MLARAM_threshold'],
                       neurons=params_dict['MLARAM_neurons'] if 'MLARAM_neurons' in params_dict.keys()
                       else None)
-
-
     else:
         raise ValueError('mll method err')
 

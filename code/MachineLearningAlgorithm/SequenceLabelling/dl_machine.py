@@ -43,10 +43,12 @@ def dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_dir,
     for train_index, val_index in folds:
         x_train, x_val, y_train, y_val, train_length, test_length = get_partition(vectors, labels, seq_length_list,
                                                                                   train_index, val_index)
-        # print("x_train", x_train.shape)
-        # print("y_train", y_train.shape)
-        # print("x_val", x_val.shape)
-        # print("y_val", y_val.shape)
+        print('dl without fagment'.center(100, '*'))
+        print("x_train", x_train.shape)
+        print("y_train", y_train.shape)
+        print("x_val", x_val.shape)
+        print("y_val", y_val.shape)
+        # print(isinstance(y_val, list))
         # exit()
         model = TorchNetRes(ml, max_len, criterion, params_dict).net_type(in_dim, num_class)
         optimizer = optim.Adam(model.parameters(), lr=params_dict['lr'])
@@ -69,8 +71,13 @@ def dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_dir,
                 final_target_list = target_list
                 final_prob_list = prob_list
 
+        print("final_target_list", len(final_target_list))
+        print("final_predict_list", len(final_predict_list))
+
         result = performance(final_target_list, final_predict_list, final_prob_list, multi, True)
         results.append(result)
+        print("result", len(result))
+        exit()
 
         cv_labels.append(final_target_list)
         cv_prob.append(final_predict_list)
@@ -78,7 +85,6 @@ def dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_dir,
         all_true_labels.extend(final_target_list)
         all_pre_labels.extend(final_predict_list)
         all_prob.extend(final_predict_list)
-        eval_cnt += len(final_predict_list)  # 15241
 
         # 这里为保存概率文件准备
         count += 1
@@ -90,8 +96,6 @@ def dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_dir,
     print("cv_labels", len(cv_labels))
     print("cv_prob", len(cv_prob))
     # print("result", len(result))
-    print("eval_cnt", eval_cnt)
-    exit()
     final_results = np.array(results).mean(axis=0)
     # table_metric(final_results, True)
     print_metric_dict(final_results, ind=False)

@@ -17,7 +17,7 @@ from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process, dl
 from MachineLearningAlgorithm.utils.utils_read import files2vectors_seq, read_dl_vec4seq, mll_files2vectors_seq, \
     mll_read_dl_vec4seq
 from MachineLearningSeq import one_ml_process, params_select, ml_results, ind_ml_results, mll_one_ml_process, \
-    mll_ml_results, mll_ind_ml_results, mll_params_select
+    mll_ml_results, mll_ind_ml_results
 
 
 def create_results_dir(args, cur_dir):
@@ -103,7 +103,7 @@ def mll_ml_fe_process(args):
     pool.close()
     pool.join()
     # 根据指标进行参数选择
-    params_selected = mll_params_select(params_dict_list_pro, args.results_dir)
+    params_selected = params_select(params_dict_list_pro, args.results_dir)
     # 将最优的特征向量文件从"all_fea_files/"文件夹下复制到主文件下
     opt_files = opt_file_copy(params_selected['out_files'], args.results_dir)
 
