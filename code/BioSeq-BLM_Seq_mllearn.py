@@ -69,10 +69,6 @@ def mll_ml_fe_process(args):
     # 列表字典 ---> 字典列表
     params_dict_list = make_params_dicts(all_params_list_dict)
 
-    # print('for each run')
-    # print(params_dict_list)
-    # exit()
-
     # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
     args.fold = mll_prepare4train_seq(args, label_array, dl=False)
 
@@ -195,16 +191,17 @@ def mll_dl_fe_process(args):
     print("label_array.shape", label_array.shape)
     # exit()
     # 深度特征向量提取
-    # 深度特征向量提取
     mll_one_seq_fe_process(args, input_one_file, label_array, out_files, **params_dict)
-    # exit()
     # 获取深度特征向量
+
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
     vectors, embed_size, fixed_seq_len_list = mll_read_dl_vec4seq(args, args.fixed_len, out_files)
 
-    # print(vectors.shape, vectors.dtype)
+    print("vectors.type", type(vectors))
     print("vectors.shape", vectors.shape)  # (N, L*E)、(32, fixed_len * 4)
+    print("type(label_array)", type(label_array))
     print("label_array.shape", label_array.shape)
+    print("type(fixed_seq_len_list)", type(fixed_seq_len_list))
     print('fixed_seq_len_list', len(fixed_seq_len_list))  # (N,) of fixed_len * 4
     # exit()
 
@@ -256,7 +253,6 @@ def main(args):
     check_contain_chinese(current_path)
 
     # 判断mode和ml的组合是否合理
-    # seq_sys_check(args)
     mll_seq_sys_check(args)
 
     # 生成结果文件夹

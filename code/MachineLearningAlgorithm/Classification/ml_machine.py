@@ -64,7 +64,7 @@ def ml_cv_process(ml, vectors, labels, folds, metric, sp, multi, res, params_dic
     return params_dict
 
 
-def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, sp, multi, res, params_dict):
+def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, res, params_dict):
     print_len = 40
     if ml == 'SVM':
         temp_str1 = '  cost = 2 ** ' + str(params_dict['cost']) + ' | ' + 'gamma = 2 ** ' + \
@@ -85,7 +85,7 @@ def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, sp, multi, res, p
         result = mll_performance(y_val, y_val_)
         results.append(result)
 
-    cv_results = np.array(results).mean(axis=0) if not multi else [np.array(results).mean(axis=0)]
+    cv_results = np.array(results).mean(axis=0)
 
     params_dict['metric'] = cv_results[metric]
     temp_str2 = '  metric value: ' + Metric_List[metric] + ' = ' + '%.3f  ' % cv_results[metric]

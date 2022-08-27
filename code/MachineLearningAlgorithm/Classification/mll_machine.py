@@ -23,8 +23,6 @@ Metric_List = ['Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1']
 
 
 def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, params_dict):
-    assert isinstance(vectors, lil_matrix), 'error'
-
     if ml:
         print_len = 40
         if ml == 'SVM':

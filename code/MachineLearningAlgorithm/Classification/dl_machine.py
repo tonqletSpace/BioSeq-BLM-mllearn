@@ -134,6 +134,7 @@ def mll_dl_cv_process(mll, ml, vectors, embed_size, labels, seq_length_list, max
             iterator_train__shuffle=True,
             train_split=False
         )
+        # print("type(x_train)", type(x_train)) np.ndarray
 
         mll_clf = MllDeepNetSeq(mll).mll_classifier(base_clf)
         # blm是每个epoch都测试，选最好的测试结果

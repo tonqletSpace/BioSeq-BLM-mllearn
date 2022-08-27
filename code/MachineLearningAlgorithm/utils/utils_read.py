@@ -115,6 +115,15 @@ def mll_files2vectors_seq(args, file_list, in_format):
     return lil_matrix(vectors)
 
 
+def mll_dl_files2vectors_seq(args, file_list, in_format):
+    vectors = files2vectors_seq(file_list, in_format)
+    if args.need_marginal_data:
+        # 增加两个边界数据，对应label分别是：(0...00)_q，(1...11)_q
+        marginal_vec = np.zeros((2, vectors.shape[1]), dtype=np.float32)
+        vectors = np.vstack((vectors, marginal_vec))
+    return vectors
+
+
 def files2vectors_info(file_list, in_format):
     in_files = []
     for in_file_name in file_list:
@@ -238,6 +247,26 @@ def mll_read_dl_vec4seq(args, fixed_len, in_files):
     return vec_vec, embed_size, fixed_seq_len_list
 
 
+def mll_read_dl_vec4res(args, vectors_list, fixed_len, in_files):
+    # print(type(vectors_list))
+    # print(vectors_list.shape)
+    # exit()
+    seq_len_list = [fixed_len] * vectors_list.shape[0]
+    # print("vec_mat.shape", vec_mat.shape)
+    embed_size = vectors_list.shape[-1] // fixed_len
+    vec_vec = vectors_list
+    # print("vec_vec.shape", vec_vec.shape)
+
+    if args.need_marginal_data:
+        # 内存中增加两个边界数据，对应label分别是：(0...00)_q，(1...11)_q
+        marginal_vec = np.zeros((2, vec_vec.shape[1]), dtype=np.float32)
+        vec_vec = np.vstack((vec_vec, marginal_vec))
+        seq_len_list.append(len(vec_vec[-2]))
+        seq_len_list.append(len(vec_vec[-1]))
+
+    return vec_vec, embed_size, seq_len_list
+
+
 def read_base_mat4res(in_file, fixed_len):
     vectors_list = []
     seq_len_list = []
@@ -296,7 +325,6 @@ def fixed_opt(fixed_len, vectors_list, seq_len_list):
     vec_mat = []
 
     for i in range(len(vectors_list)):
-        # print(i)
         temp_arr = np.zeros((fixed_len, len(vectors_list[i][0])))
         seq_len = len(vectors_list[i])
         if seq_len > fixed_len:

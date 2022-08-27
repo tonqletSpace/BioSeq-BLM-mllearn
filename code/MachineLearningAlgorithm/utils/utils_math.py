@@ -40,9 +40,9 @@ def construct_partition2two(labels, folds_num, stratified=True):
     return folds
 
 
-def mll_marginal_check(label_matrix, args):
+def mll_marginal_check(label_matrix, args, stratified=True):
     if args.need_marginal_data:
-        raw_folds = construct_partition2two(label_matrix[:-2], args.folds_num, True)
+        raw_folds = construct_partition2two(label_matrix[:-2], args.folds_num, stratified)
         n = label_matrix.get_shape()[0]
 
         folds = []
@@ -53,7 +53,7 @@ def mll_marginal_check(label_matrix, args):
 
         return folds
     else:
-        return construct_partition2two(label_matrix, args.folds_num, True)
+        return construct_partition2two(label_matrix, args.folds_num, stratified)
 
 
 def sampling(mode, x_train, y_train):

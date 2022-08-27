@@ -100,7 +100,7 @@ def one_cl_process(args, vectors, labels, folds, params_dict):
 
 def mll_one_cl_process(args, vectors, labels, folds, params_dict):
     params_dict = mll_ml_cv_process(args.mll, args.ml, vectors, labels, folds,
-                                    args.metric_index, args.sp, args.multi, args.res, params_dict)
+                                    args.metric_index, args.res, params_dict)
     return params_dict
 
 

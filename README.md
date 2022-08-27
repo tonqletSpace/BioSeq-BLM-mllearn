@@ -94,7 +94,7 @@ python BioSeq-BLM_Seq.py -category Protein -mode TM -method LSA -in_tm BOW -word
 #### 4 Identification of intrinsically disordered regions in proteins
 
 ```shell
-python BioSeq-BLM_Res.py -category Protein -method BLOSUM62 -ml LSTM -epoch 10 -lr 0.01 -dropout 0.5 -batch_size 20 -fixed_len 300 -n_layer 2 -hidden_dim 64 -seq_file ../data/4-IDRs/protein_seq.txt -label_file ../data/4-IDRs/protein_label.txt
+python BioSeq-BLM_Res.py -category Protein -method BLOSUM62 -ml LSTM -epoch 10 -lr 0.01 -dropout 0.5 -batch_size 20 -fixed_len 300 -n_layer 2 -hidden_dim 64 -seq_file ../data/4-IDRs/mll_protein_seq.txt -label_file ../data/4-IDRs/mll_protein_label.txt
 ```
 
 #### 5 RNA-binding protein identification

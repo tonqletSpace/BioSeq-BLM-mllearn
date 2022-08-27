@@ -6,48 +6,69 @@ import numpy as np
 
 from CheckAll import results_dir_check, check_contain_chinese, seq_sys_check, ml_params_check, make_params_dicts, \
     res_feature_check, Machine_Learning_Algorithm, DeepLearning, Final_Path, dl_params_check, Batch_Path_Res, \
-    Method_Res, prepare4train_res, prepare4train_seq, crf_params_check, Mll_Algorithm
+    Method_Res, prepare4train_res, prepare4train_seq, crf_params_check, Mll_Algorithm, mll_prepare4train_res, \
+    mll_prepare4train_seq, mode_params_check
 from FeatureAnalysis import fa_process
 from FeatureExtractionMode.OHE.OHE4vec import ohe2res_base, sliding_win2files, mat_list2frag_array, \
     mll_sliding_win2files
 from FeatureExtractionMode.utils.utils_write import read_res_seq_file, read_res_label_file, fixed_len_control, \
     res_file_check, out_res_file, out_dl_frag_file, res_base2frag_vec, gen_label_array, mll_gen_label_matrix, \
     mll_read_res_seq_file, mll_out_seq_file, mll_out_res_file
-from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process as seq_dcp
+from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process as seq_dcp, mll_dl_cv_process
 from MachineLearningAlgorithm.Classification.dl_machine import dl_ind_process as seq_dip
 from MachineLearningAlgorithm.SequenceLabelling.dl_machine import dl_cv_process as res_dcp
 from MachineLearningAlgorithm.SequenceLabelling.dl_machine import dl_ind_process as res_dip
 from MachineLearningAlgorithm.Classification.ml_machine import ml_cv_results, ml_ind_results
 from MachineLearningAlgorithm.SequenceLabelling.ml_machine import crf_cv_process, crf_ind_process
 from MachineLearningAlgorithm.utils.utils_read import files2vectors_res, read_base_mat4res, read_base_vec_list4res, \
-    res_label_read, read_dl_vec4seq, res_dl_label_read, mll_files2vectors_seq
+    res_label_read, read_dl_vec4seq, res_dl_label_read, mll_files2vectors_seq, mll_read_dl_vec4seq, mll_read_dl_vec4res, \
+    mll_dl_files2vectors_seq
 from MachineLearningRes import one_cl_process, params_select, mll_one_cl_process
 from FeatureExtractionRes import create_results_dir
 from MachineLearningSeq import mll_ml_results
 
 
-def mll_ind_ml_fe_process(args, opt_vectors, label_array, params_selected):
+def mll_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, params_dict):
     pass
 
 
-def mll_res_fe_process(args, label_array):
-    # convert res mll problem to seq mll problem
-    # ** 残基层面特征提取和标签数组生成开始 ** #
-    # 为存储SVM和RF输入特征的文件命名
-    out_files = mll_out_res_file(args.results_dir, args.format, ind=False)
+def mll_res_dl_fe_process(args, label_array, out_files, params_dict):
+    # residue feature (N, E)
+    vectors = mll_dl_files2vectors_seq(args, out_files, args.format)
+    print("type(vectors)", type(vectors))
+    print("vectors.shape", vectors.shape)  # (N, W*E)
+    print("type(label_array)", type(label_array))
+    print("label_array.shape", label_array.shape)  # (N, q)
+    # exit()
 
-    # 读取base特征文件, 待写入
-    vectors_list = read_base_vec_list4res(args.fea_file)
+    # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
+    vectors, embed_size, fixed_seq_len_list = mll_read_dl_vec4res(args, vectors, args.window, out_files)
 
-    # fragment判断,生成对应的特征向量
-    assert args.window is not None, "please set window size!"
-    mll_sliding_win2files(vectors_list, label_array, args.window, args.format, out_files)
+    # print(vectors.shape, vectors.dtype)
+    # print("vectors.shape", vectors.shape)  # (N, L*E)、(32, fixed_len * 4)
+    # print("label_array.shape", label_array.shape)
+    # print("embed_size", embed_size)
+    # exit()
 
+    # 深度学习的独立测试和交叉验证分开
+    if args.ind_seq_file is None:
+        # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
+
+        args = mll_prepare4train_seq(args, label_array, dl=True)
+        # 构建深度学习分类器
+        mll_dl_cv_process(args.mll, args.ml, vectors, embed_size, label_array, fixed_seq_len_list,
+                          args.fixed_len, args.folds, args.results_dir, params_dict)
+    else:
+        # 独立验证开始
+        mll_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, params_dict)
+
+
+def mll_res_ml_fe_process(args, label_array, out_files):
     # 读取特征向量文件
     vectors = mll_files2vectors_seq(args, out_files, args.format)
 
     # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
-    args = prepare4train_res(args, label_array, dl=False)
+    args = mll_prepare4train_res(args, label_array, dl=False)
 
     args.res = True
 
@@ -79,10 +100,10 @@ def mll_res_fe_process(args, label_array):
     # 特征分析
     print(' Shape of Feature vectors: [%d, %d] '.center(66, '*') % (vectors.shape[0], vectors.shape[1]))
     print('\n')
-    if args.score == 'none':
-        vectors = fa_process(args, vectors, label_array, after_ps=True)
-        print(' Shape of Feature vectors after FA process: [%d, %d] '.center(66, '*') % (vectors.shape[0],
-                                                                                         vectors.shape[1]))
+    # if args.score == 'none':
+    #     vectors = fa_process(args, vectors, label_array, after_ps=True)
+    #     print(' Shape of Feature vectors after FA process: [%d, %d] '.center(66, '*') % (vectors.shape[0],
+    #                                                                                      vectors.shape[1]))
 
     # 构建分类器
     mll_ml_results(args, vectors, label_array, args.folds, params_selected)
@@ -92,8 +113,8 @@ def mll_res_fe_process(args, label_array):
         mll_ind_ml_fe_process(args, vectors, label_array, params_selected)
 
 
-def mll_res_ind_cl_fe_process(args, params_selected):
-    return 0
+def mll_ind_ml_fe_process(args, opt_vectors, label_array, params_selected):
+    pass
 
 
 def main(args):
@@ -114,12 +135,11 @@ def main(args):
     args.results_dir = create_results_dir(args, args.current_dir)
 
     # 读取序列文件里每条序列的长度
-    # seq_len_list = read_res_seq_file(args.seq_file, args.category)
     seq_len_list, res_label_list = mll_read_res_seq_file(args.seq_file, args.label_file, args.category)
     label_array, args.need_marginal_data = mll_gen_label_matrix(res_label_list, args.mll)
 
-    print("seq_len_list", len(seq_len_list))
     print("label_array.shape", label_array.shape)
+    print("args.need_marginal_data", args.need_marginal_data)
     # exit()
 
     # 控制序列的固定长度(只需要在benchmark dataset上操作一次）
@@ -131,9 +151,10 @@ def main(args):
     all_params_list_dict = {}  # 包含了机器学习和特征提取的参数
     if args.ml in DeepLearning:
         all_params_list_dict = dl_params_check(args, all_params_list_dict)
-        # 列表字典 ---> 字典列表
-        args.params_dict_list = make_params_dicts(all_params_list_dict)
-    elif args.ml in ['SVM', 'RF']:
+        params_list_dict, all_params_list_dict = mode_params_check(args, all_params_list_dict)
+        # 列表字典 ---> 字典列表 --> 参数字典
+        args.params_dict_list = make_params_dicts(all_params_list_dict)[0]
+    else:
         all_params_list_dict = ml_params_check(args, all_params_list_dict)
         # 列表字典 ---> 字典列表
         args.params_dict_list = make_params_dicts(all_params_list_dict)
@@ -148,7 +169,22 @@ def main(args):
     ohe2res_base(args.seq_file, args.category, args.method, args.current_dir, args.pp_file, args.rss_file,
                  args.fea_file, args.cpu)
 
-    mll_res_fe_process(args, label_array)
+    # 为存储SVM和RF输入特征的文件命名
+    out_files = mll_out_res_file(args.results_dir, args.format, ind=False)
+
+    # 读取base特征文件, 待写入
+    vectors_list = read_base_vec_list4res(args.fea_file)
+
+    # convert res mll problem to seq mll problem
+    assert args.window is not None, "please set window size!"
+    mll_sliding_win2files(vectors_list, label_array, args.window, args.format, out_files)
+
+    if args.ml in DeepLearning:
+        args.dl = 1
+        mll_res_dl_fe_process(args, label_array, out_files, args.params_dict_list)
+    else:
+        args.dl = 0
+        mll_res_ml_fe_process(args, label_array, out_files)
 
     print("Done.")
     print(("Used time: %.2fs" % (time.time() - start_time)))

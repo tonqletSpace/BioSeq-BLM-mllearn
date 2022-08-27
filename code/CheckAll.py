@@ -1040,6 +1040,33 @@ def prepare4train_res(args, label_array, dl):
     return args
 
 
+def mll_prepare4train_res(args, label_array, dl):
+    info_dict = {}
+
+    if args.cv == 'j':
+        args.folds_num = sum(args.sample_num_list)
+        info_dict['Validation method'] = 'Jackknife cross validation'
+    elif args.cv == '10':
+        args.folds_num = 10
+        info_dict['Validation method'] = '10-fold cross validation'
+    else:
+        args.folds_num = 5
+        info_dict['Validation method'] = '5-fold cross validation'
+
+    if dl is False:
+        args.folds = mll_marginal_check(label_array, args)  # 固定交叉验证的每一折index
+        args.metric_index = Metric_Index[args.metric]
+        info_dict['Metric for selection'] = Metric_dict[args.metric]
+    else:
+        label_array = random.normal(loc=0.0, scale=1, size=(len(label_array)))
+        args.folds = mll_marginal_check(label_array, args, False)  # 固定交叉验证的每一折index
+
+    info_dict['Type of Problem'] = 'Multi-label Learning'
+
+    print_base_dict(info_dict)
+    return args
+
+
 def get_params(params_file_name):
     params_dict = {}
     with open(params_file_name, 'r') as f:
