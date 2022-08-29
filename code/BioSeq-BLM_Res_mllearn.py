@@ -7,7 +7,7 @@ import numpy as np
 from CheckAll import results_dir_check, check_contain_chinese, seq_sys_check, ml_params_check, make_params_dicts, \
     res_feature_check, Machine_Learning_Algorithm, DeepLearning, Final_Path, dl_params_check, Batch_Path_Res, \
     Method_Res, prepare4train_res, prepare4train_seq, crf_params_check, Mll_Algorithm, mll_prepare4train_res, \
-    mll_prepare4train_seq, mode_params_check
+    mll_prepare4train_seq, mode_params_check, mll_seq_sys_check, mll_meka_check
 from FeatureAnalysis import fa_process
 from FeatureExtractionMode.OHE.OHE4vec import ohe2res_base, sliding_win2files, mat_list2frag_array, \
     mll_sliding_win2files
@@ -42,12 +42,13 @@ def mll_res_dl_fe_process(args, label_array, out_files, params_dict):
     # exit()
 
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
+    # fixed_len为args.window所替代
     vectors, embed_size, fixed_seq_len_list = mll_read_dl_vec4res(args, vectors, args.window, out_files)
 
     # print(vectors.shape, vectors.dtype)
-    # print("vectors.shape", vectors.shape)  # (N, L*E)、(32, fixed_len * 4)
-    # print("label_array.shape", label_array.shape)
-    # print("embed_size", embed_size)
+    print("vectors.shape", vectors.shape)  # (N, L*E)、(32, fixed_len * 4)
+    print("label_array.shape", label_array.shape)
+    print("embed_size", embed_size)
     # exit()
 
     # 深度学习的独立测试和交叉验证分开
@@ -56,8 +57,9 @@ def mll_res_dl_fe_process(args, label_array, out_files, params_dict):
 
         args = mll_prepare4train_seq(args, label_array, dl=True)
         # 构建深度学习分类器
+        # fixed_len为args.window所替代
         mll_dl_cv_process(args.mll, args.ml, vectors, embed_size, label_array, fixed_seq_len_list,
-                          args.fixed_len, args.folds, args.results_dir, params_dict)
+                          args.window, args.folds, args.results_dir, params_dict)
     else:
         # 独立验证开始
         mll_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, params_dict)
@@ -83,6 +85,8 @@ def mll_res_ml_fe_process(args, label_array, out_files):
     print('\n')
     for i in range(len(params_dict_list)):
         params_dict = params_dict_list[i]
+        mll_meka_check(args, params_dict)
+        print("cur params_dict\n", params_dict)
         # params_dict_list_pro.append(one_cl_process(args, vectors, label_array, args.folds, params_dict))
         # break
         params_dict_list_pro.append(pool.apply_async(mll_one_cl_process,
@@ -129,7 +133,7 @@ def main(args):
     # 判断mode和ml的组合是否合理
     args.mode = 'OHE'
     args.score = 'none'
-    seq_sys_check(args, True)
+    mll_seq_sys_check(args, True)
 
     # 生成结果文件夹
     args.results_dir = create_results_dir(args, args.current_dir)
@@ -272,7 +276,7 @@ if __name__ == '__main__':
                        help="The dimension of multi-head attention layer for Transformer or Weighted-Transformer.")
     parse.add_argument('-d_ff', type=int, default=1024,
                        help="The dimension of fully connected layer of Transformer or Weighted-Transformer.")
-    parse.add_argument('-heads', type=int, default=4,
+    parse.add_argument('-n_heads', type=int, default=4,
                        help="The number of heads for Transformer or Weighted-Transformer.")
     # parameters for Reformer
     parse.add_argument('-n_chunk', type=int, default=8,

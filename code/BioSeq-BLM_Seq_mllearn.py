@@ -203,7 +203,8 @@ def mll_dl_fe_process(args):
     print("label_array.shape", label_array.shape)
     print("type(fixed_seq_len_list)", type(fixed_seq_len_list))
     print('fixed_seq_len_list', len(fixed_seq_len_list))  # (N,) of fixed_len * 4
-    # exit()
+    print("embed_size", embed_size)
+    exit()
 
     # 深度学习的独立测试和交叉验证分开
     if args.ind_seq_file is None:

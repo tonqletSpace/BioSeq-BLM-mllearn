@@ -102,15 +102,15 @@ def seq_sys_check(args, res=False):
     print('\n')
 
 
-def mll_seq_sys_check(args):
+def mll_seq_sys_check(args, res=False):
     # check meka
     if is_mll_meka_methods(args.mll):
         args.meka_classpath = download_meka()
-        args.which_java = '/usr/bin/java'  # should read from path
+        args.which_java = '/usr/bin/java'  # TODO should read from path
 
     # blm
     if args.ml:
-        seq_sys_check(args)
+        seq_sys_check(args, res)
 
 
 def mll_meka_check(args, params_dict):
