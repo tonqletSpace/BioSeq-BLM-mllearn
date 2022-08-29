@@ -87,8 +87,6 @@ def mll_res_ml_fe_process(args, label_array, out_files):
         params_dict = params_dict_list[i]
         mll_meka_check(args, params_dict)
         print("cur params_dict\n", params_dict)
-        # params_dict_list_pro.append(one_cl_process(args, vectors, label_array, args.folds, params_dict))
-        # break
         params_dict_list_pro.append(pool.apply_async(mll_one_cl_process,
                                                      (args, vectors, label_array, args.folds, params_dict)))
         if i == 1:
@@ -142,8 +140,8 @@ def main(args):
     seq_len_list, res_label_list = mll_read_res_seq_file(args.seq_file, args.label_file, args.category)
     label_array, args.need_marginal_data = mll_gen_label_matrix(res_label_list, args.mll)
 
-    print("label_array.shape", label_array.shape)
-    print("args.need_marginal_data", args.need_marginal_data)
+    # print("label_array.shape", label_array.shape)
+    # print("args.need_marginal_data", args.need_marginal_data)
     # exit()
 
     # 控制序列的固定长度(只需要在benchmark dataset上操作一次）
