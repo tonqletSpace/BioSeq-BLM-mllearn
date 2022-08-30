@@ -111,6 +111,8 @@ def mll_ml_fe_process(args):
         opt_vectors = mll_fa_process(args, opt_vectors, label_array, after_ps=True, ind=False)
         print(' Shape of Optimal Feature vectors after FA process: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0],
                                                                                                  opt_vectors.shape[1]))
+
+    # exit()
     # 构建分类器
     mll_ml_results(args, opt_vectors, label_array, args.folds, params_selected)
     # -------- 独立测试-------- #
@@ -181,7 +183,9 @@ def mll_dl_fe_process(args):
     # params_list_dict 为只包括特征提取的参数的字典， all_params_list_dict为包含所有参数的字典
     params_list_dict, all_params_list_dict = mode_params_check(args, all_params_list_dict)
     # 列表字典 ---> 字典列表 --> 参数字典
+    mll_params_check(args, all_params_list_dict)
     params_dict = make_params_dicts(all_params_list_dict)[0]
+
     # 特征向量文件命名
     out_files = mll_out_dl_seq_file(args.results_dir, ind=False)
 
@@ -204,7 +208,7 @@ def mll_dl_fe_process(args):
     print("type(fixed_seq_len_list)", type(fixed_seq_len_list))
     print('fixed_seq_len_list', len(fixed_seq_len_list))  # (N,) of fixed_len * 4
     print("embed_size", embed_size)
-    exit()
+    # exit()
 
     # 深度学习的独立测试和交叉验证分开
     if args.ind_seq_file is None:
@@ -493,6 +497,9 @@ if __name__ == '__main__':
                             "can be changed for the testing phase")
     parse.add_argument("-mll_n", "--MLARAM_neurons", nargs='*', type=list,
                        help="the neurons in the network")
-
+    parse.add_argument("-mll_ls", "--RAkELo_labelset_size", nargs='*', type=int,
+                       help="the neurons in the network")
+    parse.add_argument("-mll_mc", "--RAkELo_model_count", nargs='*', type=int,
+                       help="the neurons in the network")
     argv = parse.parse_args()
     main(argv)

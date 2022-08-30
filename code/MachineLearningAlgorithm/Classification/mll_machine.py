@@ -1,4 +1,5 @@
 from skmultilearn.adapt import MLARAM, BRkNNaClassifier, MLkNN, BRkNNbClassifier
+from skmultilearn.ensemble import RakelO
 from skmultilearn.problem_transform import BinaryRelevance, ClassifierChain, LabelPowerset
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
@@ -13,7 +14,7 @@ from skmultilearn.ext import Meka, download_meka
 # from ..utils.utils_read import FormatRead
 from scipy.sparse import lil_matrix, issparse
 
-from ..utils.utils_mll import is_mll_instance_methods, is_mll_meka_methods, BLMMeka
+from ..utils.utils_mll import is_mll_instance_methods, is_mll_meka_methods, BLMMeka, BLMRAkELo
 from ..utils.utils_results import mll_performance
 
 from warnings import simplefilter
@@ -80,11 +81,6 @@ def get_mll_ml_model(mll, ml, params_dict):
 
 
 def mll_ml_model_factory(mll, ml, params_dict):
-    # if is_mll_meka_methods(mll):
-    #     # 优化写法
-    #     # meka_classpath = download_meka()
-    #     # java_command = '/usr/bin/java'  # path to java executable
-
     if mll == 'BR':
         return BinaryRelevance(classifier=ml_model_factory(ml, params_dict), require_dense=[True, True])
     elif mll == 'CC':
@@ -111,6 +107,13 @@ def mll_ml_model_factory(mll, ml, params_dict):
             weka_classifier=ml_model_factory(ml, params_dict, True),  # with Naive Bayes single-label classifier
             meka_classpath=params_dict['meka_classpath'],  # obtained via download_meka
             java_command=params_dict['which_java']
+        )
+    elif mll == 'RAkELo':
+        return BLMRAkELo(
+            base_classifier=ml_model_factory(ml, params_dict),
+            base_classifier_require_dense=[True, True],
+            labelset_size=params_dict['RAkELo_labelset_size'],
+            model_count=params_dict['RAkELo_model_count']
         )
     else:
         raise ValueError('mll_ml method parameter error')
@@ -162,15 +165,3 @@ def mll_result_sparse_check(mll, res):
     if mll in ['MLARAM'] and not issparse(res):
         return lil_matrix(res)
     return res
-
-
-
-
-# def get_label_inducing_data(vectors):
-#     e, q = vectors.shape[1], 1
-#     aux_data, aux_label = lil_matrix((2, e)), lil_matrix((2, q))
-#     return aux_data, [0, 1]
-
-
-# def mll_validate_data(label_arrays):
-    # for q dim label, assure the length of each dim is 2

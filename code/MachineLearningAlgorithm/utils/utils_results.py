@@ -91,6 +91,9 @@ def mll_performance(origin_labels, predicted_labels):
 
     if origin_labels.get_shape() != predicted_labels.get_shape():
         raise ValueError("The shape of the original labels must equal to that of the predicted labels.")
+    # print(origin_labels.toarray())
+    # print(predicted_labels.toarray())
+    # exit()
 
     # 'Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1'
     hamming_loss = metrics.hamming_loss(origin_labels, predicted_labels)
@@ -241,8 +244,11 @@ def prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False):
 
 
 def mll_prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False):
-    assert issparse(true_labels) and not issparse(predicted_labels) and not issparse(prob_list)
+    assert issparse(true_labels) and not issparse(predicted_labels)
     predicted_labels = predicted_labels.astype(np.int, copy=True)
+    if prob_list is None:
+        prob_list = np.zeros(predicted_labels, np.int)
+
     true_labels = true_labels.toarray()
     prob_file = out_path + "prob_out.txt"
     if ind is True:

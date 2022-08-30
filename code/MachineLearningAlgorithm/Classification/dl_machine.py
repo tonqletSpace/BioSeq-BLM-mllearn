@@ -7,13 +7,13 @@ from sklearn.utils.validation import check_array, check_is_fitted
 from skmultilearn.problem_transform import LabelPowerset
 from skorch import NeuralNetClassifier
 from torch import nn, optim
-from scipy.sparse import issparse
+from scipy.sparse import issparse, lil_matrix
 
 from ..utils.utils_net import TorchNetSeq, FORMER, MllBaseTorchNetSeq, sequence_mask, TrmDataset
 from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
 from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
     mll_final_results_output, mll_prob_output, mll_print_metric_dict
-from ..utils.utils_mll import BLMLabelPowerset, MllDeepNetSeq
+from ..utils.utils_mll import BLMLabelPowerset, MllDeepNetSeq, get_mll_deep_model, get_lp_num_class
 
 
 def get_partition(feature, target, length, train_index, val_index):
@@ -86,22 +86,17 @@ def dl_cv_process(ml, vectors, labels, seq_length_list, max_len, folds, out_dir,
     prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
 
 
-def get_output_space_dim(y, mll):
+def get_output_space_dim(y, mll, params_dict):
     if mll in ['BR']:  # binary classification
         return 2
 
-    # LabelPowerSet
-    unique_combinations_ = {}
+    if mll in ['RAkELo']:
+        # return y.shape[1]+1
+        # TODO
+        return None
 
-    last_id = 0
-    for labels_applied in y.rows:
-        label_string = ",".join(map(str, labels_applied))
-
-        if label_string not in unique_combinations_:
-            unique_combinations_[label_string] = last_id
-            last_id += 1
-
-    return last_id  # output space {0,1,...,n_class-1}
+    if mll in ['LP']:
+        return get_lp_num_class(y)
 
 
 def mll_dl_cv_process(mll, ml, vectors, embed_size, labels, seq_length_list, max_len, folds, out_dir, params_dict):
@@ -112,59 +107,29 @@ def mll_dl_cv_process(mll, ml, vectors, embed_size, labels, seq_length_list, max
     predicted_labels = np.zeros(labels.get_shape())
     predicted_prob = np.zeros(labels.get_shape())
 
-    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # 让torch判断是否使用GPU，建议使用GPU环境，因为会快很多
-
     count = 0
-    multi = True  # 没意义，因为是mll
-
     for train_index, val_index in folds:
         x_train, x_val, y_train, y_val, train_length, test_length = get_partition(vectors, labels, seq_length_list,
                                                                                   train_index, val_index)
-        num_class = get_output_space_dim(y_train, mll)
-        initialized_torch_model = MllBaseTorchNetSeq(
-            ml, max_len, None, params_dict).net_type(embed_size, num_class)
-        base_clf = NeuralNetClassifier(
-            initialized_torch_model,
-            criterion=nn.CrossEntropyLoss(),
-            batch_size=params_dict['batch_size'],
-            optimizer=optim.Adam,
-            optimizer__lr=params_dict['lr'],
-            device=DEVICE,
-            max_epochs=params_dict['epochs'],
-            iterator_train__shuffle=True,
-            train_split=False
-        )
-        # print("type(x_train)", type(x_train)) np.ndarray
+        num_class = get_output_space_dim(y_train, mll, params_dict)
+        lp_args = mll, ml, max_len, embed_size, params_dict
+        mll_clf = get_mll_deep_model(num_class, *lp_args)
 
-        mll_clf = MllDeepNetSeq(mll).mll_classifier(base_clf)
-        # blm是每个epoch都测试，选最好的测试结果
-        # demo暂时是用fit后的结果来预测
-        if ml not in FORMER:
-            mll_clf.fit(x_train, y_train)
-            final_predict_list = mll_clf.predict(x_val)  # (N, q
-            final_prob_list = mll_clf.predict_proba(x_val)  # (N, n
-        else:
-            mll_clf.fit(TrmDataset(x_train, y_train, train_length, max_len))
-            final_predict_list = mll_clf.predict(TrmDataset(x_val, None, test_length, max_len))  # (N, q
-            final_prob_list = mll_clf.predict_proba(TrmDataset(x_val, None, test_length, max_len))  # (N, n
+        # blm是每个epoch都测试，选最好的测试结果，用fit后的结果来预测
+        final_predict_list, final_prob_list = do_fit_predict(
+            mll, ml, mll_clf, x_train, y_train, train_length, max_len, x_val, test_length, *lp_args)
 
-        assert issparse(final_predict_list) and issparse(final_prob_list) and issparse(y_val)
-        # print('final_predict_list.shape', final_predict_list.shape)
-        # print(final_predict_list.toarray())
-        # print('final_prob_list.shape', final_prob_list.shape)
-        # print(final_prob_list.toarray())
-        # print('y_val.shape', y_val.shape)
-        # print(y_val.toarray())
-        # exit()
+        assert issparse(final_predict_list) and issparse(y_val)
         result = mll_performance(y_val, final_predict_list)
         results.append(result)
 
         cv_labels.append(y_val.toarray())
-        cv_prob.append(final_prob_list.toarray())
-
         # 这里为保存概率文件准备
         predicted_labels[val_index] = final_predict_list.toarray()
-        predicted_prob[val_index] = final_prob_list.toarray()
+
+        if final_prob_list is not None:
+            cv_prob.append(final_prob_list.toarray())
+            predicted_prob[val_index] = final_prob_list.toarray()
 
         count += 1
         print("Round[%d]: Accuracy = %.3f" % (count, result[0]))
@@ -175,6 +140,31 @@ def mll_dl_cv_process(mll, ml, vectors, embed_size, labels, seq_length_list, max
     mll_final_results_output(final_results, out_dir, ind=False)  # 将指标写入文件
 
     mll_prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
+
+
+def do_fit_predict(mll, ml, mll_clf, x_train, y_train, train_length, max_len, x_val, test_length, *lp_args):
+    if mll in ['RAkELo']:  # ensemble
+        if ml in FORMER:
+            # 额外参数
+            mll_clf.fit(TrmDataset(x_train, y_train, train_length, max_len), None, *lp_args)
+            final_predict_list = mll_clf.predict(TrmDataset(x_train, y_train, train_length, max_len))  # (N, q
+            final_prob_list = None
+        else:
+            # 额外参数
+            mll_clf.fit(x_train, y_train, *lp_args)
+            final_predict_list = mll_clf.predict(x_val)  # (N, q
+            final_prob_list = None
+    else:
+        if ml in FORMER:
+            mll_clf.fit(TrmDataset(x_train, y_train, train_length, max_len))
+            final_predict_list = mll_clf.predict(TrmDataset(x_val, None, test_length, max_len))  # (N, q
+            final_prob_list = mll_clf.predict_proba(TrmDataset(x_val, None, test_length, max_len))  # (N, n
+        else:
+            mll_clf.fit(x_train, y_train)
+            final_predict_list = mll_clf.predict(x_val)  # (N, q
+            final_prob_list = mll_clf.predict_proba(x_val)  # (N, n
+
+    return final_predict_list, final_prob_list
 
 
 def dl_ind_process(ml, vectors, labels, seq_length_list, ind_vectors, ind_labels, ind_seq_length_list, max_len, out_dir,

@@ -64,7 +64,8 @@ DeepLearning = ['CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Re
 Classification = ['SVM', 'RF', 'CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer']
 SequenceLabelling = ['CRF', 'CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer']
 
-Mll_Algorithm = ['BR', 'CC', 'LP', 'MLkNN', 'BRkNNaClassifier', 'BRkNNbClassifier', 'MLARAM', 'CLR', 'FW', 'RT']
+Mll_Algorithm = ['BR', 'CC', 'LP', 'MLkNN', 'BRkNNaClassifier', 'BRkNNbClassifier', 'MLARAM',
+                 'CLR', 'FW', 'RT', 'RAkELo']
 
 # 路径
 Final_Path = '/results/'
@@ -756,11 +757,13 @@ def ml_params_check(args, all_params_list_dict):
     return all_params_list_dict
 
 
+# TODO param selection
 def mll_params_check(args, all_params_list_dict):
-    if args.ml:
-        return
-
     # only check mll adaptation methods whose ml is None
+    # if args.ml:
+    #     return
+    print('TODO param selection'.center(100, '*'))
+
     if args.mll == 'MLkNN':
         MLkNN_params_check(args.mll_kNN_k, args.MLkNN_s,
                            args.MLkNN_ignore_first_neighbours,
@@ -773,6 +776,10 @@ def mll_params_check(args, all_params_list_dict):
         MLARAM_params_check(args.MLARAM_vigilance,
                             args.MLARAM_threshold,
                             args.MLARAM_neurons,
+                            all_params_list_dict)
+    elif args.mll == 'RAkELo':
+        RAkELo_params_check(args.RAkELo_labelset_size,
+                            args.RAkELo_model_count,
                             all_params_list_dict)
     else:
         # raise ValueError('err')
@@ -799,6 +806,11 @@ def MLARAM_params_check(v, s, n, param_list_dict):
     if n:
         param_list_dict['MLARAM_neurons'] = n  # list
     # else: NoneType
+
+
+def RAkELo_params_check(k, c, param_list_dict):
+    param_helper(k, 'RAkELo_labelset_size', param_list_dict, default_value=1)
+    param_helper(c, 'RAkELo_model_count', param_list_dict, default_value=1)
 
 
 def param_helper(p_range, p_name, param_list_dict, default_value, default_span=1):
