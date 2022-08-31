@@ -182,6 +182,9 @@ class BLMBinaryRelevance(BinaryRelevance):
             else:
                 classifier = copy.deepcopy(self.classifier)
 
+            # print("before fit")
+            # print(type(X), type(y_subset))
+            # exit()
             # dl 的 model 要在fit前根据y来确定num_class
             classifier.fit(get_ds_or_x(ds, X, y_subset), None if ds else y_subset)
 
@@ -375,7 +378,8 @@ def get_ds_or_x(ds, x, y=None):
     if ds is None:
         return x
     else:
-        ds.feature = x
+        # dl methods 的 feature 不能是 sparse matrix
+        ds.feature = x.toarray() if issparse(x) else x
         ds.target = y
         return ds
 

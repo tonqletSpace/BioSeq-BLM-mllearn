@@ -119,7 +119,6 @@ def mll_dl_cv_process(mll, ml, vectors, embed_size, labels, seq_length_list, max
         final_predict_list, final_prob_list = do_fit_predict(
             mll, ml, mll_clf, x_train, y_train, train_length, max_len, x_val, test_length, *lp_args)
 
-        assert issparse(final_predict_list) and issparse(y_val)
         result = mll_performance(y_val, final_predict_list)
         results.append(result)
 
@@ -147,7 +146,7 @@ def do_fit_predict(mll, ml, mll_clf, x_train, y_train, train_length, max_len, x_
         if ml in FORMER:
             # 额外参数
             mll_clf.fit(TrmDataset(x_train, y_train, train_length, max_len), None, *lp_args)
-            final_predict_list = mll_clf.predict(TrmDataset(x_train, y_train, train_length, max_len))  # (N, q
+            final_predict_list = mll_clf.predict(TrmDataset(x_val, None, test_length, max_len))  # (N, q
             final_prob_list = None
         else:
             # 额外参数

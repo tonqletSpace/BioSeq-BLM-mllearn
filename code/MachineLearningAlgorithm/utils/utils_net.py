@@ -661,8 +661,6 @@ class MllBaseTorchNetSeq(object):
     def __init__(self, net, max_len, criterion, params_dict):
         super(MllBaseTorchNetSeq, self).__init__()
         self.net = net
-        print("params_dict['dropout']", params_dict['dropout'])
-
         self.dropout = params_dict['dropout']
         self.batch_size = params_dict['batch_size']
         self.max_len = max_len

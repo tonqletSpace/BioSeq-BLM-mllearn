@@ -86,7 +86,6 @@ def mll_performance(origin_labels, predicted_labels):
     :param origin_labels: true values of the data set.
     :param predicted_labels: predicted values of the data set.
     """
-    from scipy.sparse import lil_matrix
     assert issparse(origin_labels) and issparse(predicted_labels)
 
     if origin_labels.get_shape() != predicted_labels.get_shape():
