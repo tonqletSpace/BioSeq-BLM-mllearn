@@ -3,10 +3,13 @@ import subprocess
 import sys
 
 import torch
+from sklearn import svm
+from sklearn.ensemble import RandomForestClassifier
+from skmultilearn.adapt import MLkNN, BRkNNaClassifier, BRkNNbClassifier, MLARAM
 from skmultilearn.base import MLClassifierBase
 from skmultilearn.cluster import RandomLabelSpaceClusterer
 from skmultilearn.cluster.base import LabelSpaceClustererBase
-from skmultilearn.ensemble import RakelO, MajorityVotingClassifier
+from skmultilearn.ensemble import RakelO, MajorityVotingClassifier, RakelD
 from skmultilearn.ext import Meka
 from skmultilearn.problem_transform import LabelPowerset, BinaryRelevance, ClassifierChain
 import numpy as np
@@ -82,10 +85,17 @@ class MllDeepNetSeq(object):
         # if self.mll_type == 'CC':
         #     return BLMClassifierChain(classifier=base_clf, require_dense=self.require_dense)
         if self.mll_type == 'RAkELo':
-            return BLMRAkELo(base_classifier=base_clf,
+            print('IN!')
+            return BLMRAkELo(base_classifier=None,
                              base_classifier_require_dense=self.require_dense,
                              model_count=self.params['RAkELo_model_count'],
                              labelset_size=self.params['RAkELo_labelset_size'])
+        if self.mll_type == 'RAkELd':
+            return BLMRAkELd(
+                base_classifier=GaussianNB(),
+                base_classifier_require_dense=[True, True],
+                labelset_size=4
+            )
         else:
             raise ValueError('err of mll')
 
@@ -176,14 +186,23 @@ class BLMBinaryRelevance(BinaryRelevance):
             y_subset = self._ensure_output_format(y_subset)
 
             if issparse(y_subset) and y_subset.ndim > 1 and y_subset.shape[1] > 1:
-                # mll, ml, max_len, embed_size, params_dict
-                lp_args = 'LP', ml, max_len, embed_size, params_dict
-                classifier = get_mll_deep_model(get_lp_num_class(y_subset), *lp_args)
+                # ensemble clf
+                if max_len is not None and embed_size is not None:
+                    # dl
+                    lp_args = mll, ml, max_len, embed_size, params_dict
+                    classifier = get_mll_deep_model(get_lp_num_class(y_subset), *lp_args)
+                else:
+                    # ml
+                    print(mll, ml)
+                    classifier = get_mll_ml_model(mll, ml, params_dict)
             else:
+                # BR clf
                 classifier = copy.deepcopy(self.classifier)
 
-            # print("before fit")
-            # print(type(X), type(y_subset))
+            print("before fit")
+            print(type(X), type(y_subset))
+            print(X.shape)
+            print(y_subset.shape)
             # exit()
             # dl 的 model 要在fit前根据y来确定num_class
             classifier.fit(get_ds_or_x(ds, X, y_subset), None if ds else y_subset)
@@ -287,7 +306,7 @@ class BLMRAkELo(RakelO):
 
     def fit(self, X, y=None, mll=None, ml=None, max_len=None, embed_size=None, params_dict=None):
         self.classifier = BLMMajorityVotingClassifier(
-            classifier=None,
+            classifier=self.base_classifier,
             clusterer=RandomLabelSpaceClusterer(
                 cluster_size=self.labelset_size,
                 cluster_count=self.model_count,
@@ -298,11 +317,9 @@ class BLMRAkELo(RakelO):
 
         return self.classifier.fit(
             X, y, mll, ml, max_len, embed_size, params_dict)  # BR fit
-        # return self.classifier.fit(get_ds_or_x(ds, X, y), None if ds else y)
 
     def predict(self, X):
         return self.classifier.predict(X)
-        # return self.classifier.predict(get_ds_or_x(ds, X))
 
 
 class BLMLabelSpacePartitioningClassifier(BLMBinaryRelevance):
@@ -374,6 +391,9 @@ class BLMMajorityVotingClassifier(BLMLabelSpacePartitioningClassifier):
         raise NotImplemented("The voting scheme does not define a method for calculating probabilities")
 
 
+class BLMRAkELd(RakelD):
+
+
 def get_ds_or_x(ds, x, y=None):
     if ds is None:
         return x
@@ -402,3 +422,96 @@ def is_mll_proba_output_methods(mll):
            and not is_mll_ensemble_methods(mll)
 
 
+def mll_sparse_check(mll, *data_list):
+    if mll in ['MLARAM']:
+        data_list = [e.tocsc() for e in data_list]
+
+    return data_list
+
+
+def mll_result_sparse_check(mll, res):
+    if mll in ['MLARAM'] and not issparse(res):
+        return lil_matrix(res)
+    return res
+
+
+def get_mll_ml_model(mll, ml, params_dict):
+    if ml:
+        return mll_ml_model_factory(mll, ml, params_dict)
+    else:
+        return mll_model_factory(mll, params_dict)
+
+
+def mll_ml_model_factory(mll, ml, params_dict):
+    if mll == 'BR':
+        return BinaryRelevance(classifier=ml_model_factory(ml, params_dict), require_dense=[True, True])
+    elif mll == 'CC':
+        return ClassifierChain(classifier=ml_model_factory(ml, params_dict), require_dense=[True, True])
+    elif mll == 'LP':
+        return LabelPowerset(classifier=ml_model_factory(ml, params_dict), require_dense=[True, True])
+    elif mll == 'RAkELo':
+        return BLMRAkELo(
+            base_classifier=None,
+            base_classifier_require_dense=[True, True],
+            labelset_size=params_dict['RAkELo_labelset_size'],
+            model_count=params_dict['RAkELo_model_count']
+        )
+    elif mll == 'FW':
+        return BLMMeka(
+            meka_classifier="meka.classifiers.multilabel.FW",  # Binary Relevance
+            weka_classifier=ml_model_factory(ml, params_dict, True),  # with Naive Bayes single-label classifier
+            meka_classpath=params_dict['meka_classpath'],  # obtained via download_meka
+            java_command=params_dict['which_java']
+        )
+    elif mll == 'RT':
+        return BLMMeka(
+            meka_classifier="meka.classifiers.multilabel.RT",  # Binary Relevance
+            weka_classifier=ml_model_factory(ml, params_dict, True),  # with Naive Bayes single-label classifier
+            meka_classpath=params_dict['meka_classpath'],  # obtained via download_meka
+            java_command=params_dict['which_java']
+        )
+    elif mll == 'CLR':
+        return BLMMeka(
+            meka_classifier="meka.classifiers.multilabel.MULAN -S CLR",  # Binary Relevance
+            weka_classifier=ml_model_factory(ml, params_dict, True),  # with Naive Bayes single-label classifier
+            meka_classpath=params_dict['meka_classpath'],  # obtained via download_meka
+            java_command=params_dict['which_java']
+        )
+    else:
+        raise ValueError('mll_ml method parameter error')
+
+
+def ml_model_factory(ml, params_dict, is_weka_ml=False):
+    if ml == 'SVM':
+        if is_weka_ml:
+            return "weka.classifiers.functions.SMO -C {}" \
+                   " -K \"weka.classifiers.functions.supportVector.RBFKernel -G {}\"".\
+                       format(2 ** params_dict['cost'], 2 ** params_dict['gamma'])
+
+        return svm.SVC(C=2 ** params_dict['cost'], gamma=2 ** params_dict['gamma'], probability=True)
+    elif ml == 'RF':
+        if is_weka_ml:
+            return "weka.classifiers.trees.RandomForest -S {} -I {}".format(42, params_dict['tree'])
+
+        return RandomForestClassifier(random_state=42, n_estimators=params_dict['tree'])
+    else:
+        raise ValueError('ml method err')
+
+
+def mll_model_factory(mll, params_dict):
+    if mll == 'MLkNN':
+        return MLkNN(k=params_dict['mll_kNN_k'],
+                     s=params_dict['MLkNN_s'],
+                     ignore_first_neighbours=params_dict['MLkNN_ignore_first_neighbours'])
+    elif mll == 'BRkNNaClassifier':
+        return BRkNNaClassifier(k=params_dict['mll_kNN_k'])
+    elif mll == 'BRkNNbClassifier':
+        return BRkNNbClassifier(k=params_dict['mll_kNN_k'])
+    elif mll == 'MLARAM':
+        return MLARAM(vigilance=params_dict['MLARAM_vigilance'],
+                      threshold=params_dict['MLARAM_threshold'],
+                      neurons=params_dict['MLARAM_neurons'] if 'MLARAM_neurons' in params_dict.keys()
+                      else None)
+    else:
+        print(mll)
+        raise ValueError('mll method err')

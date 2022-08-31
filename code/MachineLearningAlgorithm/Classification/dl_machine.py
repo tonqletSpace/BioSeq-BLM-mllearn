@@ -13,7 +13,8 @@ from ..utils.utils_net import TorchNetSeq, FORMER, MllBaseTorchNetSeq, sequence_
 from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
 from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
     mll_final_results_output, mll_prob_output, mll_print_metric_dict
-from ..utils.utils_mll import BLMLabelPowerset, MllDeepNetSeq, get_mll_deep_model, get_lp_num_class
+from ..utils.utils_mll import BLMLabelPowerset, MllDeepNetSeq, get_mll_deep_model, get_lp_num_class, \
+    mll_result_sparse_check
 
 
 def get_partition(feature, target, length, train_index, val_index):
@@ -112,12 +113,12 @@ def mll_dl_cv_process(mll, ml, vectors, embed_size, labels, seq_length_list, max
         x_train, x_val, y_train, y_val, train_length, test_length = get_partition(vectors, labels, seq_length_list,
                                                                                   train_index, val_index)
         num_class = get_output_space_dim(y_train, mll, params_dict)
-        lp_args = mll, ml, max_len, embed_size, params_dict
-        mll_clf = get_mll_deep_model(num_class, *lp_args)
+        lp_args = ml, max_len, embed_size, params_dict
+        mll_clf = get_mll_deep_model(num_class, mll, *lp_args)
 
         # blm是每个epoch都测试，选最好的测试结果，用fit后的结果来预测
-        final_predict_list, final_prob_list = do_fit_predict(
-            mll, ml, mll_clf, x_train, y_train, train_length, max_len, x_val, test_length, *lp_args)
+        final_predict_list, final_prob_list = do_dl_fit_predict(
+            mll, ml, mll_clf, x_train, y_train, train_length, max_len, x_val, test_length, 'LP', *lp_args)
 
         result = mll_performance(y_val, final_predict_list)
         results.append(result)
@@ -141,7 +142,7 @@ def mll_dl_cv_process(mll, ml, vectors, embed_size, labels, seq_length_list, max
     mll_prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
 
 
-def do_fit_predict(mll, ml, mll_clf, x_train, y_train, train_length, max_len, x_val, test_length, *lp_args):
+def do_dl_fit_predict(mll, ml, mll_clf, x_train, y_train, train_length, max_len, x_val, test_length, *lp_args):
     if mll in ['RAkELo']:  # ensemble
         if ml in FORMER:
             # 额外参数
@@ -164,6 +165,22 @@ def do_fit_predict(mll, ml, mll_clf, x_train, y_train, train_length, max_len, x_
             final_prob_list = mll_clf.predict_proba(x_val)  # (N, n
 
     return final_predict_list, final_prob_list
+
+
+def do_ml_fit_predict(mll, ml, mll_clf, x_train, y_train, x_val, params_dict):
+    do_ml_fit(mll, ml, mll_clf, x_train, y_train, params_dict)
+    y_val_ = mll_result_sparse_check(mll, mll_clf.predict(x_val))
+
+    return y_val_
+
+
+def do_ml_fit(mll, ml, mll_clf, x_train, y_train, params_dict):
+    if mll in ['RAkELo']:  # ensemble
+        mll_clf.fit(x_train, y_train, 'LP', ml, params_dict=params_dict)
+    else:
+        mll_clf.fit(x_train, y_train)
+
+
 
 
 def dl_ind_process(ml, vectors, labels, seq_length_list, ind_vectors, ind_labels, ind_seq_length_list, max_len, out_dir,

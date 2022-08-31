@@ -93,8 +93,7 @@ def mll_ind_ml_results(args, ind_vectors, ind_labels, params_selected):
 
 
 def params_select(params_list, out_dir):
-    # .get()应用于 muti-thread
-    # 单线程要去掉.get()
+    # .get()应用于 muti-thread, 单线程要去掉.get()
     evaluation = params_list[0].get()['metric']
     params_list_selected = params_list[0].get()
     for i in range(len(params_list)):

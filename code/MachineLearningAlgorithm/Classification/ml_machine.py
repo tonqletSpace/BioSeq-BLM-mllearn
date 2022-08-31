@@ -6,8 +6,9 @@ import os
 import numpy as np
 from skmultilearn.problem_transform import BinaryRelevance, ClassifierChain, LabelPowerset
 
-from .mll_machine import get_mll_ml_model, mll_sparse_check, mll_result_sparse_check
-from ..utils.utils_mll import is_mll_instance_methods, is_mll_proba_output_methods
+from .dl_machine import do_ml_fit_predict, do_ml_fit
+from .mll_machine import get_mll_ml_model, mll_sparse_check
+from ..utils.utils_mll import is_mll_instance_methods, is_mll_proba_output_methods, mll_result_sparse_check
 from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
     mll_final_results_output, mll_prob_output, mll_print_metric_dict
 from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
@@ -201,9 +202,8 @@ def mll_ml_cv_results(mll, marginal_data, ml, vectors, labels, folds, out_dir, p
         #     x_train, y_train = sampling(sp, x_train, y_train)
 
         clf = get_mll_ml_model(mll, ml, params_dict)
-        clf.fit(x_train, y_train)
+        y_test_ = do_ml_fit_predict(mll, ml, clf, x_train, y_train, x_test, params_dict)
 
-        y_test_ = mll_result_sparse_check(mll, clf.predict(x_test))
         # 'Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1'
         result = mll_performance(y_test, y_test_)
         results.append(result)
@@ -236,7 +236,8 @@ def mll_ml_cv_results(mll, marginal_data, ml, vectors, labels, folds, out_dir, p
 
     # if sp != 'none':
     #     vectors, labels = sampling(sp, vectors, labels)
-    model.fit(*mll_sparse_check(mll, vectors, labels))
+    y_test_ = do_ml_fit(mll, ml, model, *mll_sparse_check(mll, vectors, labels), params_dict)
+
     joblib.dump(model, model_path)  # 使用job lib保存模型
 
 
