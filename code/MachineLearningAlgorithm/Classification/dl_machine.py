@@ -14,7 +14,7 @@ from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot
 from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
     mll_final_results_output, mll_prob_output, mll_print_metric_dict
 from ..utils.utils_mll import BLMLabelPowerset, MllDeepNetSeq, get_mll_deep_model, get_lp_num_class, \
-    mll_result_sparse_check
+    mll_result_sparse_check, Mll_ENSEMBLE_Methods
 
 
 def get_partition(feature, target, length, train_index, val_index):
@@ -91,9 +91,7 @@ def get_output_space_dim(y, mll, params_dict):
     if mll in ['BR']:  # binary classification
         return 2
 
-    if mll in ['RAkELo']:
-        # return y.shape[1]+1
-        # TODO
+    if mll in Mll_ENSEMBLE_Methods:
         return None
 
     if mll in ['LP']:
@@ -143,7 +141,7 @@ def mll_dl_cv_process(mll, ml, vectors, embed_size, labels, seq_length_list, max
 
 
 def do_dl_fit_predict(mll, ml, mll_clf, x_train, y_train, train_length, max_len, x_val, test_length, *lp_args):
-    if mll in ['RAkELo']:  # ensemble
+    if mll in Mll_ENSEMBLE_Methods:  # ensemble
         if ml in FORMER:
             # 额外参数
             mll_clf.fit(TrmDataset(x_train, y_train, train_length, max_len), None, *lp_args)
@@ -175,12 +173,10 @@ def do_ml_fit_predict(mll, ml, mll_clf, x_train, y_train, x_val, params_dict):
 
 
 def do_ml_fit(mll, ml, mll_clf, x_train, y_train, params_dict):
-    if mll in ['RAkELo']:  # ensemble
+    if mll in Mll_ENSEMBLE_Methods:  # ensemble
         mll_clf.fit(x_train, y_train, 'LP', ml, params_dict=params_dict)
     else:
         mll_clf.fit(x_train, y_train)
-
-
 
 
 def dl_ind_process(ml, vectors, labels, seq_length_list, ind_vectors, ind_labels, ind_seq_length_list, max_len, out_dir,

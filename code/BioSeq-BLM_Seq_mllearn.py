@@ -496,10 +496,10 @@ if __name__ == '__main__':
                        help="controls how many prototypes participate by the prediction, "
                             "can be changed for the testing phase")
     parse.add_argument("-mll_n", "--MLARAM_neurons", nargs='*', type=list,
-                       help="the neurons in the network")
-    parse.add_argument("-mll_ls", "--RAkELo_labelset_size", nargs='*', type=int,
-                       help="the neurons in the network")
+                       help="ensemble todo")
+    parse.add_argument("-mll_ls", "--RAkEL_labelset_size", nargs='*', type=int,
+                       help="ensemble todo")
     parse.add_argument("-mll_mc", "--RAkELo_model_count", nargs='*', type=int,
-                       help="the neurons in the network")
+                       help="ensemble todo")
     argv = parse.parse_args()
     main(argv)

@@ -24,7 +24,7 @@ from .utils_net import TrmDataset, MllBaseTorchNetSeq
 
 Mll_Instance_Based_Methods = ['MLkNN', 'BRkNNaClassifier', 'BRkNNbClassifier']
 Mll_MEKA_Methods = ['CLR', 'FW', 'RT']
-Mll_ENSEMBLE_Methods = ['RAkELo']
+Mll_ENSEMBLE_Methods = ['RAkELo', 'RAkELd']
 
 
 def get_lp_num_class(y):
@@ -63,10 +63,12 @@ def get_mll_deep_model(num_class, mll, ml, max_len, embed_size, params_dict):
             iterator_train__shuffle=True,
             train_split=False
         )
+        require_dense = [True, True]
     else:
         base_clf = None
+        require_dense = [False, False]
 
-    mll_clf = MllDeepNetSeq(mll, params_dict).mll_classifier(base_clf)
+    mll_clf = MllDeepNetSeq(mll, params_dict, require_dense).mll_classifier(base_clf)
 
     return mll_clf
 
@@ -80,24 +82,23 @@ class MllDeepNetSeq(object):
     def mll_classifier(self, base_clf):
         if self.mll_type == 'LP':
             return BLMLabelPowerset(classifier=base_clf, require_dense=self.require_dense)
-        if self.mll_type == 'BR':
+        elif self.mll_type == 'BR':
             return BLMBinaryRelevance(classifier=base_clf, require_dense=self.require_dense)
         # if self.mll_type == 'CC':
         #     return BLMClassifierChain(classifier=base_clf, require_dense=self.require_dense)
-        if self.mll_type == 'RAkELo':
-            print('IN!')
+        elif self.mll_type == 'RAkELo':
             return BLMRAkELo(base_classifier=None,
                              base_classifier_require_dense=self.require_dense,
                              model_count=self.params['RAkELo_model_count'],
-                             labelset_size=self.params['RAkELo_labelset_size'])
-        if self.mll_type == 'RAkELd':
+                             labelset_size=self.params['RAkEL_labelset_size'])
+        elif self.mll_type == 'RAkELd':
             return BLMRAkELd(
-                base_classifier=GaussianNB(),
-                base_classifier_require_dense=[True, True],
-                labelset_size=4
+                base_classifier=None,
+                base_classifier_require_dense=self.require_dense,
+                labelset_size=self.params['RAkEL_labelset_size']
             )
         else:
-            raise ValueError('err of mll')
+            raise ValueError('err of mll MllDeepNetSeq methods')
 
 
 class BLMLabelPowerset(LabelPowerset):
@@ -185,25 +186,18 @@ class BLMBinaryRelevance(BinaryRelevance):
             X = self._ensure_input_format(X)
             y_subset = self._ensure_output_format(y_subset)
 
-            if issparse(y_subset) and y_subset.ndim > 1 and y_subset.shape[1] > 1:
-                # ensemble clf
-                if max_len is not None and embed_size is not None:
-                    # dl
-                    lp_args = mll, ml, max_len, embed_size, params_dict
-                    classifier = get_mll_deep_model(get_lp_num_class(y_subset), *lp_args)
-                else:
-                    # ml
-                    print(mll, ml)
-                    classifier = get_mll_ml_model(mll, ml, params_dict)
-            else:
+            if issparse(y_subset) and y_subset.ndim > 1 and y_subset.shape[1] == 1\
+                    and params_dict is None:
                 # BR clf
                 classifier = copy.deepcopy(self.classifier)
+            else:
+                # ensemble clf
+                if max_len is not None and embed_size is not None:
+                    lp_args = mll, ml, max_len, embed_size, params_dict
+                    classifier = get_mll_deep_model(get_lp_num_class(y_subset), *lp_args)  # dl
+                else:
+                    classifier = get_mll_ml_model(mll, ml, params_dict)  # ml
 
-            print("before fit")
-            print(type(X), type(y_subset))
-            print(X.shape)
-            print(y_subset.shape)
-            # exit()
             # dl 的 model 要在fit前根据y来确定num_class
             classifier.fit(get_ds_or_x(ds, X, y_subset), None if ds else y_subset)
 
@@ -296,6 +290,7 @@ class BLMMeka(Meka):
             raise Exception(self.output_ + self._error)
 
 
+# RakelO start
 class BLMRAkELo(RakelO):
     def __init__(self, base_classifier=None, model_count=None, labelset_size=3, base_classifier_require_dense=None):
         super(BLMRAkELo, self).__init__(
@@ -306,7 +301,7 @@ class BLMRAkELo(RakelO):
 
     def fit(self, X, y=None, mll=None, ml=None, max_len=None, embed_size=None, params_dict=None):
         self.classifier = BLMMajorityVotingClassifier(
-            classifier=self.base_classifier,
+            classifier=None,
             clusterer=RandomLabelSpaceClusterer(
                 cluster_size=self.labelset_size,
                 cluster_count=self.model_count,
@@ -347,6 +342,7 @@ class BLMLabelSpacePartitioningClassifier(BLMBinaryRelevance):
         return result
 
     def _generate_partition(self, X, y):
+        np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
         self.partition_ = self.clusterer.fit_predict(X, y)
         self.model_count_ = len(self.partition_)
         self._label_count = y.shape[1]
@@ -389,9 +385,42 @@ class BLMMajorityVotingClassifier(BLMLabelSpacePartitioningClassifier):
 
     def predict_proba(self, X):
         raise NotImplemented("The voting scheme does not define a method for calculating probabilities")
+# RakelO end
 
 
+# RakelD
 class BLMRAkELd(RakelD):
+    def __init__(self, base_classifier=None, labelset_size=3, base_classifier_require_dense=None):
+        super(BLMRAkELd, self).__init__(
+            base_classifier=base_classifier,
+            labelset_size=labelset_size,
+            base_classifier_require_dense=base_classifier_require_dense
+        )
+
+    def fit(self, X, y, mll=None, ml=None, max_len=None, embed_size=None, params_dict=None):
+        ds = None
+        if isinstance(X, TrmDataset):
+            ds = X
+            X = ds.feature
+            y = ds.target
+
+        self._label_count = y.shape[1]
+        self.model_count_ = int(np.ceil(self._label_count / self.labelset_size))
+        self.classifier_ = BLMLabelSpacePartitioningClassifier(
+            classifier=None,
+            clusterer=RandomLabelSpaceClusterer(
+                cluster_size=self.labelset_size,
+                cluster_count=self.model_count_,
+                allow_overlap=False
+            ),
+            require_dense=[False, False]
+        )
+        return self.classifier_.fit(
+            get_ds_or_x(ds, X, y), None if ds else y,
+            mll, ml, max_len, embed_size, params_dict)
+
+    def predict(self, X):
+        return self.classifier_.predict(X)
 
 
 def get_ds_or_x(ds, x, y=None):
@@ -453,8 +482,16 @@ def mll_ml_model_factory(mll, ml, params_dict):
         return BLMRAkELo(
             base_classifier=None,
             base_classifier_require_dense=[True, True],
-            labelset_size=params_dict['RAkELo_labelset_size'],
+            labelset_size=params_dict['RAkEL_labelset_size'],
             model_count=params_dict['RAkELo_model_count']
+        )
+    elif mll == 'RAkELd':
+        # print('1', params_dict['RAkEL_labelset_size'])
+        # exit()
+        return BLMRAkELd(
+            base_classifier=None,
+            base_classifier_require_dense=[True, True],
+            labelset_size=params_dict['RAkEL_labelset_size']
         )
     elif mll == 'FW':
         return BLMMeka(
@@ -478,7 +515,7 @@ def mll_ml_model_factory(mll, ml, params_dict):
             java_command=params_dict['which_java']
         )
     else:
-        raise ValueError('mll_ml method parameter error')
+        raise ValueError('error of mll_ml_model_factory methods')
 
 
 def ml_model_factory(ml, params_dict, is_weka_ml=False):
