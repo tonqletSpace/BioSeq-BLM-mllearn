@@ -201,13 +201,13 @@ def mll_dl_fe_process(args):
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
     vectors, embed_size, fixed_seq_len_list = mll_read_dl_vec4seq(args, args.fixed_len, out_files)
 
-    print("vectors.type", type(vectors))
-    print("vectors.shape", vectors.shape)  # (N, L*E)、(32, fixed_len * 4)
-    print("type(label_array)", type(label_array))
-    print("label_array.shape", label_array.shape)
-    print("type(fixed_seq_len_list)", type(fixed_seq_len_list))
-    print('fixed_seq_len_list', len(fixed_seq_len_list))  # (N,) of fixed_len * 4
-    print("embed_size", embed_size)
+    # print("vectors.type", type(vectors))
+    # print("vectors.shape", vectors.shape)  # (N, L*E)、(32, fixed_len * 4)
+    # print("type(label_array)", type(label_array))
+    # print("label_array.shape", label_array.shape)
+    # print("type(fixed_seq_len_list)", type(fixed_seq_len_list))
+    # print('fixed_seq_len_list', len(fixed_seq_len_list))  # (N,) of fixed_len * 4
+    # print("embed_size", embed_size)
     # exit()
 
     # 深度学习的独立测试和交叉验证分开

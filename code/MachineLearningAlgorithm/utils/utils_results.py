@@ -90,9 +90,6 @@ def mll_performance(origin_labels, predicted_labels):
 
     if origin_labels.get_shape() != predicted_labels.get_shape():
         raise ValueError("The shape of the original labels must equal to that of the predicted labels.")
-    # print(origin_labels.toarray())
-    # print(predicted_labels.toarray())
-    # exit()
 
     # 'Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1'
     hamming_loss = metrics.hamming_loss(origin_labels, predicted_labels)
@@ -100,7 +97,7 @@ def mll_performance(origin_labels, predicted_labels):
     jaccard_similarity = metrics.jaccard_score(origin_labels, predicted_labels, average='samples', zero_division=0)
     precision = metrics.precision_score(origin_labels, predicted_labels, average='samples', zero_division=0)
     recall = metrics.recall_score(origin_labels, predicted_labels, average='samples', zero_division=0)
-    f1_score = metrics.f1_score(origin_labels, predicted_labels, average='samples', zero_division=0)
+    f1_score = metrics.f1_score(origin_labels, predicted_labels, average='micro', zero_division=0)
 
     return hamming_loss, accuracy, jaccard_similarity, precision, recall, f1_score
 

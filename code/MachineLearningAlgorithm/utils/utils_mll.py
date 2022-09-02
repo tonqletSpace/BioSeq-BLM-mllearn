@@ -424,6 +424,13 @@ class BLMRAkELd(RakelD):
 
 
 def get_ds_or_x(ds, x, y=None):
+    """
+
+    :param ds: torch.utils.data.Dataset or None
+    :param x: sparse matrix, [n_samples, n_features]
+    :param y: sparse matrix, [n_samples, n_features]
+    :return: torch.utils.data.Dataset or x
+    """
     if ds is None:
         return x
     else:
@@ -486,8 +493,6 @@ def mll_ml_model_factory(mll, ml, params_dict):
             model_count=params_dict['RAkELo_model_count']
         )
     elif mll == 'RAkELd':
-        # print('1', params_dict['RAkEL_labelset_size'])
-        # exit()
         return BLMRAkELd(
             base_classifier=None,
             base_classifier_require_dense=[True, True],
