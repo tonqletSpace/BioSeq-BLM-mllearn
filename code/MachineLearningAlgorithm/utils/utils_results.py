@@ -1,3 +1,4 @@
+import csv
 import math
 import os
 
@@ -241,29 +242,32 @@ def prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False):
 
 def mll_prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False):
     assert issparse(true_labels) and not issparse(predicted_labels)
+
     predicted_labels = predicted_labels.astype(np.int, copy=True)
     if prob_list is None:
         prob_list = np.zeros(predicted_labels, np.int)
-
     true_labels = true_labels.toarray()
-    prob_file = out_path + "prob_out.txt"
+
+    prob_file = out_path + "prob_out.csv"
     if ind is True:
-        prob_file = out_path + "ind_prob_out.txt"
+        prob_file = out_path + "ind_prob_out.csv"
 
-    def prob_style(*args, space=10):
-        return args[0].center(space, ' ') + \
-               args[1].center(2*space, ' ') +\
-               args[2].center(2*space, ' ') +\
-               args[3].center(3*space, ' ') + '\n'
+    len_label = true_labels.shape[1]*5
+    header = ('Sample index',
+              'True labels'.center(len_label, ' '),
+              'predicted labels'.center(len_label, ' '),
+              'probability values'.center(len_label*2, ' '))
 
-    with open(prob_file, 'w') as f:
-        head = ('Sample index', 'True labels', 'predicted labels', 'probability values')
-        f.write(prob_style(*head))
+    with open(prob_file, 'w', encoding='utf-8', newline='') as f:
+        out = csv.writer(f)  # 创建writer对象
+        out.writerow(header)
         for i, (k, m, n) in enumerate(zip(true_labels,
                                           predicted_labels,
                                           prob_list)):
-            line = tuple(map(str, (i+1, k, m, n)))
-            f.write(prob_style(*line))
+            nn = tuple(map(lambda x: round(x, 4), n))
+            line = tuple((i+1, tuple(k), tuple(m), nn))
+            out.writerow(line)
+
     full_path = os.path.abspath(prob_file)
     if os.path.isfile(full_path):
         print('The output file for probability values can be found:')

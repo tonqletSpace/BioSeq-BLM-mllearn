@@ -25,6 +25,7 @@ from .utils_net import TrmDataset, MllBaseTorchNetSeq
 Mll_Instance_Based_Methods = ['MLkNN', 'BRkNNaClassifier', 'BRkNNbClassifier']
 Mll_MEKA_Methods = ['CLR', 'FW', 'RT']
 Mll_ENSEMBLE_Methods = ['RAkELo', 'RAkELd']
+Mll_Adaptation_Mthods = Mll_Instance_Based_Methods + ['MLARAM']
 
 
 def get_lp_num_class(y):
@@ -186,8 +187,7 @@ class BLMBinaryRelevance(BinaryRelevance):
             X = self._ensure_input_format(X)
             y_subset = self._ensure_output_format(y_subset)
 
-            if issparse(y_subset) and y_subset.ndim > 1 and y_subset.shape[1] == 1\
-                    and params_dict is None:
+            if not is_mll_ensemble_methods(mll):
                 # BR clf
                 classifier = copy.deepcopy(self.classifier)
             else:
@@ -271,7 +271,6 @@ class BLMMeka(Meka):
             command_args += ['--', weka_classfier_param]
 
         meka_command = " ".join(command_args)
-        # print(meka_command)
 
         if sys.platform != 'win32':
             meka_command = shlex.split(meka_command)
@@ -452,6 +451,14 @@ def is_mll_ensemble_methods(mll):
     return mll in Mll_ENSEMBLE_Methods
 
 
+def is_hyper_parameter_mthods (mll):
+    return mll in Mll_Instance_Based_Methods + Mll_ENSEMBLE_Methods
+
+
+def is_adaptation_model(mll):
+    return mll in Mll_Adaptation_Mthods
+
+
 def is_mll_proba_output_methods(mll):
     return not is_mll_instance_methods(mll) \
            and not is_mll_meka_methods(mll) \
@@ -472,13 +479,13 @@ def mll_result_sparse_check(mll, res):
 
 
 def get_mll_ml_model(mll, ml, params_dict):
-    if ml:
-        return mll_ml_model_factory(mll, ml, params_dict)
+    if is_adaptation_model(mll):
+        return adaptation_model_factory(mll, params_dict)
     else:
-        return mll_model_factory(mll, params_dict)
+        return problem_transformation_model_factory(mll, ml, params_dict)
 
 
-def mll_ml_model_factory(mll, ml, params_dict):
+def problem_transformation_model_factory(mll, ml, params_dict):
     if mll == 'BR':
         return BinaryRelevance(classifier=ml_model_factory(ml, params_dict), require_dense=[True, True])
     elif mll == 'CC':
@@ -520,7 +527,7 @@ def mll_ml_model_factory(mll, ml, params_dict):
             java_command=params_dict['which_java']
         )
     else:
-        raise ValueError('error of mll_ml_model_factory methods')
+        raise ValueError('error! unregisted mll method {}. please refer to the manual.'.format(mll))
 
 
 def ml_model_factory(ml, params_dict, is_weka_ml=False):
@@ -540,7 +547,7 @@ def ml_model_factory(ml, params_dict, is_weka_ml=False):
         raise ValueError('ml method err')
 
 
-def mll_model_factory(mll, params_dict):
+def adaptation_model_factory(mll, params_dict):
     if mll == 'MLkNN':
         return MLkNN(k=params_dict['mll_kNN_k'],
                      s=params_dict['MLkNN_s'],
@@ -555,5 +562,4 @@ def mll_model_factory(mll, params_dict):
                       neurons=params_dict['MLARAM_neurons'] if 'MLARAM_neurons' in params_dict.keys()
                       else None)
     else:
-        print(mll)
-        raise ValueError('mll method err')
+        raise ValueError('error! unregisted mll method {}. please refer to the manual.'.format(mll))

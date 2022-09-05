@@ -61,11 +61,6 @@ def mll_ml_fe_process(args):
     # params_list_dict 为只包括特征提取的参数的字典， all_params_list_dict为包含所有参数的字典
     params_list_dict, all_params_list_dict = mode_params_check(args, all_params_list_dict)
 
-    # print('for feat extraction')
-    # print(params_list_dict)
-    # print('all param')
-    # print(all_params_list_dict)
-
     # 列表字典 ---> 字典列表
     params_dict_list = make_params_dicts(all_params_list_dict)
 
@@ -112,7 +107,6 @@ def mll_ml_fe_process(args):
         print(' Shape of Optimal Feature vectors after FA process: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0],
                                                                                                  opt_vectors.shape[1]))
 
-    # exit()
     # 构建分类器
     mll_ml_results(args, opt_vectors, label_array, args.folds, params_selected)
     # -------- 独立测试-------- #
@@ -189,11 +183,6 @@ def mll_dl_fe_process(args):
     # 特征向量文件命名
     out_files = mll_out_dl_seq_file(args.results_dir, ind=False)
 
-    # print(all_params_list_dict)
-    # print('params_dict', params_dict)
-    # print("out_files", out_files)
-    print("label_array.shape", label_array.shape)
-    # exit()
     # 深度特征向量提取
     mll_one_seq_fe_process(args, input_one_file, label_array, out_files, **params_dict)
     # 获取深度特征向量
@@ -201,23 +190,15 @@ def mll_dl_fe_process(args):
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
     vectors, embed_size, fixed_seq_len_list = mll_read_dl_vec4seq(args, args.fixed_len, out_files)
 
-    # print("vectors.type", type(vectors))
-    # print("vectors.shape", vectors.shape)  # (N, L*E)、(32, fixed_len * 4)
-    # print("type(label_array)", type(label_array))
-    # print("label_array.shape", label_array.shape)
-    # print("type(fixed_seq_len_list)", type(fixed_seq_len_list))
-    # print('fixed_seq_len_list', len(fixed_seq_len_list))  # (N,) of fixed_len * 4
-    # print("embed_size", embed_size)
-    # exit()
-
     # 深度学习的独立测试和交叉验证分开
     if args.ind_seq_file is None:
         # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
 
         args = mll_prepare4train_seq(args, label_array, dl=True)
         # 构建深度学习分类器
-        mll_dl_cv_process(args.mll, args.ml, vectors, embed_size, label_array, fixed_seq_len_list,
-                          args.fixed_len, args.folds, args.results_dir, params_dict)
+        mll_dl_cv_process(args.need_marginal_data, args.mll, args.ml, vectors, embed_size,
+                          label_array, fixed_seq_len_list, args.fixed_len,
+                          args.folds, args.results_dir, params_dict)
     else:
         # 独立验证开始
         mll_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, params_dict)

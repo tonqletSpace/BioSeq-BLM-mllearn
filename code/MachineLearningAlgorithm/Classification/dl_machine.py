@@ -18,7 +18,6 @@ from ..utils.utils_mll import BLMLabelPowerset, MllDeepNetSeq, get_mll_deep_mode
 
 
 def get_partition(feature, target, length, train_index, val_index):
-    # all feature, all target
     x_train = feature[train_index]
     x_val = feature[val_index]
     y_train = target[train_index]
@@ -98,13 +97,17 @@ def get_output_space_dim(y, mll, params_dict):
         return get_lp_num_class(y)
 
 
-def mll_dl_cv_process(mll, ml, vectors, embed_size, labels, seq_length_list, max_len, folds, out_dir, params_dict):
+def mll_dl_cv_process(need_marginal_data, mll, ml, vectors, embed_size,
+                      labels, seq_length_list, max_len, folds, out_dir, params_dict):
     results = []
     cv_labels = []
     cv_prob = []
 
-    predicted_labels = np.zeros(labels.get_shape())
-    predicted_prob = np.zeros(labels.get_shape())
+    tmp_shape = labels.get_shape()
+    if need_marginal_data:
+        tmp_shape = (tmp_shape[0]-2, tmp_shape[1])
+    predicted_labels = np.zeros(tmp_shape, dtype=np.int32)  # (N, q)
+    predicted_prob = np.zeros(tmp_shape)  # (N, q)
 
     count = 0
     for train_index, val_index in folds:
@@ -136,7 +139,6 @@ def mll_dl_cv_process(mll, ml, vectors, embed_size, labels, seq_length_list, max
     final_results = np.array(results).mean(axis=0)
     mll_print_metric_dict(final_results, ind=False)
     mll_final_results_output(final_results, out_dir, ind=False)  # 将指标写入文件
-
     mll_prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
 
 

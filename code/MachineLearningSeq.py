@@ -75,7 +75,7 @@ def ml_results(args, vectors, labels, folds, vec_files, params_selected):
 
 
 def mll_ml_results(args, vectors, labels, folds, params_selected):
-    mll_ml_cv_results(args.mll, args.need_marginal_data, args.ml, vectors, labels, folds, args.results_dir, params_selected)
+    mll_ml_cv_results(args.need_marginal_data, args.mll, args.ml, vectors, labels, folds, args.results_dir, params_selected)
     return params_selected
 
 

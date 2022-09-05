@@ -171,7 +171,7 @@ def ml_cv_results(ml, vectors, labels, folds, sp, multi, res, out_dir, params_di
     joblib.dump(model, model_path)  # 使用job lib保存模型
 
 
-def mll_ml_cv_results(mll, marginal_data, ml, vectors, labels, folds, out_dir, params_dict):
+def mll_ml_cv_results(need_marginal_data, mll, ml, vectors, labels, folds, out_dir, params_dict):
     assert issparse(vectors) and issparse(labels), 'error'
 
     print_len = 60
@@ -190,7 +190,7 @@ def mll_ml_cv_results(mll, marginal_data, ml, vectors, labels, folds, out_dir, p
     cv_prob = []
 
     tmp_shape = labels.get_shape()
-    if marginal_data:
+    if need_marginal_data:
         tmp_shape = (tmp_shape[0]-2, tmp_shape[1])
     predicted_labels = np.zeros(tmp_shape, dtype=np.int32)  # (N, q)
     predicted_prob = np.zeros(tmp_shape)  # (N, q)

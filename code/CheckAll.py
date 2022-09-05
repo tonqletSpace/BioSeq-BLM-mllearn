@@ -12,7 +12,7 @@ from skmultilearn.ext import download_meka
 from MachineLearningAlgorithm.utils.utils_math import construct_partition2two, mll_marginal_check
 
 # Alphabets of DNA, RNA, PROTEIN
-from MachineLearningAlgorithm.utils.utils_mll import is_mll_meka_methods
+from MachineLearningAlgorithm.utils.utils_mll import is_mll_meka_methods, is_hyper_parameter_mthods
 
 DNA = "ACGT"
 RNA = "ACGU"
@@ -757,12 +757,16 @@ def ml_params_check(args, all_params_list_dict):
     return all_params_list_dict
 
 
-# TODO param selection
 def mll_params_check(args, all_params_list_dict):
-    # only check mll adaptation methods whose ml is None
-    # if args.ml:
-    #     return
-    print('TODO param selection'.center(100, '*'))
+    """
+    this function adds hyper-parameters from args to all_params_list_dict for parameter selection
+
+    :param args: used for access of hyper-parameters of predictors
+    :param all_params_list_dict: used for parameter selection
+    :return: None
+    """
+    if not is_hyper_parameter_mthods(args.mll):
+        return
 
     if args.mll == 'MLkNN':
         MLkNN_params_check(args.mll_kNN_k, args.MLkNN_s,
@@ -784,10 +788,9 @@ def mll_params_check(args, all_params_list_dict):
     elif args.mll == 'RAkELd':
         RAkELd_params_check(args.RAkEL_labelset_size,
                             all_params_list_dict)
-        print(all_params_list_dict['RAkEL_labelset_size'])
-        # exit()
     else:
-        raise ValueError('error! a new mll method {} detected'.format(args.mll))
+        raise ValueError('error! an unregistered mll method name {} found, please refer to the manual.'
+                         .format(args.mll))
 
 
 def MLkNN_params_check(k, s, ifn, param_list_dict):
@@ -809,7 +812,6 @@ def MLARAM_params_check(v, s, n, param_list_dict):
     param_helper(s, 'MLARAM_threshold', param_list_dict, default_value=0.02)
     if n:
         param_list_dict['MLARAM_neurons'] = n  # list
-    # else: NoneType
 
 
 def RAkELo_params_check(k, c, param_list_dict):
