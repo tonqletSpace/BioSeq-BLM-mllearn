@@ -187,17 +187,19 @@ class BLMBinaryRelevance(BinaryRelevance):
             X = self._ensure_input_format(X)
             y_subset = self._ensure_output_format(y_subset)
 
-            if not is_mll_ensemble_methods(mll):
+            if mll is None:
                 # BR clf
+                # print("BR clf".center(100, '*'))
                 classifier = copy.deepcopy(self.classifier)
             else:
                 # ensemble clf
+                # print("ensemble clf".center(100, '*'))
                 if max_len is not None and embed_size is not None:
                     lp_args = mll, ml, max_len, embed_size, params_dict
                     classifier = get_mll_deep_model(get_lp_num_class(y_subset), *lp_args)  # dl
                 else:
                     classifier = get_mll_ml_model(mll, ml, params_dict)  # ml
-
+            # exit()
             # dl 的 model 要在fit前根据y来确定num_class
             classifier.fit(get_ds_or_x(ds, X, y_subset), None if ds else y_subset)
 
@@ -451,8 +453,9 @@ def is_mll_ensemble_methods(mll):
     return mll in Mll_ENSEMBLE_Methods
 
 
-def is_hyper_parameter_mthods (mll):
-    return mll in Mll_Instance_Based_Methods + Mll_ENSEMBLE_Methods
+def is_hyper_parameter_mthods(mll):
+    return mll in Mll_Adaptation_Mthods + Mll_ENSEMBLE_Methods
+    # return mll in Mll_Instance_Based_Methods + Mll_ENSEMBLE_Methods
 
 
 def is_adaptation_model(mll):

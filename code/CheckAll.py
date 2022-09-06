@@ -812,6 +812,8 @@ def MLARAM_params_check(v, s, n, param_list_dict):
     param_helper(s, 'MLARAM_threshold', param_list_dict, default_value=0.02)
     if n:
         param_list_dict['MLARAM_neurons'] = n  # list
+    # print("MLARAM_vigilance", param_list_dict['MLARAM_vigilance'])
+    # exit()
 
 
 def RAkELo_params_check(k, c, param_list_dict):

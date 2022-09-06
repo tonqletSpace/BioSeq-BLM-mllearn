@@ -14,7 +14,7 @@ from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot
 from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
     mll_final_results_output, mll_prob_output, mll_print_metric_dict
 from ..utils.utils_mll import BLMLabelPowerset, MllDeepNetSeq, get_mll_deep_model, get_lp_num_class, \
-    mll_result_sparse_check, Mll_ENSEMBLE_Methods
+    mll_result_sparse_check, Mll_ENSEMBLE_Methods, is_mll_ensemble_methods
 
 
 def get_partition(feature, target, length, train_index, val_index):
@@ -175,7 +175,8 @@ def do_ml_fit_predict(mll, ml, mll_clf, x_train, y_train, x_val, params_dict):
 
 
 def do_ml_fit(mll, ml, mll_clf, x_train, y_train, params_dict):
-    if mll in Mll_ENSEMBLE_Methods:  # ensemble
+    if is_mll_ensemble_methods(mll):  # ensemble
+        # print("mll", mll)
         mll_clf.fit(x_train, y_train, 'LP', ml, params_dict=params_dict)
     else:
         mll_clf.fit(x_train, y_train)
