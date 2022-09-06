@@ -22,10 +22,12 @@ from scipy.sparse import issparse, lil_matrix, hstack
 
 from .utils_net import TrmDataset, MllBaseTorchNetSeq
 
-Mll_Instance_Based_Methods = ['MLkNN', 'BRkNNaClassifier', 'BRkNNbClassifier']
 Mll_MEKA_Methods = ['CLR', 'FW', 'RT']
 Mll_ENSEMBLE_Methods = ['RAkELo', 'RAkELd']
+Mll_Instance_Based_Methods = ['MLkNN', 'BRkNNaClassifier', 'BRkNNbClassifier']
+
 Mll_Adaptation_Mthods = Mll_Instance_Based_Methods + ['MLARAM']
+Mll_Methods = ['BR', 'CC', 'LP'] + Mll_Adaptation_Mthods + Mll_MEKA_Methods + Mll_ENSEMBLE_Methods
 
 
 def get_lp_num_class(y):
@@ -174,7 +176,6 @@ class BLMBinaryRelevance(BinaryRelevance):
         y = self._ensure_output_format(
             y, sparse_format='csc', enforce_sparse=True)
 
-        # exit()
         self.classifiers_ = []
         self._generate_partition(X, y)
         self._label_count = y.shape[1]
@@ -199,7 +200,6 @@ class BLMBinaryRelevance(BinaryRelevance):
                     classifier = get_mll_deep_model(get_lp_num_class(y_subset), *lp_args)  # dl
                 else:
                     classifier = get_mll_ml_model(mll, ml, params_dict)  # ml
-            # exit()
             # dl 的 model 要在fit前根据y来确定num_class
             classifier.fit(get_ds_or_x(ds, X, y_subset), None if ds else y_subset)
 
@@ -566,3 +566,31 @@ def adaptation_model_factory(mll, params_dict):
                       else None)
     else:
         raise ValueError('error! unregisted mll method {}. please refer to the manual.'.format(mll))
+
+
+def mll_arg_parser(parse):
+    parse.add_argument('-mll', type=str, choices=Mll_Methods, required=True,
+                       help="The multi-label learning algorithm, for example: Binary Relevance(BR).")
+
+    parse.add_argument("-mll_k", "--mll_kNN_k", nargs='*', type=int,
+                       help="number of neighbours of each input instance to take into account")
+    parse.add_argument("-mll_s", "--MLkNN_s", nargs='*', type=float,
+                       help="the smoothing parameter")
+    parse.add_argument("-mll_ifn", "--MLkNN_ignore_first_neighbours", nargs='*', type=int,
+                       help="ability to ignore first N neighbours, "
+                            "useful for comparing with other classification software")
+    parse.add_argument("-mll_v", "--MLARAM_vigilance", nargs='*', type=float,
+                       help="parameter for adaptive resonance theory networks, "
+                            "controls how large a hyperbox can be, 1 it is small (no compression), "
+                            "0 should assume all range. Normally set between 0.8 and 0.999, "
+                            "it is dataset dependent. It is responsible for the creation of the prototypes,"
+                            " therefore training of the network ")
+    parse.add_argument("-mll_t", "--MLARAM_threshold", nargs='*', type=float,
+                       help="controls how many prototypes participate by the prediction, "
+                            "can be changed for the testing phase")
+    parse.add_argument("-mll_n", "--MLARAM_neurons", nargs='*', type=list,
+                       help="ensemble todo")
+    parse.add_argument("-mll_ls", "--RAkEL_labelset_size", nargs='*', type=int,
+                       help="ensemble todo")
+    parse.add_argument("-mll_mc", "--RAkELo_model_count", nargs='*', type=int,
+                       help="ensemble todo")
