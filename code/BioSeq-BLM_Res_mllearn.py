@@ -6,8 +6,8 @@ import numpy as np
 
 from CheckAll import results_dir_check, check_contain_chinese, seq_sys_check, ml_params_check, make_params_dicts, \
     res_feature_check, Machine_Learning_Algorithm, DeepLearning, Final_Path, dl_params_check, Batch_Path_Res, \
-    Method_Res, prepare4train_res, prepare4train_seq, crf_params_check, Mll_Algorithm, mll_prepare4train_res, \
-    mll_prepare4train_seq, mode_params_check, mll_seq_sys_check, mll_meka_check
+    Method_Res, prepare4train_res, prepare4train_seq, crf_params_check, mll_prepare4train_res, \
+    mll_prepare4train_seq, mode_params_check, mll_seq_sys_check, mll_meka_check, mll_params_check
 from FeatureAnalysis import fa_process
 from FeatureExtractionMode.OHE.OHE4vec import ohe2res_base, sliding_win2files, mat_list2frag_array, \
     mll_sliding_win2files
@@ -26,6 +26,7 @@ from MachineLearningAlgorithm.utils.utils_read import files2vectors_res, read_ba
 from MachineLearningRes import one_cl_process, params_select, mll_one_cl_process
 from FeatureExtractionRes import create_results_dir
 from MachineLearningSeq import mll_ml_results
+from MachineLearningAlgorithm.utils.utils_mll import mll_arg_parser
 
 
 def mll_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, params_dict):
@@ -35,10 +36,10 @@ def mll_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_
 def mll_res_dl_fe_process(args, label_array, out_files, params_dict):
     # residue feature (N, E)
     vectors = mll_dl_files2vectors_seq(args, out_files, args.format)
-    print("type(vectors)", type(vectors))
-    print("vectors.shape", vectors.shape)  # (N, W*E)
-    print("type(label_array)", type(label_array))
-    print("label_array.shape", label_array.shape)  # (N, q)
+    # print("type(vectors)", type(vectors))
+    # print("vectors.shape", vectors.shape)  # (N, W*E)
+    # print("type(label_array)", type(label_array))
+    # print("label_array.shape", label_array.shape)  # (N, q)
     # exit()
 
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
@@ -46,9 +47,9 @@ def mll_res_dl_fe_process(args, label_array, out_files, params_dict):
     vectors, embed_size, fixed_seq_len_list = mll_read_dl_vec4res(args, vectors, args.window, out_files)
 
     # print(vectors.shape, vectors.dtype)
-    print("vectors.shape", vectors.shape)  # (N, L*E)、(32, fixed_len * 4)
-    print("label_array.shape", label_array.shape)
-    print("embed_size", embed_size)
+    # print("vectors.shape", vectors.shape)  # (N, L*E)、(32, fixed_len * 4)
+    # print("label_array.shape", label_array.shape)
+    # print("embed_size", embed_size)
     # exit()
 
     # 深度学习的独立测试和交叉验证分开
@@ -58,7 +59,7 @@ def mll_res_dl_fe_process(args, label_array, out_files, params_dict):
         args = mll_prepare4train_seq(args, label_array, dl=True)
         # 构建深度学习分类器
         # fixed_len为args.window所替代
-        mll_dl_cv_process(args.mll, args.ml, vectors, embed_size, label_array, fixed_seq_len_list,
+        mll_dl_cv_process(args.need_marginal_data, args.mll, args.ml, vectors, embed_size, label_array, fixed_seq_len_list,
                           args.window, args.folds, args.results_dir, params_dict)
     else:
         # 独立验证开始
@@ -80,17 +81,12 @@ def mll_res_ml_fe_process(args, label_array, out_files):
     # 多进程控制
     pool = multiprocessing.Pool(args.cpu)
     params_dict_list_pro = []
-    print('\n')
-    print('Parameter Selection Processing...')
-    print('\n')
+    print('\nParameter Selection Processing...\n')
     for i in range(len(params_dict_list)):
         params_dict = params_dict_list[i]
         mll_meka_check(args, params_dict)
-        print("cur params_dict\n", params_dict)
         params_dict_list_pro.append(pool.apply_async(mll_one_cl_process,
                                                      (args, vectors, label_array, args.folds, params_dict)))
-        if i == 1:
-            break
 
     pool.close()
     pool.join()
@@ -140,10 +136,6 @@ def main(args):
     seq_len_list, res_label_list = mll_read_res_seq_file(args.seq_file, args.label_file, args.category)
     label_array, args.need_marginal_data = mll_gen_label_matrix(res_label_list, args.mll)
 
-    # print("label_array.shape", label_array.shape)
-    # print("args.need_marginal_data", args.need_marginal_data)
-    # exit()
-
     # 控制序列的固定长度(只需要在benchmark dataset上操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
 
@@ -153,12 +145,12 @@ def main(args):
     all_params_list_dict = {}  # 包含了机器学习和特征提取的参数
     if args.ml in DeepLearning:
         all_params_list_dict = dl_params_check(args, all_params_list_dict)
+        mll_params_check(args, all_params_list_dict)
         params_list_dict, all_params_list_dict = mode_params_check(args, all_params_list_dict)
-        # 列表字典 ---> 字典列表 --> 参数字典
         args.params_dict_list = make_params_dicts(all_params_list_dict)[0]
     else:
         all_params_list_dict = ml_params_check(args, all_params_list_dict)
-        # 列表字典 ---> 字典列表
+        mll_params_check(args, all_params_list_dict)
         args.params_dict_list = make_params_dicts(all_params_list_dict)
 
     print('all_params_list_dict', all_params_list_dict)
@@ -312,27 +304,7 @@ if __name__ == '__main__':
                             "based on the method you choose.")
 
     # parameters for mll methods
-    parse.add_argument('-mll', type=str, choices=Mll_Algorithm, required=True,
-                       help="The multi-label learning algorithm, for example: Binary Relevance(BR).")
-
-    parse.add_argument("-mll_k", "--mll_kNN_k", nargs='*', type=int,
-                       help="number of neighbours of each input instance to take into account")
-    parse.add_argument("-mll_s", "--MLkNN_s", nargs='*', type=float,
-                       help="the smoothing parameter")
-    parse.add_argument("-mll_ifn", "--MLkNN_ignore_first_neighbours", nargs='*', type=int,
-                       help="ability to ignore first N neighbours, "
-                            "useful for comparing with other classification software")
-    parse.add_argument("-mll_v", "--MLARAM_vigilance", nargs='*', type=float,
-                       help="parameter for adaptive resonance theory networks, "
-                            "controls how large a hyperbox can be, 1 it is small (no compression), "
-                            "0 should assume all range. Normally set between 0.8 and 0.999, "
-                            "it is dataset dependent. It is responsible for the creation of the prototypes,"
-                            " therefore training of the network ")
-    parse.add_argument("-mll_t", "--MLARAM_threshold", nargs='*', type=float,
-                       help="controls how many prototypes participate by the prediction, "
-                            "can be changed for the testing phase")
-    parse.add_argument("-mll_n", "--MLARAM_neurons", nargs='*', type=list,
-                       help="the neurons in the network")
+    mll_arg_parser(parse)
 
     argv = parse.parse_args()
     main(argv)

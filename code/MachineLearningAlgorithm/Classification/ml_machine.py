@@ -65,33 +65,34 @@ def ml_cv_process(ml, vectors, labels, folds, metric, sp, multi, res, params_dic
     return params_dict
 
 
-def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, res, params_dict):
-    print_len = 40
-    if ml == 'SVM':
-        temp_str1 = '  cost = 2 ** ' + str(params_dict['cost']) + ' | ' + 'gamma = 2 ** ' + \
-                    str(params_dict['gamma']) + '  '
-    else:
-        temp_str1 = '  tree = ' + str(params_dict['tree']) + '  '
-    print(temp_str1.center(print_len, '+'))
-
-    results = []
-    for train_index, val_index in folds:
-        x_train, y_train, x_val, y_val = mll_sparse_check(mll, *get_partition(vectors, labels, train_index, val_index))
-
-        clf = get_mll_ml_model(mll, ml, params_dict)
-        clf.fit(x_train, y_train)
-
-        y_val_ = mll_result_sparse_check(mll, clf.predict(x_val))
-        # 'Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1'
-        result = mll_performance(y_val, y_val_)
-        results.append(result)
-
-    cv_results = np.array(results).mean(axis=0)
-
-    params_dict['metric'] = cv_results[metric]
-    temp_str2 = '  metric value: ' + Metric_List[metric] + ' = ' + '%.3f  ' % cv_results[metric]
-    print(temp_str2.center(print_len, '*'))
-    return params_dict
+# def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, res, params_dict):
+#     print_len = 40
+#     if ml == 'SVM':
+#         temp_str1 = '  cost = 2 ** ' + str(params_dict['cost']) + ' | ' + 'gamma = 2 ** ' + \
+#                     str(params_dict['gamma']) + '  '
+#     else:
+#         temp_str1 = '  tree = ' + str(params_dict['tree']) + '  '
+#     print(temp_str1.center(print_len, '+'))
+#
+#     results = []
+#     for train_index, val_index in folds:
+#         x_train, y_train, x_val, y_val = mll_sparse_check(mll, *get_partition(vectors, labels, train_index, val_index))
+#
+#         clf = get_mll_ml_model(mll, ml, params_dict)
+#         y_val_ = do_ml_fit_predict(mll, ml, clf, x_train, y_train, x_val, params_dict)
+#
+#         # y_val_ = mll_result_sparse_check(mll, clf.predict(x_val))
+#
+#         # 'Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1'
+#         result = mll_performance(y_val, y_val_)
+#         results.append(result)
+#
+#     cv_results = np.array(results).mean(axis=0)
+#
+#     params_dict['metric'] = cv_results[metric]
+#     temp_str2 = '  metric value: ' + Metric_List[metric] + ' = ' + '%.3f  ' % cv_results[metric]
+#     print(temp_str2.center(print_len, '*'))
+#     return params_dict
 
 
 def get_partition(vectors, labels, train_index, val_index):

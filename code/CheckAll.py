@@ -7,6 +7,7 @@ import sys
 from collections import Counter
 from itertools import count, takewhile, product
 
+from scipy.sparse import lil_matrix
 from skmultilearn.ext import download_meka
 
 from MachineLearningAlgorithm.utils.utils_math import construct_partition2two, mll_marginal_check
@@ -63,9 +64,6 @@ Ml = {'SVM': 'Support Vector Machine(SVM)', 'RF': 'Random Forest(RF)', 'CRF': 'C
 DeepLearning = ['CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer']
 Classification = ['SVM', 'RF', 'CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer']
 SequenceLabelling = ['CRF', 'CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer']
-
-Mll_Algorithm = ['BR', 'CC', 'LP', 'MLkNN', 'BRkNNaClassifier', 'BRkNNbClassifier', 'MLARAM',
-                 'CLR', 'FW', 'RT', 'RAkELo', 'RAkELd']
 
 # 路径
 Final_Path = '/results/'
@@ -940,12 +938,8 @@ def prepare4train_seq(args, label_array, dl):
 
 
 def mll_prepare4train_seq(args, label_array, dl):
-    from scipy.sparse import lil_matrix
+    assert isinstance(label_array, lil_matrix), 'err'
 
-    if not isinstance(label_array, lil_matrix):
-        return prepare4train_seq(args, label_array, dl)
-
-    # multi-label learning version
     info_dict = {}
 
     if args.cv == 'j':
@@ -972,7 +966,7 @@ def mll_prepare4train_seq(args, label_array, dl):
             else:
                 info_dict['Technique for sampling'] = 'combine oversampling  and undersampling '
 
-    info_dict['Type of Problem'] = 'multi-label learning'
+    info_dict['Type of Problem'] = 'Multi-label Learning'
 
     print_base_dict(info_dict)
     return args
@@ -1065,6 +1059,7 @@ def prepare4train_res(args, label_array, dl):
 
 
 def mll_prepare4train_res(args, label_array, dl):
+    assert isinstance(label_array, lil_matrix), 'err'
     info_dict = {}
 
     if args.cv == 'j':
@@ -1079,11 +1074,12 @@ def mll_prepare4train_res(args, label_array, dl):
 
     if dl is False:
         args.folds = mll_marginal_check(label_array, args)  # 固定交叉验证的每一折index
-        args.metric_index = Metric_Index[args.metric]
-        info_dict['Metric for selection'] = Metric_dict[args.metric]
     else:
         label_array = random.normal(loc=0.0, scale=1, size=(len(label_array)))
         args.folds = mll_marginal_check(label_array, args, False)  # 固定交叉验证的每一折index
+
+    args.metric_index = Mll_Metric_Index[args.metric]
+    info_dict['Metric for selection'] = Metric_dict[args.metric]
 
     info_dict['Type of Problem'] = 'Multi-label Learning'
 

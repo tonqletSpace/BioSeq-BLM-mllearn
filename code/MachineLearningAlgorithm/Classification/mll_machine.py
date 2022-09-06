@@ -16,12 +16,12 @@ from ..utils.utils_results import mll_performance
 from warnings import simplefilter
 simplefilter(action='ignore', category=FutureWarning)
 
-Metric_List = ['Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1']
+Mll_Metric_List = ['Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1']
 
 
 def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, params_dict):
+    print_len = 40
     if ml:
-        print_len = 40
         if ml == 'SVM':
             temp_str1 = '  cost = 2 ** ' + str(params_dict['cost']) + ' | ' + 'gamma = 2 ** ' + \
                         str(params_dict['gamma']) + '  '
@@ -29,8 +29,7 @@ def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, params_dict):
             temp_str1 = '  tree = ' + str(params_dict['tree']) + '  '
         print(temp_str1.center(print_len, '+'))
 
-    print_len = 40
-    print(str(params_dict).center(print_len, '+'))
+    # print(str(params_dict).center(print_len, '+'))
 
     results = []
     for train_index, val_index in folds:
@@ -46,9 +45,10 @@ def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, params_dict):
 
     cv_results = np.array(results).mean(axis=0)
 
-    params_dict['metric'] = cv_results[metric]
-    temp_str2 = '  metric value: ' + Metric_List[metric] + ' = ' + '%.3f  ' % cv_results[metric]
+    temp_str2 = '  metric value: ' + Mll_Metric_List[metric] + ' = ' + '%.3f  ' % cv_results[metric]
     print(temp_str2.center(print_len, '*'))
+
+    params_dict['metric'] = cv_results[metric]
     return params_dict
 
 

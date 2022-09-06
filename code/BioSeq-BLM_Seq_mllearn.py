@@ -2,10 +2,8 @@ import multiprocessing
 import os
 import time
 
-
-
 from CheckAll import Batch_Path_Seq, DeepLearning, Classification, Method_Semantic_Similarity, prepare4train_seq \
-    , mll_prepare4train_seq, Mll_Algorithm, mll_seq_sys_check, mll_params_check, mll_meka_check
+    , mll_prepare4train_seq, mll_seq_sys_check, mll_params_check, mll_meka_check
 from CheckAll import Method_One_Hot_Enc, Feature_Extract_Mode, check_contain_chinese, seq_sys_check, dl_params_check, \
     seq_feature_check, mode_params_check, results_dir_check, ml_params_check, make_params_dicts, Final_Path, All_Words
 from FeatureAnalysis import fa_process, mll_fa_process
@@ -18,6 +16,7 @@ from MachineLearningAlgorithm.utils.utils_read import files2vectors_seq, read_dl
     mll_read_dl_vec4seq
 from MachineLearningSeq import one_ml_process, params_select, ml_results, ind_ml_results, mll_one_ml_process, \
     mll_ml_results, mll_ind_ml_results
+from MachineLearningAlgorithm.utils.utils_mll import mll_arg_parser
 
 
 def create_results_dir(args, cur_dir):
@@ -67,6 +66,7 @@ def mll_ml_fe_process(args):
     # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
     args.fold = mll_prepare4train_seq(args, label_array, dl=False)
 
+    print(args.metric_index)
     # 指定分析层面
     args.res = False
 
@@ -93,6 +93,11 @@ def mll_ml_fe_process(args):
 
     pool.close()
     pool.join()
+
+    # print("params_dict_list_pro")
+    # for d in params_dict_list_pro:
+    #     print(d)
+    # exit()
     # 根据指标进行参数选择
     params_selected = params_select(params_dict_list_pro, args.results_dir)
     # 将最优的特征向量文件从"all_fea_files/"文件夹下复制到主文件下
@@ -457,30 +462,7 @@ if __name__ == '__main__':
                        help="Select use batch mode or not, the parameter will change the directory for generating file "
                             "based on the method you choose.")
     # parameters for mll methods
-    parse.add_argument('-mll', type=str, choices=Mll_Algorithm, required=True,
-                       help="The multi-label learning algorithm, for example: Binary Relevance(BR).")
+    mll_arg_parser(parse)
 
-    parse.add_argument("-mll_k", "--mll_kNN_k", nargs='*', type=int,
-                       help="number of neighbours of each input instance to take into account")
-    parse.add_argument("-mll_s", "--MLkNN_s", nargs='*', type=float,
-                       help="the smoothing parameter")
-    parse.add_argument("-mll_ifn", "--MLkNN_ignore_first_neighbours", nargs='*', type=int,
-                       help="ability to ignore first N neighbours, "
-                            "useful for comparing with other classification software")
-    parse.add_argument("-mll_v", "--MLARAM_vigilance", nargs='*', type=float,
-                       help="parameter for adaptive resonance theory networks, "
-                            "controls how large a hyperbox can be, 1 it is small (no compression), "
-                            "0 should assume all range. Normally set between 0.8 and 0.999, "
-                            "it is dataset dependent. It is responsible for the creation of the prototypes,"
-                            " therefore training of the network ")
-    parse.add_argument("-mll_t", "--MLARAM_threshold", nargs='*', type=float,
-                       help="controls how many prototypes participate by the prediction, "
-                            "can be changed for the testing phase")
-    parse.add_argument("-mll_n", "--MLARAM_neurons", nargs='*', type=list,
-                       help="ensemble todo")
-    parse.add_argument("-mll_ls", "--RAkEL_labelset_size", nargs='*', type=int,
-                       help="ensemble todo")
-    parse.add_argument("-mll_mc", "--RAkELo_model_count", nargs='*', type=int,
-                       help="ensemble todo")
     argv = parse.parse_args()
     main(argv)
