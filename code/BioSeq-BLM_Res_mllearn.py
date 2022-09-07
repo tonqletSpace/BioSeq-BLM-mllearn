@@ -240,7 +240,7 @@ if __name__ == '__main__':
                             " 'fs'---apply feature selection to parameter selection procedure;\n"
                             " 'dr'---apply dimension reduction to parameter selection procedure.\n")
     # ----------------------- parameters for MachineLearning---------------------- #
-    parse.add_argument('-ml', type=str, choices=Machine_Learning_Algorithm, required=True,
+    parse.add_argument('-ml', type=str, choices=Machine_Learning_Algorithm, required=False,
                        help="The machine learning algorithm, for example: Support Vector Machine(SVM).")
     parse.add_argument('-grid', type=int, nargs='*', choices=[0, 1], default=0,
                        help="grid = 0 for rough grid search, grid = 1 for meticulous grid search.")

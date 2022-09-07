@@ -4,7 +4,7 @@ import os
 
 import numpy as np
 import sklearn.metrics as metrics
-from scipy.sparse import issparse
+from scipy.sparse import issparse, lil_matrix
 from sklearn.metrics import roc_auc_score
 
 
@@ -87,7 +87,9 @@ def mll_performance(origin_labels, predicted_labels):
     :param origin_labels: true values of the data set.
     :param predicted_labels: predicted values of the data set.
     """
-    assert issparse(origin_labels) and issparse(predicted_labels)
+    if not issparse(origin_labels) or not issparse(predicted_labels):
+        origin_labels = lil_matrix(origin_labels)
+        predicted_labels = lil_matrix(predicted_labels)
 
     if origin_labels.get_shape() != predicted_labels.get_shape():
         raise ValueError("The shape of the original labels must equal to that of the predicted labels.")

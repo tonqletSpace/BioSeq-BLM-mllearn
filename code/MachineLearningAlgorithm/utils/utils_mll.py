@@ -470,7 +470,7 @@ def is_mll_proba_output_methods(mll):
 
 def mll_sparse_check(mll, *data_list):
     if mll in ['MLARAM']:
-        data_list = [e.tocsc() for e in data_list]
+        data_list = [e.toarray() for e in data_list]
 
     return data_list
 
