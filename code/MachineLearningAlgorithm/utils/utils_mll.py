@@ -568,6 +568,21 @@ def adaptation_model_factory(mll, params_dict):
         raise ValueError('error! unregisted mll method {}. please refer to the manual.'.format(mll))
 
 
+def mll_meka_check(args, params_dict):
+    if is_mll_meka_methods(args.mll):
+        params_dict['meka_classpath'] = args.meka_classpath
+        params_dict['which_java'] = args.which_java
+
+
+def mll_erase_meka_config(params_dict):
+    meka_config = ['meka_classpath', 'which_java']
+    for key in meka_config:
+        if params_dict.__contains__(key):
+            params_dict.pop(key)
+
+    return params_dict
+
+
 def mll_arg_parser(parse):
     parse.add_argument('-mll', type=str, choices=Mll_Methods, required=True,
                        help="The multi-label learning algorithm, for example: Binary Relevance(BR).")

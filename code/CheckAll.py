@@ -13,7 +13,9 @@ from skmultilearn.ext import download_meka
 from MachineLearningAlgorithm.utils.utils_math import construct_partition2two, mll_marginal_check
 
 # Alphabets of DNA, RNA, PROTEIN
-from MachineLearningAlgorithm.utils.utils_mll import is_mll_meka_methods, is_hyper_parameter_mthods
+from MachineLearningAlgorithm.utils.utils_mll import is_mll_meka_methods, is_hyper_parameter_mthods, \
+    mll_erase_meka_config
+from FeatureExtractionMode.utils.utils_write import opt_params2file
 
 DNA = "ACGT"
 RNA = "ACGU"
@@ -112,10 +114,27 @@ def mll_seq_sys_check(args, res=False):
         seq_sys_check(args, res)
 
 
-def mll_meka_check(args, params_dict):
-    if is_mll_meka_methods(args.mll):
-        params_dict['meka_classpath'] = args.meka_classpath
-        params_dict['which_java'] = args.which_java
+def mll_ensemble_check(q, params_dict):
+    if params_dict.__contains__('RAkEL_labelset_size') and params_dict['RAkEL_labelset_size'] is not None:
+        assert params_dict['RAkEL_labelset_size'] >= 1,\
+            'error! RAkEL_labelset_size must be greater than 1'
+        assert params_dict['RAkEL_labelset_size'] < q,\
+            'error! RAkEL_labelset_size must be less than the dimension ' \
+            'of label space. got {} vs {}'.format(params_dict['RAkEL_labelset_size'], q)
+
+
+def mll_params_select(params_list, out_dir):
+    # .get()应用于 muti-thread, 单线程要去掉.get()
+    evaluation = params_list[0].get()['metric']
+    params_list_selected = params_list[0].get()
+    for i in range(len(params_list)):
+        if params_list[i].get()['metric'] > evaluation:
+            evaluation = params_list[i].get()['metric']
+            params_list_selected = params_list[i].get()
+    del params_list_selected['metric']
+
+    opt_params2file(mll_erase_meka_config(params_list_selected.copy()), out_dir)  # 将最优参数写入文件
+    return params_list_selected
 
 
 def check_contain_chinese(check_str):
@@ -757,7 +776,7 @@ def ml_params_check(args, all_params_list_dict):
 
 def mll_params_check(args, all_params_list_dict):
     """
-    this function adds hyper-parameters from args to all_params_list_dict for parameter selection
+    this function adds hyper-parameters of mll model from args to all_params_list_dict for parameter selection
 
     :param args: used for access of hyper-parameters of predictors
     :param all_params_list_dict: used for parameter selection
@@ -787,8 +806,8 @@ def mll_params_check(args, all_params_list_dict):
         RAkELd_params_check(args.RAkEL_labelset_size,
                             all_params_list_dict)
     else:
-        raise ValueError('error! an unregistered mll method name {} found, please refer to the manual.'
-                         .format(args.mll))
+        raise ValueError('error! an unregistered mll method name {} found, '
+                         'please refer to the manual.'.format(args.mll))
 
 
 def MLkNN_params_check(k, s, ifn, param_list_dict):
@@ -810,8 +829,6 @@ def MLARAM_params_check(v, s, n, param_list_dict):
     param_helper(s, 'MLARAM_threshold', param_list_dict, default_value=0.02)
     if n:
         param_list_dict['MLARAM_neurons'] = n  # list
-    # print("MLARAM_vigilance", param_list_dict['MLARAM_vigilance'])
-    # exit()
 
 
 def RAkELo_params_check(k, c, param_list_dict):

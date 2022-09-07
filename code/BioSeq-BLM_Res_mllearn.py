@@ -7,7 +7,8 @@ import numpy as np
 from CheckAll import results_dir_check, check_contain_chinese, seq_sys_check, ml_params_check, make_params_dicts, \
     res_feature_check, Machine_Learning_Algorithm, DeepLearning, Final_Path, dl_params_check, Batch_Path_Res, \
     Method_Res, prepare4train_res, prepare4train_seq, crf_params_check, mll_prepare4train_res, \
-    mll_prepare4train_seq, mode_params_check, mll_seq_sys_check, mll_meka_check, mll_params_check
+    mll_prepare4train_seq, mode_params_check, mll_seq_sys_check, mll_params_check, mll_ensemble_check, \
+    mll_params_select
 from FeatureAnalysis import fa_process
 from FeatureExtractionMode.OHE.OHE4vec import ohe2res_base, sliding_win2files, mat_list2frag_array, \
     mll_sliding_win2files
@@ -26,7 +27,7 @@ from MachineLearningAlgorithm.utils.utils_read import files2vectors_res, read_ba
 from MachineLearningRes import one_cl_process, params_select, mll_one_cl_process
 from FeatureExtractionRes import create_results_dir
 from MachineLearningSeq import mll_ml_results
-from MachineLearningAlgorithm.utils.utils_mll import mll_arg_parser
+from MachineLearningAlgorithm.utils.utils_mll import mll_arg_parser, mll_meka_check
 
 
 def mll_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, params_dict):
@@ -34,23 +35,14 @@ def mll_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_
 
 
 def mll_res_dl_fe_process(args, label_array, out_files, params_dict):
+    mll_ensemble_check(label_array.shape[1], params_dict)
+
     # residue feature (N, E)
     vectors = mll_dl_files2vectors_seq(args, out_files, args.format)
-    # print("type(vectors)", type(vectors))
-    # print("vectors.shape", vectors.shape)  # (N, W*E)
-    # print("type(label_array)", type(label_array))
-    # print("label_array.shape", label_array.shape)  # (N, q)
-    # exit()
 
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
     # fixed_len为args.window所替代
     vectors, embed_size, fixed_seq_len_list = mll_read_dl_vec4res(args, vectors, args.window, out_files)
-
-    # print(vectors.shape, vectors.dtype)
-    # print("vectors.shape", vectors.shape)  # (N, L*E)、(32, fixed_len * 4)
-    # print("label_array.shape", label_array.shape)
-    # print("embed_size", embed_size)
-    # exit()
 
     # 深度学习的独立测试和交叉验证分开
     if args.ind_seq_file is None:
@@ -59,8 +51,8 @@ def mll_res_dl_fe_process(args, label_array, out_files, params_dict):
         args = mll_prepare4train_seq(args, label_array, dl=True)
         # 构建深度学习分类器
         # fixed_len为args.window所替代
-        mll_dl_cv_process(args.need_marginal_data, args.mll, args.ml, vectors, embed_size, label_array, fixed_seq_len_list,
-                          args.window, args.folds, args.results_dir, params_dict)
+        mll_dl_cv_process(args.need_marginal_data, args.mll, args.ml, vectors, embed_size,
+                          label_array, fixed_seq_len_list, args.window, args.folds, args.results_dir, params_dict)
     else:
         # 独立验证开始
         mll_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, params_dict)
@@ -84,6 +76,7 @@ def mll_res_ml_fe_process(args, label_array, out_files):
     print('\nParameter Selection Processing...\n')
     for i in range(len(params_dict_list)):
         params_dict = params_dict_list[i]
+        mll_ensemble_check(label_array.shape[1], params_dict)
         mll_meka_check(args, params_dict)
         params_dict_list_pro.append(pool.apply_async(mll_one_cl_process,
                                                      (args, vectors, label_array, args.folds, params_dict)))
@@ -93,7 +86,7 @@ def mll_res_ml_fe_process(args, label_array, out_files):
     # ** 筛选结束 ** #
 
     # 根据指标进行参数选择
-    params_selected = params_select(params_dict_list_pro, args.results_dir)
+    params_selected = mll_params_select(params_dict_list_pro, args.results_dir)
 
     # 特征分析
     print(' Shape of Feature vectors: [%d, %d] '.center(66, '*') % (vectors.shape[0], vectors.shape[1]))

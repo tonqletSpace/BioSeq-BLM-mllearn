@@ -3,7 +3,7 @@ import os
 import time
 
 from CheckAll import Batch_Path_Seq, DeepLearning, Classification, Method_Semantic_Similarity, prepare4train_seq \
-    , mll_prepare4train_seq, mll_seq_sys_check, mll_params_check, mll_meka_check
+    , mll_prepare4train_seq, mll_seq_sys_check, mll_params_check, mll_ensemble_check, mll_params_select
 from CheckAll import Method_One_Hot_Enc, Feature_Extract_Mode, check_contain_chinese, seq_sys_check, dl_params_check, \
     seq_feature_check, mode_params_check, results_dir_check, ml_params_check, make_params_dicts, Final_Path, All_Words
 from FeatureAnalysis import fa_process, mll_fa_process
@@ -16,7 +16,7 @@ from MachineLearningAlgorithm.utils.utils_read import files2vectors_seq, read_dl
     mll_read_dl_vec4seq
 from MachineLearningSeq import one_ml_process, params_select, ml_results, ind_ml_results, mll_one_ml_process, \
     mll_ml_results, mll_ind_ml_results
-from MachineLearningAlgorithm.utils.utils_mll import mll_arg_parser
+from MachineLearningAlgorithm.utils.utils_mll import mll_arg_parser, mll_meka_check
 
 
 def create_results_dir(args, cur_dir):
@@ -66,7 +66,6 @@ def mll_ml_fe_process(args):
     # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
     args.fold = mll_prepare4train_seq(args, label_array, dl=False)
 
-    print(args.metric_index)
     # 指定分析层面
     args.res = False
 
@@ -78,6 +77,7 @@ def mll_ml_fe_process(args):
     print('\n')
     for i in range(len(params_dict_list)):
         params_dict = params_dict_list[i]
+        mll_ensemble_check(label_array.shape[1], params_dict)
         mll_meka_check(args, params_dict)
         print("cur params_dict\n", params_dict)
         # 生成特征向量文件名
@@ -94,12 +94,8 @@ def mll_ml_fe_process(args):
     pool.close()
     pool.join()
 
-    # print("params_dict_list_pro")
-    # for d in params_dict_list_pro:
-    #     print(d)
-    # exit()
     # 根据指标进行参数选择
-    params_selected = params_select(params_dict_list_pro, args.results_dir)
+    params_selected = mll_params_select(params_dict_list_pro, args.results_dir)
     # 将最优的特征向量文件从"all_fea_files/"文件夹下复制到主文件下
     opt_files = opt_file_copy(params_selected['out_files'], args.results_dir)
 
@@ -184,6 +180,7 @@ def mll_dl_fe_process(args):
     # 列表字典 ---> 字典列表 --> 参数字典
     mll_params_check(args, all_params_list_dict)
     params_dict = make_params_dicts(all_params_list_dict)[0]
+    mll_ensemble_check(label_array.shape[1], params_dict)
 
     # 特征向量文件命名
     out_files = mll_out_dl_seq_file(args.results_dir, ind=False)
