@@ -586,7 +586,6 @@ def mll_erase_meka_config(params_dict):
 def mll_arg_parser(parse):
     parse.add_argument('-mll', type=str, choices=Mll_Methods, required=True,
                        help="The multi-label learning algorithm, for example: Binary Relevance(BR).")
-
     parse.add_argument("-mll_k", "--mll_kNN_k", nargs='*', type=int,
                        help="number of neighbours of each input instance to take into account")
     parse.add_argument("-mll_s", "--MLkNN_s", nargs='*', type=float,

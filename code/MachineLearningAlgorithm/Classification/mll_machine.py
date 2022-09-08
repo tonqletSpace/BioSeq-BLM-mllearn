@@ -29,7 +29,7 @@ def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, params_dict):
             temp_str1 = '  tree = ' + str(params_dict['tree']) + '  '
         print(temp_str1.center(print_len, '+'))
 
-    # print(str(params_dict).center(print_len, '+'))
+    print(str(params_dict).center(print_len, '+'))
 
     results = []
     for train_index, val_index in folds:

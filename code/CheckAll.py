@@ -1,4 +1,5 @@
 import os
+from decimal import Decimal
 
 import numpy as np
 from numpy import random
@@ -840,27 +841,54 @@ def RAkELd_params_check(k, param_list_dict):
     param_helper(k, 'RAkEL_labelset_size', param_list_dict, default_value=1)
 
 
-def param_helper(p_range, p_name, param_list_dict, default_value, default_span=1):
+def param_helper(p_range, p_name, param_list_dict, default_value, default_span=None):
     """
     p_range =（b, e=b, s=default_span)
     => range[b, e+s, s]
     """
     # 1: meticulous; 0: 'rough'.
     if p_range:
-        if len(p_range) == 1:
-            t_range = range(p_range[0], p_range[0] + default_span, default_span)
-        elif len(p_range) == 2:
-            t_range = range(p_range[0], p_range[1] + default_span, default_span)
-        elif len(p_range) == 3:
-            t_range = range(p_range[0], p_range[1] + p_range[2], p_range[2])
+        if isinstance(default_value, int):
+            if default_span is None:
+                default_span = 1
+
+            if len(p_range) == 1:
+                t_range = range(p_range[0], p_range[0] + default_span, default_span)
+            elif len(p_range) == 2:
+                t_range = range(p_range[0], p_range[1], default_span)
+            elif len(p_range) == 3:
+                t_range = range(p_range[0], p_range[1], p_range[2])
+            else:
+                error_info = 'The number of input value of parameter {} should be no more than 3!'.format(p_name)
+                sys.stderr.write(error_info)
+                raise ValueError(error_info)
         else:
-            error_info = 'The number of input value of parameter {} should be no more than 3!'.format(p_name)
-            sys.stderr.write(error_info)
-            raise ValueError(error_info)
+            if default_span is None:
+                default_span = 1.0
+
+            if len(p_range) == 1:
+                t_range = float_range(p_range[0], p_range[0] + default_span, default_span)
+            elif len(p_range) == 2:
+                t_range = float_range(p_range[0], p_range[1], default_span)
+            elif len(p_range) == 3:
+                t_range = float_range(p_range[0], p_range[1], p_range[2])
+            else:
+                error_info = 'The number of input value of parameter {} should be no more than 3!'.format(p_name)
+                sys.stderr.write(error_info)
+                raise ValueError(error_info)
     else:
         t_range = np.arange(default_value, default_value+default_span*3, default_span)
 
     param_list_dict[p_name] = list(t_range)
+
+
+def float_range(start, stop, steps):
+    res = []
+    while Decimal(str(start)) < Decimal(str(stop)):
+        res.append(float(Decimal(str(start))))
+        start = Decimal(str(start))+Decimal(str(steps))
+
+    return res
 
 
 # 深度学习的参数检查

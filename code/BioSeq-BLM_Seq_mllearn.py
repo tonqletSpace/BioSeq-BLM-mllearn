@@ -46,7 +46,6 @@ def mll_ml_fe_process(args):
     seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
     # 生成标签矩阵
     label_array, args.need_marginal_data = mll_gen_label_matrix(seq_label_list, args.mll)
-    # print('label_array.get_shape()', label_array.get_shape())
     # 控制序列的固定长度(只需要操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
 
@@ -86,8 +85,6 @@ def mll_ml_fe_process(args):
         # 注意多进程计算的debug
         # params_dict_list_pro.append(
         #     mll_one_ml_fe_process(args, input_one_file, label_array, vec_files, args.folds, params_dict))
-        if i == 1:
-            break
         params_dict_list_pro.append(pool.apply_async(
             mll_one_ml_fe_process, (args, input_one_file, label_array, vec_files, args.folds, params_dict)))
 
