@@ -603,7 +603,7 @@ def mll_arg_parser(parse):
                             "it is dataset dependent. It is responsible for the creation of the prototypes,"
                             " therefore training of the network ")
     parse.add_argument("-mll_t", "--MLARAM_threshold", nargs='*',
-                       type=float, action=mll_param_bound(0, 1),
+                       type=float, action=mll_param_bound(0.0, 1.0),
                        help="controls how many prototypes participate by the prediction, "
                             "can be changed for the testing phase")
     parse.add_argument("-mll_ls", "--RAkEL_labelset_size", nargs='*', type=int,
@@ -613,13 +613,53 @@ def mll_arg_parser(parse):
 
 
 def mll_param_bound(lower, upper):
+    """
+    test all
+    :param lower: minimum lower_bound
+    :param upper: maximum upper_bound
+    :return:
+    """
     class ParamBound(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
             if values is not None and isinstance(values, list):
-                for elm in values:
-                    if not lower <= elm < upper:
-                        msg = 'argument "{f}" requires between {lower} and {upper} arguments'.format(
-                            f=self.dest, lower=lower, upper=upper)
-                        raise argparse.ArgumentTypeError(msg)
+                if not test_in_range(values, lower, upper):
+                    msg = 'argument "{f}" requires between {lower} and {upper} arguments'.format(
+                        f=self.dest, lower=lower, upper=upper)
+                    raise argparse.ArgumentTypeError(msg)
             setattr(namespace, self.dest, values)
     return ParamBound
+
+
+def test_in_range(lst, lower, upper):
+    """
+    len(list) == 1: test_in_range(start)
+    len(list) == 2: test_in_range(start) & test_in_range(get_max_val(start, end, 1))
+    len(list) == 3: test_in_range(start) & test_in_range(step) & test_in_range(get_max_val(start, end, step))
+
+    :param lst: user given parameter
+    :param lower: fixed bound
+    :param upper: fixed bound
+    :return:
+    """
+    def in_range(elm, lb, ub):
+        return lb <= elm < ub
+
+    def get_max_val(start, end, step=1):
+        assert start < end, 'Error! parameter range start:{} must be lower than end:{}'.format(start, end)
+        res = start
+        while res + step < end:
+            res += step
+
+        return res
+
+    if len(lst) == 1:
+        return in_range(lst[0], lower, upper)  # 因为 idx=1 表示上界，不会包含
+    elif len(lst) == 2:
+        return in_range(lst[0], lower, upper) and \
+               in_range(get_max_val(lst[0], lst[1], 1), lower, upper)  # default span is 1
+    elif len(lst) == 3:
+        return in_range(lst[0], lower, upper) and \
+               in_range(lst[2], lower, upper) and \
+               in_range(get_max_val(lst[0], lst[1], lst[2]), lower, upper)
+    else:
+        raise argparse.ArgumentTypeError('Error! count of parameters can not be more than 3!')
