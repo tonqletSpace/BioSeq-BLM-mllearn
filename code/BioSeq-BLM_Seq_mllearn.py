@@ -58,9 +58,11 @@ def mll_ml_fe_process(args):
     # 对每个mode的words和method的参数进行检查
     # params_list_dict 为只包括特征提取的参数的字典， all_params_list_dict为包含所有参数的字典
     params_list_dict, all_params_list_dict = mode_params_check(args, all_params_list_dict)
+    print("all_params_list_dict", all_params_list_dict)
 
     # 列表字典 ---> 字典列表
     params_dict_list = make_params_dicts(all_params_list_dict)
+    print("params_dict_list", params_dict_list)
 
     # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
     args.fold = mll_prepare4train_seq(args, label_array, dl=False)
@@ -257,7 +259,7 @@ def main(args):
 if __name__ == '__main__':
     import argparse
 
-    parse = argparse.ArgumentParser(prog='BioSeq-BLM', description="Step into analysis, please select parameters ")
+    parse = argparse.ArgumentParser(prog='BioSeq-BLM-MLL', description="Step into analysis, please select parameters ")
 
     # ----------------------- parameters for FeatureExtraction ---------------------- #
     parse.add_argument('-category', type=str, choices=['DNA', 'RNA', 'Protein'], required=True,
@@ -438,9 +440,6 @@ if __name__ == '__main__':
     # ----------------------- parameters for input and output ---------------------- #
     # parameters for input
     parse.add_argument('-seq_file', nargs='*', required=True, help="The input files in FASTA format.")
-    # parse.add_argument('-label', type=int, nargs='*', required=True,
-    #                    help="The corresponding label of input sequence files. For deep learning method, the label can "
-    #                         "only set as positive integer")
     parse.add_argument('-ind_seq_file', nargs='*', help="The input independent test files in FASTA format.")
 
     parse.add_argument('-fixed_len', type=int,

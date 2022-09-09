@@ -797,7 +797,6 @@ def mll_params_check(args, all_params_list_dict):
     elif args.mll == 'MLARAM':
         MLARAM_params_check(args.MLARAM_vigilance,
                             args.MLARAM_threshold,
-                            args.MLARAM_neurons,
                             all_params_list_dict)
     elif args.mll == 'RAkELo':
         RAkELo_params_check(args.RAkEL_labelset_size,
@@ -825,11 +824,23 @@ def BRkNNbClassifier_params_check(k, param_list_dict):
     param_helper(k, 'mll_kNN_k', param_list_dict, default_value=10)
 
 
-def MLARAM_params_check(v, s, n, param_list_dict):
+def MLARAM_params_check(v, s, param_list_dict):
     param_helper(v, 'MLARAM_vigilance', param_list_dict, default_value=0.9)
     param_helper(s, 'MLARAM_threshold', param_list_dict, default_value=0.02)
-    if n:
-        param_list_dict['MLARAM_neurons'] = n  # list
+    # if n is not None:
+    #     param_list_dict['MLARAM_neurons'] = [arg_list2str(n)]
+    #     print("param_list_dict['MLARAM_neurons']", param_list_dict['MLARAM_neurons'])
+
+
+def arg_list2str(lst):
+    """
+    :param lst: list of string number
+    :return: list(str(arg_list))
+    """
+    for si in lst:
+        assert isinstance(int(si), int), 'error! element of list parameter must be integer.'
+
+    return ','.join(lst)
 
 
 def RAkELo_params_check(k, c, param_list_dict):
@@ -841,13 +852,12 @@ def RAkELd_params_check(k, param_list_dict):
     param_helper(k, 'RAkEL_labelset_size', param_list_dict, default_value=1)
 
 
-def param_helper(p_range, p_name, param_list_dict, default_value, default_span=None):
+def param_helper(p_range, p_name, param_list_dict, default_value, default_span=1):
     """
     p_range =（b, e=b, s=default_span)
     => range[b, e+s, s]
     """
-    # 1: meticulous; 0: 'rough'.
-    if p_range:
+    if p_range is not None:
         if isinstance(default_value, int):
             if default_span is None:
                 default_span = 1
@@ -877,7 +887,7 @@ def param_helper(p_range, p_name, param_list_dict, default_value, default_span=N
                 sys.stderr.write(error_info)
                 raise ValueError(error_info)
     else:
-        t_range = np.arange(default_value, default_value+default_span*3, default_span)
+        t_range = np.arange(default_value, default_value+default_span, default_span)
 
     param_list_dict[p_name] = list(t_range)
 

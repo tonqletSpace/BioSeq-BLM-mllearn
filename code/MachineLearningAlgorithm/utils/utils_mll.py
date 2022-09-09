@@ -1,3 +1,4 @@
+import argparse
 import shlex
 import subprocess
 import sys
@@ -561,11 +562,13 @@ def adaptation_model_factory(mll, params_dict):
         return BRkNNbClassifier(k=params_dict['mll_kNN_k'])
     elif mll == 'MLARAM':
         return MLARAM(vigilance=params_dict['MLARAM_vigilance'],
-                      threshold=params_dict['MLARAM_threshold'],
-                      neurons=params_dict['MLARAM_neurons'] if 'MLARAM_neurons' in params_dict.keys()
-                      else None)
+                      threshold=params_dict['MLARAM_threshold'])
     else:
         raise ValueError('error! unregisted mll method {}. please refer to the manual.'.format(mll))
+
+
+# def str2arg_list(lst_str):
+#     return [int(si) for si in lst_str.split(',')]
 
 
 def mll_meka_check(args, params_dict):
@@ -585,7 +588,7 @@ def mll_erase_meka_config(params_dict):
 
 def mll_arg_parser(parse):
     parse.add_argument('-mll', type=str, choices=Mll_Methods, required=True,
-                       help="The multi-label learning algorithm, for example: Binary Relevance(BR).")
+                       help="the multi-label learning algorithm, for example: Binary Relevance(BR).")
     parse.add_argument("-mll_k", "--mll_kNN_k", nargs='*', type=int,
                        help="number of neighbours of each input instance to take into account")
     parse.add_argument("-mll_s", "--MLkNN_s", nargs='*', type=float,
@@ -599,12 +602,26 @@ def mll_arg_parser(parse):
                             "0 should assume all range. Normally set between 0.8 and 0.999, "
                             "it is dataset dependent. It is responsible for the creation of the prototypes,"
                             " therefore training of the network ")
-    parse.add_argument("-mll_t", "--MLARAM_threshold", nargs='*', type=float,
+    parse.add_argument("-mll_t", "--MLARAM_threshold", nargs='*',
+                       type=float, action=mll_param_bound(0, 1),
                        help="controls how many prototypes participate by the prediction, "
                             "can be changed for the testing phase")
-    parse.add_argument("-mll_n", "--MLARAM_neurons", nargs='*', type=list,
-                       help="ensemble todo")
     parse.add_argument("-mll_ls", "--RAkEL_labelset_size", nargs='*', type=int,
                        help="ensemble todo")
     parse.add_argument("-mll_mc", "--RAkELo_model_count", nargs='*', type=int,
                        help="ensemble todo")
+
+
+def mll_param_bound(lower, upper):
+    class ParamBound(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            # print("type(values)", type(values))
+            print(str(values).center(100, '*'))
+            if values is not None and isinstance(values, list):
+                for elm in values:
+                    if not lower <= elm < upper:
+                        msg = 'argument "{f}" requires between {lower} and {upper} arguments'.format(
+                            f=self.dest, lower=lower, upper=upper)
+                        raise argparse.ArgumentTypeError(msg)
+            setattr(namespace, self.dest, values)
+    return ParamBound
