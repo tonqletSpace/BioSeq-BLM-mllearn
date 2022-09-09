@@ -615,8 +615,6 @@ def mll_arg_parser(parse):
 def mll_param_bound(lower, upper):
     class ParamBound(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
-            # print("type(values)", type(values))
-            print(str(values).center(100, '*'))
             if values is not None and isinstance(values, list):
                 for elm in values:
                     if not lower <= elm < upper:
