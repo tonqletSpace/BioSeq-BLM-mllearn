@@ -590,13 +590,17 @@ def mll_arg_parser(parse):
     parse.add_argument('-mll', type=str, choices=Mll_Methods, required=True,
                        help="the multi-label learning algorithm, for example: Binary Relevance(BR).")
     parse.add_argument("-mll_k", "--mll_kNN_k", nargs='*', type=int,
+                       action=mll_param_bound(1),
                        help="number of neighbours of each input instance to take into account")
     parse.add_argument("-mll_s", "--MLkNN_s", nargs='*', type=float,
+                       action=mll_param_bound(),
                        help="the smoothing parameter")
     parse.add_argument("-mll_ifn", "--MLkNN_ignore_first_neighbours", nargs='*', type=int,
+                       action=mll_param_bound(1),
                        help="ability to ignore first N neighbours, "
                             "useful for comparing with other classification software")
     parse.add_argument("-mll_v", "--MLARAM_vigilance", nargs='*', type=float,
+                       action=mll_param_bound(0.0, 1.0 + 1e-6),
                        help="parameter for adaptive resonance theory networks, "
                             "controls how large a hyperbox can be, 1 it is small (no compression), "
                             "0 should assume all range. Normally set between 0.8 and 0.999, "
@@ -612,7 +616,7 @@ def mll_arg_parser(parse):
                        help="ensemble todo")
 
 
-def mll_param_bound(lower, upper):
+def mll_param_bound(lower=float("-inf"), upper=float("inf")):
     """
     test all
     :param lower: minimum lower_bound
