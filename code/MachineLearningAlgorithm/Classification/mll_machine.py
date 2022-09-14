@@ -10,7 +10,7 @@ from skmultilearn.ext import Meka, download_meka
 from scipy.sparse import lil_matrix, issparse
 
 from .dl_machine import do_ml_fit_predict
-from ..utils.utils_mll import BLMRAkELo, BLMMeka, mll_sparse_check, get_mll_ml_model
+from ..utils.utils_mll import BLMRAkELo, BLMMeka, mll_sparse_check, get_mll_ml_model, mll_hyper_param_show
 from ..utils.utils_results import mll_performance
 
 from warnings import simplefilter
@@ -20,16 +20,8 @@ Mll_Metric_List = ['Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1']
 
 
 def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, params_dict):
-    print_len = 40
-    if ml:
-        if ml == 'SVM':
-            temp_str1 = '  cost = 2 ** ' + str(params_dict['cost']) + ' | ' + 'gamma = 2 ** ' + \
-                        str(params_dict['gamma']) + '  '
-        else:
-            temp_str1 = '  tree = ' + str(params_dict['tree']) + '  '
-        print(temp_str1.center(print_len, '+'))
-
-    print(str(params_dict).center(print_len, '+'))
+    print_len = 60
+    mll_hyper_param_show(mll, ml, params_dict, print_len=print_len)
 
     results = []
     for train_index, val_index in folds:

@@ -15,7 +15,7 @@ from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot
 from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
     mll_final_results_output, mll_prob_output, mll_print_metric_dict
 from ..utils.utils_mll import BLMLabelPowerset, MllDeepNetSeq, get_mll_deep_model, get_lp_num_class, \
-    mll_result_sparse_check, Mll_ENSEMBLE_Methods, is_mll_ensemble_methods
+    mll_result_sparse_check, Mll_ENSEMBLE_Methods, is_mll_ensemble_methods, mll_hyper_param_show
 
 
 def get_partition(feature, target, length, train_index, val_index):
@@ -100,9 +100,8 @@ def get_output_space_dim(y, mll, params_dict):
 
 def mll_dl_cv_process(need_marginal_data, mll, ml, vectors, embed_size,
                       labels, seq_length_list, max_len, folds, out_dir, params_dict):
-    results = []
-    cv_labels = []
-    cv_prob = []
+
+    mll_hyper_param_show(mll, ml, params_dict, print_len=60)
 
     tmp_shape = labels.get_shape()
     if need_marginal_data:
@@ -110,6 +109,7 @@ def mll_dl_cv_process(need_marginal_data, mll, ml, vectors, embed_size,
     predicted_labels = np.zeros(tmp_shape, dtype=np.int32)  # (N, q)
     predicted_prob = np.zeros(tmp_shape)  # (N, q)
 
+    results = []
     count = 0
     for train_index, val_index in folds:
         x_train, x_val, y_train, y_val, train_length, test_length = get_partition(vectors, labels, seq_length_list,
@@ -125,12 +125,10 @@ def mll_dl_cv_process(need_marginal_data, mll, ml, vectors, embed_size,
         result = mll_performance(y_val, final_predict_list)
         results.append(result)
 
-        cv_labels.append(y_val.toarray())
         # 这里为保存概率文件准备
         predicted_labels[val_index] = final_predict_list.toarray()
 
         if final_prob_list is not None:
-            cv_prob.append(final_prob_list.toarray())
             predicted_prob[val_index] = final_prob_list.toarray()
 
         count += 1

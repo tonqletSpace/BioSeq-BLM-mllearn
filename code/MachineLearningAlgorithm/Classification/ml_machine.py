@@ -8,7 +8,8 @@ from skmultilearn.problem_transform import BinaryRelevance, ClassifierChain, Lab
 
 from .dl_machine import do_ml_fit_predict, do_ml_fit
 from .mll_machine import get_mll_ml_model, mll_sparse_check
-from ..utils.utils_mll import is_mll_instance_methods, is_mll_proba_output_methods, mll_result_sparse_check
+from ..utils.utils_mll import is_mll_instance_methods, is_mll_proba_output_methods, mll_result_sparse_check, \
+    mll_hyper_param_show
 from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
     mll_final_results_output, mll_prob_output, mll_print_metric_dict
 from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
@@ -19,10 +20,6 @@ Metric_List = ['Acc', 'MCC', 'AUC', 'BAcc', 'Sn', 'Sp', 'Pr', 'Rc', 'F1']
 
 
 def ml_cv_process(ml, vectors, labels, folds, metric, sp, multi, res, params_dict):
-    print("vectors.shape", vectors.shape)
-    print("labels.shape", labels.shape)
-    # exit()
-
     results = []
 
     print_len = 40
@@ -175,20 +172,7 @@ def ml_cv_results(ml, vectors, labels, folds, sp, multi, res, out_dir, params_di
 def mll_ml_cv_results(need_marginal_data, mll, ml, vectors, labels, folds, out_dir, params_dict):
     assert issparse(vectors) and issparse(labels), 'error'
 
-    print_len = 60
-    print('\n')
-    if ml == 'SVM':
-        print('  The optimal parameters for SVM are as follows  '.center(print_len, '*'))
-        temp_str1 = '    cost = 2 ** ' + str(params_dict['cost']) + ' | ' + 'gamma = 2 ** ' + \
-                    str(params_dict['gamma']) + '    '
-        print(temp_str1.center(print_len, '*'), '\n')
-    elif ml == 'RF':
-        print('The optimal parameters for RF is as follows'.center(print_len, '*'))
-        temp_str1 = '    tree = ' + str(params_dict['tree']) + '    '
-        print(temp_str1.center(print_len, '*'), '\n')
-
-    cv_labels = []
-    cv_prob = []
+    mll_hyper_param_show(mll, ml, params_dict, is_optimal=True)
 
     tmp_shape = labels.get_shape()
     if need_marginal_data:
@@ -209,19 +193,16 @@ def mll_ml_cv_results(need_marginal_data, mll, ml, vectors, labels, folds, out_d
         result = mll_performance(y_test, y_test_)
         results.append(result)
 
-        cv_labels.append(y_test)
         predicted_labels[test_index] = y_test_.toarray()
 
         if is_mll_proba_output_methods(mll):
             y_test_prob = mll_result_sparse_check(mll, clf.predict_proba(x_test))
-            cv_prob.append(y_test_prob)
             predicted_prob[test_index] = y_test_prob.toarray()
 
     final_results = np.array(results).mean(axis=0)
 
     mll_final_results_output(final_results, out_dir, ind=False)  # 将指标写入文件
-    if not is_mll_instance_methods(mll):
-        mll_prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
+    mll_prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
 
     # 利用整个数据集训练并保存模型
     model = get_mll_ml_model(mll, ml, params_dict)
@@ -232,7 +213,7 @@ def mll_ml_cv_results(need_marginal_data, mll, ml, vectors, labels, folds, out_d
     elif ml == 'RF':
         model_path += 'tree_' + str(params_dict['tree'])
     else:
-        model_path += 'mll_params_todo_final'
+        model_path += 'mll_params_TODOXXX'
     model_path += '_' + str(mll).lower() + '_' + str(ml).lower() + '.model'
 
     # if sp != 'none':

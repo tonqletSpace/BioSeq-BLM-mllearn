@@ -254,7 +254,7 @@ def mll_prob_output(true_labels, predicted_labels, prob_list, out_path, ind=Fals
     if ind is True:
         prob_file = out_path + "ind_prob_out.csv"
 
-    len_label = true_labels.shape[1]*5
+    len_label = true_labels.shape[1]*2
     header = ('Sample index',
               'True labels'.center(len_label, ' '),
               'predicted labels'.center(len_label, ' '),

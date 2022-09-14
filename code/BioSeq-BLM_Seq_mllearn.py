@@ -80,13 +80,9 @@ def mll_ml_fe_process(args):
         params_dict = params_dict_list[i]
         mll_ensemble_check(label_array.shape[1], params_dict)
         mll_meka_check(args, params_dict)
-        print("cur params_dict\n", params_dict)
         # 生成特征向量文件名
         vec_files = mll_out_seq_file(args.format, args.results_dir, params_dict, params_list_dict)
         params_dict['out_files'] = vec_files
-        # 注意多进程计算的debug
-        # params_dict_list_pro.append(
-        #     mll_one_ml_fe_process(args, input_one_file, label_array, vec_files, args.folds, params_dict))
         params_dict_list_pro.append(pool.apply_async(
             mll_one_ml_fe_process, (args, input_one_file, label_array, vec_files, args.folds, params_dict)))
 

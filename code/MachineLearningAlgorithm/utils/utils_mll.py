@@ -611,9 +611,11 @@ def mll_arg_parser(parse):
                        help="controls how many prototypes participate by the prediction, "
                             "can be changed for the testing phase")
     parse.add_argument("-mll_ls", "--RAkEL_labelset_size", nargs='*', type=int,
-                       help="ensemble todo")
+                       action=mll_param_bound(1),
+                       help="the desired size of each of the partitions")
     parse.add_argument("-mll_mc", "--RAkELo_model_count", nargs='*', type=int,
-                       help="ensemble todo")
+                       action=mll_param_bound(1),
+                       help="the desired number of classifiers")
 
 
 def mll_param_bound(lower=float("-inf"), upper=float("inf")):
@@ -667,3 +669,83 @@ def test_in_range(lst, lower, upper):
                in_range(get_max_val(lst[0], lst[1], lst[2]), lower, upper)
     else:
         raise argparse.ArgumentTypeError('Error! count of parameters can not be more than 3!')
+
+
+# param show
+# top-tier
+def mll_hyper_param_show(mll, ml, params_dict, is_optimal=False, print_len=60):
+    body = get_hp_body_info(is_optimal, print_len, get_hp_kv_pair_list(mll, ml, params_dict))
+    print_len = max(print_len, len(body))
+    header = get_header_info(is_optimal, print_len)
+
+    print(header)
+    print(body)
+
+
+def get_hp_body_info(is_optimal, print_len, hp_kv_pair_list):
+    star = '*' if is_optimal else '+'
+
+    body_info_list = []
+    for k, v in hp_kv_pair_list:
+        info = k + ' = ' + v
+        # blm special problem
+        if k == 'cost' or k == 'gamma':
+            info = k + ' = 2 ** ' + v
+
+        body_info_list.append(info)
+
+    body = '  ' + ' | '.join(body_info_list) + '  '
+
+    return body.center(print_len, star)
+
+
+def get_hp_kv_pair_list(mll, ml, params_dict):
+    res = []
+    hp_list1 = get_mll_hp_list(mll)
+    hp_list2 = get_ml_hp_list(ml)
+
+    for hp in hp_list1 + hp_list2:
+        res.append([hp, str(params_dict[hp])])
+
+    return res
+
+
+def get_mll_hp_list(mll):
+    hp = None
+    if mll == 'RAkELo':
+        hp = ['RAkEL_labelset_size', 'RAkELo_model_count']
+    elif mll == 'RAkELd':
+        hp = ['RAkEL_labelset_size']
+    elif mll == 'MLkNN':
+        hp = ['mll_kNN_k', 'MLkNN_s', 'MLkNN_ignore_first_neighbours']
+    elif mll in ['BRkNNaClassifier', 'BRkNNbClassifier']:
+        hp = ['mll_kNN_k']
+    elif mll == 'MLARAM':
+        hp = ['MLARAM_vigilance', 'MLARAM_threshold']
+
+    return hp if hp is not None else []
+
+
+def get_ml_hp_list(ml):
+    hp = None
+    if ml == 'RF':
+        hp = ['tree']
+    elif ml == 'SVM':
+        hp = ['gamma', 'cost']
+    elif ml == 'CNN':
+        hp = ['lr', 'out_channels', 'kernel_size']
+    elif ml in ['LSTM', 'GRU']:
+        hp = ['lr', 'hidden_dim', 'n_layer']
+    elif ml in ['Transformer', 'Weighted-Transformer']:
+        hp = ['lr', 'd_model', 'd_ff', 'n_heads']
+    elif ml == 'Reformer':
+        hp = ['lr', 'n_chunk', 'rounds', 'bucket_length']
+
+    return hp if hp is not None else []
+
+
+def get_header_info(is_optimal, print_len):
+    star = '*' if is_optimal else '+'
+    header = '  The optimal parameters for SVM are as follows  ' if is_optimal else ''
+    header = '\n' + header.center(print_len, star)
+    return header
