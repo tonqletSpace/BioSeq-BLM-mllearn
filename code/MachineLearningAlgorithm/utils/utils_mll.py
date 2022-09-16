@@ -674,7 +674,7 @@ def test_in_range(lst, lower, upper):
 # param show
 # top-tier
 def mll_hyper_param_show(mll, ml, params_dict, is_optimal=False, print_len=60):
-    body = get_hp_body_info(is_optimal, print_len, get_hp_kv_pair_list(mll, ml, params_dict))
+    body, _ = get_hp_body_info(is_optimal, print_len, get_hp_kv_pair_list(mll, ml, params_dict))
     print_len = max(print_len, len(body))
     header = get_header_info(is_optimal, print_len)
 
@@ -696,7 +696,7 @@ def get_hp_body_info(is_optimal, print_len, hp_kv_pair_list):
 
     body = '  ' + ' | '.join(body_info_list) + '  '
 
-    return body.center(print_len, star)
+    return body.center(print_len, star), body_info_list
 
 
 def get_hp_kv_pair_list(mll, ml, params_dict):
@@ -749,3 +749,10 @@ def get_header_info(is_optimal, print_len):
     header = '  The optimal parameters for SVM are as follows  ' if is_optimal else ''
     header = '\n' + header.center(print_len, star)
     return header
+
+
+def get_mll_model_path(mll, ml, out_dir, params_dict):
+    kv_list = np.array(get_hp_kv_pair_list(mll, ml, params_dict)).ravel()
+
+    model_path = out_dir + '_'.join([mll.lower(), ml.lower()]) + '_' + '_'.join(kv_list) + '.model'
+    return model_path

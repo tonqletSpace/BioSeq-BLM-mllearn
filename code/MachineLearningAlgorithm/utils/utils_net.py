@@ -251,14 +251,7 @@ class MllTransformerSeq(nn.Module):
         )
 
     def forward(self, inputs, seq_mask, mask=False, return_attn=False):
-        # print("inputs", inputs.shape)
-        # print("seq_mask", seq_mask.shape)
-        # print("seq_mask", seq_mask.data[:10])
-        # exit()
         inputs = inputs.to(torch.float32).reshape(-1, inputs.shape[1]//self.embed_size, self.embed_size)
-        # print("inputs", inputs.shape)
-        # exit()
-        # inputs = inputs.view(inputs.size()[0], -1)
         output, _ = self.transformer(inputs, seq_mask, mask, return_attn)
         # 注意这里的self-attention不是取最后一个，因为self-attention和LSTM其实不太一样，这里直接将self-attention转变大小考虑了，因此初始化时多了一个fixed_len参数
         output = output.view(output.shape[0], -1)
@@ -472,8 +465,10 @@ class TorchNetSeq(object):
             rounds = self.params_dict['rounds']
             bucket_length = self.params_dict['bucket_length']
             n_layer = self.params_dict['n_layer']
-            model = TransformerSeq(n_classes, self.max_len, d_model, d_ff, n_heads, n_chunk, rounds, bucket_length,
-                                   n_layer, self.dropout)
+            # model = TransformerSeq(n_classes, self.max_len, d_model, d_ff, n_heads, n_chunk, rounds, bucket_length,
+            #                        n_layer, self.dropout)
+            model = ReformerSeq(n_classes, self.max_len, d_model, d_ff, n_heads,
+                                n_chunk, rounds, bucket_length, n_layer, self.dropout)
         return model
 
     def train(self, model, optimizer, train_x, train_y, train_len_list, epoch):
@@ -695,15 +690,16 @@ class MllBaseTorchNetSeq(object):
             model = MllTransformerSeq(self.max_len, in_dim, n_layer, d_model, d_model,
                                       d_model, d_ff, n_heads, n_classes, self.dropout, True)
         else:
-            n_layer = self.params_dict['n_layer']
-            d_model = self.params_dict['d_model']
-            d_ff = self.params_dict['d_ff']
-            n_heads = self.params_dict['n_heads']
-            n_chunk = self.params_dict['n_chunk']
-            rounds = self.params_dict['rounds']
-            bucket_length = self.params_dict['bucket_length']
-            model = MllTransformerSeq(n_classes, self.max_len, d_model, d_ff, n_heads,
-                                      n_chunk, rounds, bucket_length, n_layer, self.dropout)
+            # n_layer = self.params_dict['n_layer']
+            # d_model = self.params_dict['d_model']
+            # d_ff = self.params_dict['d_ff']
+            # n_heads = self.params_dict['n_heads']
+            # n_chunk = self.params_dict['n_chunk']
+            # rounds = self.params_dict['rounds']
+            # bucket_length = self.params_dict['bucket_length']
+            # model = MllTransformerSeq(n_classes, self.max_len, d_model, d_ff, n_heads,
+            #                           n_chunk, rounds, bucket_length, n_layer, self.dropout)
+            raise NotImplementedError('the model is not supported for blm-mll system.')
         return model
 
 

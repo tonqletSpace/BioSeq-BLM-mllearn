@@ -75,8 +75,8 @@ def ml_results(args, vectors, labels, folds, vec_files, params_selected):
 
 
 def mll_ml_results(args, vectors, labels, folds, params_selected):
-    mll_ml_cv_results(args.need_marginal_data, args.mll, args.ml, vectors, labels, folds, args.results_dir, params_selected)
-    return params_selected
+    model_path = mll_ml_cv_results(args.need_marginal_data, args.mll, args.ml, vectors, labels, folds, args.results_dir, params_selected)
+    return model_path
 
 
 def ind_ml_results(args, vectors, labels, ind_vectors, ind_labels, params_selected):
@@ -88,8 +88,8 @@ def ind_ml_results(args, vectors, labels, ind_vectors, ind_labels, params_select
                              args.results_dir, params_selected)
 
 
-def mll_ind_ml_results(args, ind_vectors, ind_labels, params_selected):
-    mll_ml_ind_results(args.ml, ind_vectors, ind_labels, args.multi, args.res, args.results_dir, params_selected)
+def mll_ind_ml_results(args, ind_vectors, ind_labels, model_path, params_selected):
+    mll_ml_ind_results(args.mll, args.ml, ind_vectors, ind_labels, model_path, args.results_dir, params_selected)
 
 
 def params_select(params_list, out_dir):

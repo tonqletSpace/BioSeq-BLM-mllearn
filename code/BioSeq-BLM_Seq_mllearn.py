@@ -104,13 +104,14 @@ def mll_ml_fe_process(args):
                                                                                                  opt_vectors.shape[1]))
 
     # 构建分类器
-    mll_ml_results(args, opt_vectors, label_array, args.folds, params_selected)
+    model_path = mll_ml_results(args, opt_vectors, label_array, args.folds, params_selected)
     # -------- 独立测试-------- #
     # 即，将独立测试数据集在最优的model上进行测试
     if args.ind_seq_file is not None:
-        mll_ind_ml_fe_process(args, opt_vectors, label_array, params_selected)
+        mll_ind_ml_fe_process(args, opt_vectors, label_array, model_path, params_selected)
 
 
+# 参数选择
 def mll_one_ml_fe_process(args, input_one_file, labels, vec_files, folds, params_dict):
     # 特征提取
     # args.res = False
@@ -128,14 +129,17 @@ def mll_one_ml_fe_process(args, input_one_file, labels, vec_files, folds, params
     return params_dict
 
 
-def mll_ind_ml_fe_process(args, vectors, labels, params_selected):
+# 独立测试
+def mll_ind_ml_fe_process(args, vectors, labels, model_path, params_selected):
     print('########################## Independent Test Begin ##########################\n')
     # 合并独立测试集序列文件
     ind_input_one_file = create_all_seq_file(args.ind_seq_file, args.results_dir)
     # 统计独立测试集样本数目和序列长度
-    seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.ind_seq_file, args.label, ind_input_one_file)
+    seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.ind_seq_file, ind_input_one_file)
     # 生成标签矩阵
-    ind_label_array = mll_gen_label_matrix(seq_label_list)
+    ind_label_array, args.need_marginal_data = mll_gen_label_matrix(seq_label_list, args.mll)
+    # 控制序列的固定长度(只需要操作一次）
+    args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
 
     # 生成独立测试集特征向量文件名
     ind_out_files = mll_out_ind_file(args.format, args.results_dir)
@@ -143,16 +147,16 @@ def mll_ind_ml_fe_process(args, vectors, labels, params_selected):
     mll_one_seq_fe_process(args, ind_input_one_file, ind_label_array, ind_out_files, **params_selected)
 
     # 获取独立测试集特征向量
-    ind_vectors = mll_files2vectors_seq(ind_out_files, args.format)
+    ind_vectors = mll_files2vectors_seq(args, ind_out_files, args.format)
+
     print(' Shape of Ind Feature vectors: [%d, %d] '.center(66, '*') % (ind_vectors.shape[0], ind_vectors.shape[1]))
-    # if args.score == 'none':
-    #     ind_vectors = fa_process(args, ind_vectors, ind_label_array, after_ps=True, ind=True)
-    #     print(' Shape of Ind Feature vectors after FA process: [%d, %d] '.center(66, '*') % (ind_vectors.shape[0],
-    #                                                                                          ind_vectors.shape[1]))
+    if args.score == 'none':
+        ind_vectors = mll_fa_process(args, ind_vectors, ind_label_array, after_ps=True, ind=True)
+        print(' Shape of Ind Feature vectors after FA process: [%d, %d] '.center(66, '*') % (ind_vectors.shape[0],
+                                                                                             ind_vectors.shape[1]))
     # 为独立测试集构建分类器
     args.ind_vec_file = ind_out_files
-    mll_ind_ml_results(args, vectors, labels, ind_vectors, ind_label_array, params_selected)
-
+    mll_ind_ml_results(args, ind_vectors, ind_label_array, model_path, params_selected)
     print('########################## Independent Test Finish ##########################\n')
 
 

@@ -154,7 +154,8 @@ class MultiBranchAttention(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.layer_norm = LayerNormalization(d_model)
 
-        init.xavier_normal(self.w_o)
+        # by tonqlet 2020/9/1
+        # init.xavier_normal_(self.w_o)
 
     def forward(self, q, k, v, attn_mask):
         # q: [b_size x len_q x d_model]
@@ -163,13 +164,17 @@ class MultiBranchAttention(nn.Module):
         residual = q
 
         # context: a tensor of shape [b_size x len_q x n_branches * d_v]
-        context, attn = self.multih_attn(q, k, v, attn_mask=attn_mask)
+        # by tonqlet 2020/9/1
+        # context, attn = self.multih_attn(q, k, v, attn_mask=attn_mask)
+        context, attn = self.multihead_attn(q, k, v, attn_mask=attn_mask)
 
         # context: a list of tensors of shape [b_size x len_q x d_v] len: n_branches
         context = context.split(self.d_v, dim=-1)
 
         # outputs: a list of tensors of shape [b_size x len_q x d_model] len: n_branches
-        outputs = [self.w_o[i](context[i]) for i in range(self.n_branches)]
+        # by tonqlet 2020/9/1
+        # outputs = [self.w_o[i](context[i]) for i in range(self.n_branches)]
+        outputs = [init.xavier_normal_(self.w_o[i](context[i])) for i in range(self.n_branches)]
         outputs = [kappa * output for kappa, output in zip(self.w_kp, outputs)]
         outputs = [pos_ffn(output) for pos_ffn, output in zip(self.pos_ffn, outputs)]
         outputs = [alpha * output for alpha, output in zip(self.w_a, outputs)]

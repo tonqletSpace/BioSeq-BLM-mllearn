@@ -9,7 +9,7 @@ from skmultilearn.problem_transform import BinaryRelevance, ClassifierChain, Lab
 from .dl_machine import do_ml_fit_predict, do_ml_fit
 from .mll_machine import get_mll_ml_model, mll_sparse_check
 from ..utils.utils_mll import is_mll_instance_methods, is_mll_proba_output_methods, mll_result_sparse_check, \
-    mll_hyper_param_show
+    mll_hyper_param_show, get_mll_model_path
 from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
     mll_final_results_output, mll_prob_output, mll_print_metric_dict
 from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
@@ -84,9 +84,6 @@ def ml_cv_results(ml, vectors, labels, folds, sp, multi, res, out_dir, params_di
     cv_prob = []
     predicted_labels = np.zeros(len(labels))
     predicted_prob = np.zeros(len(labels))
-    print("vectors.shape", vectors.shape)
-    print("labels.shape", labels.shape)
-    # exit()
     for train_index, test_index in folds:
         x_train, y_train, x_test, y_test = get_partition(vectors, labels, train_index, test_index)
         if sp != 'none':
@@ -135,7 +132,6 @@ def ml_cv_results(ml, vectors, labels, folds, sp, multi, res, out_dir, params_di
 
 def mll_ml_cv_results(need_marginal_data, mll, ml, vectors, labels, folds, out_dir, params_dict):
     assert issparse(vectors) and issparse(labels), 'error'
-
     mll_hyper_param_show(mll, ml, params_dict, is_optimal=True)
 
     tmp_shape = labels.get_shape()
@@ -146,9 +142,8 @@ def mll_ml_cv_results(need_marginal_data, mll, ml, vectors, labels, folds, out_d
 
     results = []
     for train_index, test_index in folds:
-        x_train, y_train, x_test, y_test = mll_sparse_check(mll, *get_partition(vectors, labels, train_index, test_index))
-        # if sp != 'none':
-        #     x_train, y_train = sampling(sp, x_train, y_train)
+        x_train, y_train, x_test, y_test = mll_sparse_check(
+            mll, *get_partition(vectors, labels, train_index, test_index))
 
         clf = get_mll_ml_model(mll, ml, params_dict)
         y_test_ = do_ml_fit_predict(mll, ml, clf, x_train, y_train, x_test, params_dict)
@@ -171,20 +166,12 @@ def mll_ml_cv_results(need_marginal_data, mll, ml, vectors, labels, folds, out_d
     # 利用整个数据集训练并保存模型
     model = get_mll_ml_model(mll, ml, params_dict)
 
-    model_path = out_dir
-    if ml == 'SVM':
-        model_path += 'cost_[' + str(params_dict['cost']) + ']_gamma_[' + str(params_dict['gamma']) + ']'
-    elif ml == 'RF':
-        model_path += 'tree_' + str(params_dict['tree'])
-    else:
-        model_path += 'mll_params_TODOXXX'
-    model_path += '_' + str(mll).lower() + '_' + str(ml).lower() + '.model'
-
-    # if sp != 'none':
-    #     vectors, labels = sampling(sp, vectors, labels)
     y_test_ = do_ml_fit(mll, ml, model, *mll_sparse_check(mll, vectors, labels), params_dict)
 
+    model_path = get_mll_model_path(mll, ml, out_dir, params_dict)
     joblib.dump(model, model_path)  # 使用job lib保存模型
+
+    return model_path
 
 
 def ml_ind_results(ml, ind_vectors, ind_labels, multi, res, out_dir, params_dict):
@@ -210,22 +197,25 @@ def ml_ind_results(ml, ind_vectors, ind_labels, multi, res, out_dir, params_dict
     prob_output(ind_labels, pre_labels, ind_prob, out_dir, ind=True)  # 将标签对应概率写入文件
 
 
-def mll_ml_ind_results(mll, ml, ind_vectors, ind_labels, multi, out_dir, params_dict):
-    model_path = out_dir + 'cost_[' + str(params_dict['cost']) + ']_gamma_[' + str(
-        params_dict['gamma']) + ']_' + mll.lower() + '_' + ml.lower() + '.model'
+def mll_ml_ind_results(mll, ml, ind_vectors, ind_labels, model_path, out_dir, params_dict):
+    assert issparse(ind_vectors) and issparse(ind_labels), 'error'
+    mll_hyper_param_show(mll, ml, params_dict, is_optimal=True)
 
+    print(model_path)
+    # exit()
     model = joblib.load(model_path)
-    ind_prob = model.predict_proba(ind_vectors)
-    pre_labels = model.predict(ind_vectors)  # [N, q]
-    final_result = mll_performance(ind_labels, pre_labels)
+
+    predicted_labels = mll_result_sparse_check(mll, model.predict(ind_vectors)).toarray()
+
+    if is_mll_proba_output_methods(mll):
+        y_test_prob = mll_result_sparse_check(mll, model.predict_proba(ind_vectors))
+        predicted_prob = y_test_prob.toarray()
+
+    final_result = mll_performance(ind_labels, predicted_labels)
 
     mll_print_metric_dict(final_result, ind=True)
-
-    # plot_roc_ind(ind_labels, ind_prob, out_dir)  # 绘制ROC曲线
-    # plot_pr_ind(ind_labels, ind_prob, out_dir)  # 绘制PR曲线
-
-    mll_final_results_output(final_result, out_dir, ind=True, multi=multi)  # 将指标写入文件
-    mll_prob_output(ind_labels, pre_labels, ind_prob, out_dir, ind=True)  # 将标签对应概率写入文件
+    mll_final_results_output(final_result, out_dir, ind=True)  # 将指标写入文件
+    mll_prob_output(ind_labels, predicted_labels, predicted_prob, out_dir, ind=True)  # 将标签对应概率写入文件
 
 
 def ml_score_cv_process(ml, vec_files, folds_num, metric, sp, multi, in_format, params_dict):
