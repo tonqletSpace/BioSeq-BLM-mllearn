@@ -11,7 +11,8 @@ from FeatureExtractionMode.utils.utils_write import seq_file2one, gen_label_arra
     opt_file_copy, out_dl_seq_file, create_all_seq_file, fixed_len_control, mll_seq_file2one, mll_gen_label_matrix, \
     mll_out_seq_file, mll_out_ind_file, mll_out_dl_seq_file
 from FeatureExtractionSeq import one_seq_fe_process, mll_one_seq_fe_process
-from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process, dl_ind_process, mll_dl_cv_process
+from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process, dl_ind_process, mll_dl_cv_process, \
+    mll_dl_ind_process
 from MachineLearningAlgorithm.utils.utils_read import files2vectors_seq, read_dl_vec4seq, mll_files2vectors_seq, \
     mll_read_dl_vec4seq
 from MachineLearningSeq import one_ml_process, params_select, ml_results, ind_ml_results, mll_one_ml_process, \
@@ -191,6 +192,8 @@ def mll_dl_fe_process(args):
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
     vectors, embed_size, fixed_seq_len_list = mll_read_dl_vec4seq(args, args.fixed_len, out_files)
 
+    print("mll_dl_fe_process", type(vectors))
+
     # 深度学习的独立测试和交叉验证分开
     if args.ind_seq_file is None:
         # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
@@ -202,29 +205,34 @@ def mll_dl_fe_process(args):
                           args.folds, args.results_dir, params_dict)
     else:
         # 独立验证开始
-        mll_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, params_dict)
+        mll_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, args.fixed_len, params_dict)
 
 
-def mll_ind_dl_fe_process(args, vectors, labels, fixed_seq_len_list, params_dict):
+def mll_ind_dl_fe_process(args, vectors, embed_size, labels, fixed_seq_len_list, fixed_len, params_dict):
     print('########################## Independent Test Begin ##########################\n')
     # 合并独立测试集序列文件
     ind_input_one_file = create_all_seq_file(args.ind_seq_file, args.results_dir)
     # 统计独立测试集样本数目和序列长度
-    ind_sp_num_list, ind_seq_len_list = seq_file2one(args.category, args.ind_seq_file, args.label, ind_input_one_file)
+    ind_seq_len_list, ind_seq_label_list = mll_seq_file2one(args.category, args.ind_seq_file, ind_input_one_file)
 
     # 生成独立测试集标签数组
-    ind_label_array = gen_label_array(ind_sp_num_list, args.label)
+    ind_label_array, args.need_marginal_data = mll_gen_label_matrix(ind_seq_label_list, args.mll)
+
+    mll_ensemble_check(ind_label_array.shape[1], params_dict)
 
     # 生成独立测试集特征向量文件名
-    ind_out_files = out_dl_seq_file(args.label, args.results_dir, ind=True)
+    ind_out_files = mll_out_dl_seq_file(args.results_dir, ind=True)
+
     # 特征提取
-    one_seq_fe_process(args, ind_input_one_file, ind_label_array, ind_out_files, ind_sp_num_list, True, **params_dict)
+    mll_one_seq_fe_process(args, ind_input_one_file, ind_label_array, ind_out_files, **params_dict)
+
     # 获取独立测试集特征向量
-    ind_vectors, ind_fixed_seq_len_list = read_dl_vec4seq(args.fixed_len, ind_out_files, return_sp=False)
+    ind_vectors, embed_size, ind_fixed_seq_len_list = mll_read_dl_vec4seq(args, fixed_len, ind_out_files)
 
     # 为独立测试构建深度学习分类器
-    dl_ind_process(args.ml, vectors, labels, fixed_seq_len_list, ind_vectors, ind_label_array, ind_fixed_seq_len_list,
-                   args.fixed_len, args.results_dir, params_dict)
+    mll_dl_ind_process(args.need_marginal_data, args.mll, args.ml, vectors, labels, fixed_seq_len_list,
+                       ind_vectors, ind_label_array, ind_fixed_seq_len_list,
+                       embed_size, fixed_len, args.results_dir, params_dict)
 
     print('########################## Independent Test Finish ##########################\n')
 

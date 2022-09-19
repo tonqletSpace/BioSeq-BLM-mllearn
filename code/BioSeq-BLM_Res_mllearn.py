@@ -30,10 +30,6 @@ from MachineLearningSeq import mll_ml_results
 from MachineLearningAlgorithm.utils.utils_mll import mll_arg_parser, mll_meka_check
 
 
-def mll_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, params_dict):
-    pass
-
-
 def mll_res_dl_fe_process(args, label_array, out_files, params_dict):
     mll_ensemble_check(label_array.shape[1], params_dict)
 
@@ -56,6 +52,10 @@ def mll_res_dl_fe_process(args, label_array, out_files, params_dict):
     else:
         # 独立验证开始
         mll_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, params_dict)
+
+
+def mll_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, params_dict):
+    raise NotImplementedError('res*dl')
 
 
 def mll_res_ml_fe_process(args, label_array, out_files):
@@ -105,7 +105,7 @@ def mll_res_ml_fe_process(args, label_array, out_files):
 
 
 def mll_ind_ml_fe_process(args, opt_vectors, label_array, params_selected):
-    pass
+    raise NotImplementedError('res*ml')
 
 
 def main(args):

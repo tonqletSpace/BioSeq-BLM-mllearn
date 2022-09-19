@@ -1,3 +1,5 @@
+import random
+
 import numpy as np
 import torch
 from sklearn import preprocessing
@@ -112,13 +114,13 @@ def mll_dl_cv_process(need_marginal_data, mll, ml, vectors, embed_size,
     results = []
     count = 0
     for train_index, val_index in folds:
-        x_train, x_val, y_train, y_val, train_length, test_length = get_partition(vectors, labels, seq_length_list,
-                                                                                  train_index, val_index)
+        x_train, x_val, y_train, y_val, train_length, test_length = get_partition(
+            vectors, labels, seq_length_list, train_index, val_index)
         num_class = get_output_space_dim(y_train, mll, params_dict)
         lp_args = ml, max_len, embed_size, params_dict
         mll_clf = get_mll_deep_model(num_class, mll, *lp_args)
 
-        # blm是每个epoch都测试，选最好的测试结果，用fit后的结果来预测
+        # blm是每个epoch都测试，选最好的测试结果；这里用fit后的结果来预测
         final_predict_list, final_prob_list = do_dl_fit_predict(
             mll, ml, mll_clf, x_train, y_train, train_length, max_len, x_val, test_length, 'LP', *lp_args)
 
@@ -142,24 +144,42 @@ def mll_dl_cv_process(need_marginal_data, mll, ml, vectors, embed_size,
 
 
 def do_dl_fit_predict(mll, ml, mll_clf, x_train, y_train, train_length, max_len, x_val, test_length, *lp_args):
+    mll_clf = do_dl_fit(mll, ml, mll_clf, x_train, y_train, train_length, max_len, *lp_args)
+    final_predict_list, final_prob_list = do_dl_predict(mll, ml, mll_clf, max_len, x_val, test_length)
+
+    return final_predict_list, final_prob_list
+
+
+def do_dl_fit(mll, ml, mll_clf, x_train, y_train, train_length, max_len, *lp_args):
     if mll in Mll_ENSEMBLE_Methods:  # ensemble
         if ml in FORMER:
             # 额外参数
             mll_clf.fit(TrmDataset(x_train, y_train, train_length, max_len), None, *lp_args)
-            final_predict_list = mll_clf.predict(TrmDataset(x_val, None, test_length, max_len))  # (N, q
-            final_prob_list = None
         else:
             # 额外参数
             mll_clf.fit(x_train, y_train, *lp_args)
+    else:
+        if ml in FORMER:
+            mll_clf.fit(TrmDataset(x_train, y_train, train_length, max_len))
+        else:
+            mll_clf.fit(x_train, y_train)
+
+    return mll_clf
+
+
+def do_dl_predict(mll, ml, mll_clf, max_len, x_val, test_length):
+    if mll in Mll_ENSEMBLE_Methods:  # ensemble
+        if ml in FORMER:
+            final_predict_list = mll_clf.predict(TrmDataset(x_val, None, test_length, max_len))  # (N, q
+            final_prob_list = None
+        else:
             final_predict_list = mll_clf.predict(x_val)  # (N, q
             final_prob_list = None
     else:
         if ml in FORMER:
-            mll_clf.fit(TrmDataset(x_train, y_train, train_length, max_len))
             final_predict_list = mll_clf.predict(TrmDataset(x_val, None, test_length, max_len))  # (N, q
             final_prob_list = mll_clf.predict_proba(TrmDataset(x_val, None, test_length, max_len))  # (N, n
         else:
-            mll_clf.fit(x_train, y_train)
             final_predict_list = mll_clf.predict(x_val)  # (N, q
             final_prob_list = mll_clf.predict_proba(x_val)  # (N, n
 
@@ -215,3 +235,41 @@ def dl_ind_process(ml, vectors, labels, seq_length_list, ind_vectors, ind_labels
     final_results_output(final_result, out_dir, ind=True, multi=multi)  # 将指标写入文件
     prob_output(final_target_list, final_predict_list, final_prob_list, out_dir)
 
+
+def mll_dl_ind_process(need_marginal_data, mll, ml, vectors, labels, fixed_seq_len_list,
+                       ind_vectors, ind_label_array, ind_fixed_seq_len_list,
+                       embed_size, max_len, out_dir, params_dict):
+
+    print("need_marginal_data", need_marginal_data)
+
+    print("vectors.shape", vectors.shape)
+    print("labels.shape", labels.shape)
+    print("train_seq_length_list.shape", fixed_seq_len_list.shape)
+
+    print("ind_vectors.shape", ind_vectors.shape)
+    print("ind_labels.shape", ind_label_array.shape)
+    print("ind_seq_length_list.shape", ind_fixed_seq_len_list.shape)
+
+    # exit()
+    # blm是每个epoch都测试，选最好的测试结果；这里用fit后的结果来预测
+    num_class = get_output_space_dim(labels, mll, params_dict)
+    lp_args = ml, max_len, embed_size, params_dict
+    mll_clf = get_mll_deep_model(num_class, mll, *lp_args)
+
+    range_list = list(range(len(vectors)))
+    random.shuffle(range_list)
+    vectors, labels, train_length = vectors[range_list], labels[range_list], fixed_seq_len_list[range_list]
+
+    mll_clf = do_dl_fit(mll, ml, mll_clf, vectors, labels, train_length, max_len, *lp_args)
+    predict_list, prob_list = do_dl_predict(mll, ml, mll_clf, max_len, ind_vectors, ind_fixed_seq_len_list)
+
+    final_predict_list = predict_list.toarray()
+
+    if prob_list is not None:
+        final_prob_list = prob_list.toarray()
+
+    final_result = mll_performance(ind_label_array, final_predict_list)
+
+    mll_print_metric_dict(final_result, ind=True)
+    mll_final_results_output(final_result, out_dir, ind=True)  # 将指标写入文件
+    mll_prob_output(ind_label_array, final_predict_list, final_prob_list, out_dir)  # 将标签对应概率写入文件

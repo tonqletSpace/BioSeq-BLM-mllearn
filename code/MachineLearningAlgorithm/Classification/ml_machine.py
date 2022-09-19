@@ -201,8 +201,6 @@ def mll_ml_ind_results(mll, ml, ind_vectors, ind_labels, model_path, out_dir, pa
     assert issparse(ind_vectors) and issparse(ind_labels), 'error'
     mll_hyper_param_show(mll, ml, params_dict, is_optimal=True)
 
-    print(model_path)
-    # exit()
     model = joblib.load(model_path)
 
     predicted_labels = mll_result_sparse_check(mll, model.predict(ind_vectors)).toarray()
