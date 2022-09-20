@@ -360,15 +360,12 @@ def main(args):
 
     if args.ml in DeepLearning:
         if args.fragment == 0:
-            print('res dl, fragment=0')
             res_dl_fe_process(args)
         else:
             frag_dl_fe_process(args)
     elif args.ml in ['SVM', 'RF']:
-        print('res ml')
         res_cl_fe_process(args, args.fragment)
     else:
-        print('res crf')
         res_crf_fe_process(args)
 
     print("Done.")
