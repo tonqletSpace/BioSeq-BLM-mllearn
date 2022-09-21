@@ -19,7 +19,7 @@ from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process as 
 from MachineLearningAlgorithm.Classification.dl_machine import dl_ind_process as seq_dip
 from MachineLearningAlgorithm.SequenceLabelling.dl_machine import dl_cv_process as res_dcp
 from MachineLearningAlgorithm.SequenceLabelling.dl_machine import dl_ind_process as res_dip
-from MachineLearningAlgorithm.Classification.ml_machine import ml_cv_results, ml_ind_results
+from MachineLearningAlgorithm.Classification.ml_machine import ml_cv_results, ml_ind_results, mll_ml_ind_results
 from MachineLearningAlgorithm.SequenceLabelling.ml_machine import crf_cv_process, crf_ind_process
 from MachineLearningAlgorithm.utils.utils_read import files2vectors_res, read_base_mat4res, read_base_vec_list4res, \
     res_label_read, read_dl_vec4seq, res_dl_label_read, mll_files2vectors_seq, mll_read_dl_vec4seq, mll_read_dl_vec4res, \
@@ -37,7 +37,7 @@ def mll_res_dl_fe_process(args, label_array, out_files, params_dict):
     vectors = mll_dl_files2vectors_seq(args, out_files, args.format)
 
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
-    # fixed_len为args.window所替代
+    # fixed_len为args.window所替代, 问题转化
     vectors, embed_size, fixed_seq_len_list = mll_read_dl_vec4res(args, vectors, args.window, out_files)
 
     # 深度学习的独立测试和交叉验证分开
@@ -51,11 +51,7 @@ def mll_res_dl_fe_process(args, label_array, out_files, params_dict):
                           label_array, fixed_seq_len_list, args.window, args.folds, args.results_dir, params_dict)
     else:
         # 独立验证开始
-        mll_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, params_dict)
-
-
-def mll_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, params_dict):
-    raise NotImplementedError('res*dl')
+        mll_res_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, args.fixed_len, params_dict)
 
 
 def mll_res_ml_fe_process(args, label_array, out_files):
@@ -97,15 +93,64 @@ def mll_res_ml_fe_process(args, label_array, out_files):
     #                                                                                      vectors.shape[1]))
 
     # 构建分类器
-    mll_ml_results(args, vectors, label_array, args.folds, params_selected)
+    model_path = mll_ml_results(args, vectors, label_array, args.folds, params_selected)
     # -------- 独立测试-------- #
     # 即，将独立测试数据集在最优的model上进行测试
     if args.ind_seq_file is not None:
-        mll_ind_ml_fe_process(args, vectors, label_array, params_selected)
+        mll_res_ind_ml_fe_process(args, vectors, label_array, model_path, params_selected)
 
 
-def mll_ind_ml_fe_process(args, opt_vectors, label_array, params_selected):
-    raise NotImplementedError('res*ml')
+def mll_res_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, fixed_len, params_dict):
+    raise NotImplementedError
+
+
+def mll_res_ind_ml_fe_process(args, opt_vectors, label_array, model_path, params_selected):
+    print('########################## Independent Test Begin ##########################\n')
+
+    # 为独立测试集配置参数
+    args, ind_label_array = mll_res_ind_preprocess(args)
+    # res.py ind is False?!!
+    ind_out_files = mll_out_res_file(args.results_dir, args.format, ind=True)
+
+    # 读取base特征文件, 待写入
+    ind_vectors_list = read_base_vec_list4res(args.ind_fea_file)
+
+    # convert res mll problem to seq mll problem
+    assert args.window is not None, "please set window size!"
+    mll_sliding_win2files(ind_vectors_list, ind_label_array, args.window, args.format, ind_out_files)
+
+    # 读取独立测试数据集特征向量文件
+    ind_vectors = mll_files2vectors_seq(args, ind_out_files, args.format)
+
+    # 独立测试集特征分析
+    print(' Shape of Ind Feature vectors: [%d, %d] '.center(66, '*') % (ind_vectors.shape[0], ind_vectors.shape[1]))
+    print('\n')
+    if args.score == 'none':
+        ind_vectors = fa_process(args, ind_vectors, ind_label_array, True, True)
+        print(' Shape of Ind Feature vectors after FA process: [%d, %d] '.center(66, '*') % (ind_vectors.shape[0],
+                                                                                             ind_vectors.shape[1]))
+    # 构建独立测试集的分类器
+    mll_ml_ind_results(args.mll, args.ml, ind_vectors, ind_label_array, model_path, args.results_dir, params_selected)
+    print('########################## Independent Test Finish ##########################\n')
+
+
+def mll_res_ind_preprocess(args):
+    """ 为独立测试步骤生成特征 """
+
+    # 读取序列文件里每条序列的长度
+    ind_seq_len_list, ind_res_label_list = mll_read_res_seq_file(args.ind_seq_file, args.label_file , args.category)
+    ind_label_array, args.need_marginal_data = mll_gen_label_matrix(ind_res_label_list, args.mll)
+
+    # 控制序列的固定长度(只需要在benchmark dataset上操作一次）
+    args.fixed_len = fixed_len_control(ind_seq_len_list, args.fixed_len)
+
+    # 所有res特征在基准数据集上的基础输出文件
+    args.ind_fea_file = args.results_dir + 'ind_res_features.txt'
+    # 提取残基层面特征,生成向量文件
+    ohe2res_base(args.ind_seq_file, args.category, args.method, args.current_dir,
+                 args.pp_file, args.rss_file, args.ind_fea_file, args.cpu)
+
+    return args, ind_label_array
 
 
 def main(args):
@@ -146,6 +191,7 @@ def main(args):
         mll_params_check(args, all_params_list_dict)
         args.params_dict_list = make_params_dicts(all_params_list_dict)
 
+    print('in res main flow')
     print('all_params_list_dict', all_params_list_dict)
     print('args.params_dict_list', args.params_dict_list)
     # exit()
@@ -165,6 +211,10 @@ def main(args):
     # convert res mll problem to seq mll problem
     assert args.window is not None, "please set window size!"
     mll_sliding_win2files(vectors_list, label_array, args.window, args.format, out_files)
+
+    # print("res - cv flow")
+    # print("vectors_list.shape", vectors_list.shape)
+    # print("label_array.shape", label_array.shape)
 
     if args.ml in DeepLearning:
         args.dl = 1

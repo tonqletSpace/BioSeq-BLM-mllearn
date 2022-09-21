@@ -3,14 +3,19 @@ import os
 import time
 
 from CheckAll import ml_params_check, dl_params_check, make_params_dicts, Classification, DeepLearning, \
-    Method_Semantic_Similarity, prepare4train_seq
-from FeatureExtractionMode.utils.utils_write import opt_params2file, gen_label_array, fixed_len_control
-from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process, dl_ind_process
+    Method_Semantic_Similarity, prepare4train_seq, mll_ensemble_check
+from FeatureExtractionMode.utils.utils_write import opt_params2file, gen_label_array, fixed_len_control, \
+    create_all_seq_file, mll_seq_file2one, mll_gen_label_matrix, mll_out_ind_file, mll_out_dl_seq_file
+from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process, dl_ind_process, mll_dl_ind_process
 from MachineLearningAlgorithm.Classification.ml_machine import ml_cv_process, ml_cv_results, ml_ind_results, \
     ml_score_cv_process, ml_score_cv_results, ml_score_ind_results, mll_ml_cv_results, mll_ml_ind_results
-from MachineLearningAlgorithm.utils.utils_read import files2vectors_info, seq_label_read, read_dl_vec4seq
+from MachineLearningAlgorithm.utils.utils_read import files2vectors_info, seq_label_read, read_dl_vec4seq, \
+    mll_files2vectors_seq, mll_read_dl_vec4seq
 from SemanticSimilarity import ind_score_process
 from MachineLearningAlgorithm.Classification.mll_machine import mll_ml_cv_process
+from FeatureExtractionSeq import mll_one_seq_fe_process
+
+from FeatureAnalysis import mll_fa_process
 
 
 def ml_process(args):
@@ -79,6 +84,7 @@ def mll_ml_results(args, vectors, labels, folds, params_selected):
     return model_path
 
 
+# 独立测试
 def ind_ml_results(args, vectors, labels, ind_vectors, ind_labels, params_selected):
     if args.score == 'none':
         ml_ind_results(args.ml, ind_vectors, ind_labels, args.multi, args.res, args.results_dir, params_selected)
@@ -90,6 +96,70 @@ def ind_ml_results(args, vectors, labels, ind_vectors, ind_labels, params_select
 
 def mll_ind_ml_results(args, ind_vectors, ind_labels, model_path, params_selected):
     mll_ml_ind_results(args.mll, args.ml, ind_vectors, ind_labels, model_path, args.results_dir, params_selected)
+
+
+def mll_seq_ind_ml_fe_process(args, vectors, labels, model_path, params_selected):
+    print('########################## Independent Test Begin ##########################\n')
+    # 合并独立测试集序列文件
+    ind_input_one_file = create_all_seq_file(args.ind_seq_file, args.results_dir, ind=True)
+    # 统计独立测试集样本数目和序列长度
+    seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.ind_seq_file, ind_input_one_file)
+    # 生成标签矩阵
+    ind_label_array, args.need_marginal_data = mll_gen_label_matrix(seq_label_list, args.mll)
+    # 控制序列的固定长度(只需要操作一次）
+    args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
+
+    # 生成独立测试集特征向量文件名
+    ind_out_files = mll_out_ind_file(args.format, args.results_dir)
+    # 特征提取
+    mll_one_seq_fe_process(args, ind_input_one_file, ind_label_array, ind_out_files, **params_selected)
+
+    # 获取独立测试集特征向量
+    ind_vectors = mll_files2vectors_seq(args, ind_out_files, args.format)
+
+    print(' Shape of Ind Feature vectors: [%d, %d] '.center(66, '*') % (ind_vectors.shape[0], ind_vectors.shape[1]))
+    if args.score == 'none':
+        ind_vectors = mll_fa_process(args, ind_vectors, ind_label_array, after_ps=True, ind=True)
+        print(' Shape of Ind Feature vectors after FA process: [%d, %d] '.center(66, '*') % (ind_vectors.shape[0],
+                                                                                             ind_vectors.shape[1]))
+    # 为独立测试集构建分类器
+    args.ind_vec_file = ind_out_files
+    mll_ind_ml_results(args, ind_vectors, ind_label_array, model_path, params_selected)
+    print('########################## Independent Test Finish ##########################\n')
+
+
+def mll_seq_ind_dl_fe_process(args, vectors, embed_size, labels, fixed_seq_len_list, fixed_len, params_dict):
+    print('########################## Independent Test Begin ##########################\n')
+    # 合并独立测试集序列文件
+    ind_input_one_file = create_all_seq_file(args.ind_seq_file, args.results_dir, ind=True)
+    # 统计独立测试集样本数目和序列长度
+    print("args.ind_seq_file", args.ind_seq_file)
+    print("ind_input_one_file", ind_input_one_file)
+    # exit()
+    # TODO 为什么之前注释的流程没有报这个错
+    # TODO 为什么seq level没有报这个错
+    ind_seq_len_list, ind_seq_label_list = mll_seq_file2one(args.category, args.ind_seq_file, ind_input_one_file)
+
+    # 生成独立测试集标签数组
+    ind_label_array, args.need_marginal_data = mll_gen_label_matrix(ind_seq_label_list, args.mll)
+
+    mll_ensemble_check(ind_label_array.shape[1], params_dict)
+
+    # 生成独立测试集特征向量文件名
+    ind_out_files = mll_out_dl_seq_file(args.results_dir, ind=True)
+
+    # 特征提取
+    mll_one_seq_fe_process(args, ind_input_one_file, ind_label_array, ind_out_files, **params_dict)
+
+    # 获取独立测试集特征向量
+    ind_vectors, embed_size, ind_fixed_seq_len_list = mll_read_dl_vec4seq(args, fixed_len, ind_out_files)
+
+    # 为独立测试构建深度学习分类器
+    mll_dl_ind_process(args.need_marginal_data, args.mll, args.ml, vectors, labels, fixed_seq_len_list,
+                       ind_vectors, ind_label_array, ind_fixed_seq_len_list,
+                       embed_size, fixed_len, args.results_dir, params_dict)
+
+    print('########################## Independent Test Finish ##########################\n')
 
 
 def params_select(params_list, out_dir):

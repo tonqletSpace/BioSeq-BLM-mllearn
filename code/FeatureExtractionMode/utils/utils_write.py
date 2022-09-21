@@ -220,6 +220,9 @@ def fa_vectors2files(vectors, sample_num_list, out_format, file_list):
 
 def create_all_seq_file(seq_files, tgt_dir, ind=False):
     suffix = os.path.splitext(seq_files[0])[-1]
+    if len(tgt_dir) >= 2 and tgt_dir[-1] == '/':
+        tgt_dir = tgt_dir[:-1]
+
     if ind is False:
         return tgt_dir + '/' + 'all_seq_file' + suffix
     else:
@@ -236,6 +239,10 @@ def mll_seq_file2one(category, seq_files, out_file, label_cardinality=7, iid=Tru
         alphabet = RNA
     else:
         alphabet = PROTEIN
+
+    # 处理 ind_seq_files
+    if not isinstance(seq_files, list):
+        seq_files = [seq_files]
 
     # 读取所有序列
     seq_len_list = []  # list of length integer (list[len(seq1), len(seq2), ...])

@@ -205,6 +205,7 @@ def mll_ml_ind_results(mll, ml, ind_vectors, ind_labels, model_path, out_dir, pa
 
     predicted_labels = mll_result_sparse_check(mll, model.predict(ind_vectors)).toarray()
 
+    predicted_prob = np.zeros(ind_labels.get_shape())  # (N, q)
     if is_mll_proba_output_methods(mll):
         y_test_prob = mll_result_sparse_check(mll, model.predict_proba(ind_vectors))
         predicted_prob = y_test_prob.toarray()
