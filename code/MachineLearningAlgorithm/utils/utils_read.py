@@ -106,22 +106,19 @@ def files2vectors_seq(file_list, in_format):
     return vectors
 
 
-def mll_files2vectors_seq(args, file_list, in_format):
+def mll_files2vectors_seq(args, file_list, in_format, is_dl_flow=False):
+    if isinstance(file_list, str):
+        file_list = [file_list]
+
+    print("file_list", file_list)
+    print("in_format", in_format)
+
     vectors = files2vectors_seq(file_list, in_format)
     if args.need_marginal_data:
         # 增加两个边界数据，对应label分别是：(0...00)_q，(1...11)_q
         marginal_vec = np.zeros((2, vectors.shape[1]), dtype=np.float32)
         vectors = np.vstack((vectors, marginal_vec))
-    return lil_matrix(vectors)
-
-
-def mll_dl_files2vectors_seq(args, file_list, in_format):
-    vectors = files2vectors_seq(file_list, in_format)
-    if args.need_marginal_data:
-        # 增加两个边界数据，对应label分别是：(0...00)_q，(1...11)_q
-        marginal_vec = np.zeros((2, vectors.shape[1]), dtype=np.float32)
-        vectors = np.vstack((vectors, marginal_vec))
-    return vectors
+    return vectors if is_dl_flow else lil_matrix(vectors)
 
 
 def files2vectors_info(file_list, in_format):
@@ -244,8 +241,8 @@ def mll_read_dl_vec4seq(args, fixed_len, in_files):
     return vec_vec, embed_size, fixed_seq_len_list
 
 
-def mll_read_dl_vec4res(args, vectors_list, fixed_len, in_files):
-    seq_len_list = [fixed_len] * vectors_list.shape[0]
+def mll_read_dl_data4res(args, vectors_list, fixed_len, in_files):
+    seq_len_list = np.array([fixed_len] * vectors_list.shape[0])
     embed_size = vectors_list.shape[-1] // fixed_len
     vec_vec = vectors_list
 
@@ -253,8 +250,7 @@ def mll_read_dl_vec4res(args, vectors_list, fixed_len, in_files):
         # 内存中增加两个边界数据，对应label分别是：(0...00)_q，(1...11)_q
         marginal_vec = np.zeros((2, vec_vec.shape[1]), dtype=np.float32)
         vec_vec = np.vstack((vec_vec, marginal_vec))
-        seq_len_list.append(len(vec_vec[-2]))
-        seq_len_list.append(len(vec_vec[-1]))
+        seq_len_list = np.append(seq_len_list, [len(vec_vec[-2]), len(vec_vec[-1])])
 
     return vec_vec, embed_size, seq_len_list
 

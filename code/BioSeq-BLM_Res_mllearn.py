@@ -15,30 +15,27 @@ from FeatureExtractionMode.OHE.OHE4vec import ohe2res_base, sliding_win2files, m
 from FeatureExtractionMode.utils.utils_write import read_res_seq_file, read_res_label_file, fixed_len_control, \
     res_file_check, out_res_file, out_dl_frag_file, res_base2frag_vec, gen_label_array, mll_gen_label_matrix, \
     mll_read_res_seq_file, mll_out_seq_file, mll_out_res_file
-from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process as seq_dcp, mll_dl_cv_process
+from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process as seq_dcp, mll_dl_cv_process, \
+    mll_dl_ind_process
 from MachineLearningAlgorithm.Classification.dl_machine import dl_ind_process as seq_dip
 from MachineLearningAlgorithm.SequenceLabelling.dl_machine import dl_cv_process as res_dcp
 from MachineLearningAlgorithm.SequenceLabelling.dl_machine import dl_ind_process as res_dip
 from MachineLearningAlgorithm.Classification.ml_machine import ml_cv_results, ml_ind_results, mll_ml_ind_results
 from MachineLearningAlgorithm.SequenceLabelling.ml_machine import crf_cv_process, crf_ind_process
 from MachineLearningAlgorithm.utils.utils_read import files2vectors_res, read_base_mat4res, read_base_vec_list4res, \
-    res_label_read, read_dl_vec4seq, res_dl_label_read, mll_files2vectors_seq, mll_read_dl_vec4seq, mll_read_dl_vec4res, \
-    mll_dl_files2vectors_seq
+    res_label_read, read_dl_vec4seq, res_dl_label_read, mll_files2vectors_seq, mll_read_dl_vec4seq, mll_read_dl_data4res, \
+    mll_files2vectors_seq
 from MachineLearningRes import one_cl_process, params_select, mll_one_cl_process
 from FeatureExtractionRes import create_results_dir
-from MachineLearningSeq import mll_ml_results
+from MachineLearningSeq import mll_ml_results, mll_seq_ind_dl_fe_process
 from MachineLearningAlgorithm.utils.utils_mll import mll_arg_parser, mll_meka_check
 
 
 def mll_res_dl_fe_process(args, label_array, out_files, params_dict):
-    mll_ensemble_check(label_array.shape[1], params_dict)
-
-    # residue feature (N, E)
-    vectors = mll_dl_files2vectors_seq(args, out_files, args.format)
-
-    # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
-    # fixed_len为args.window所替代, 问题转化
-    vectors, embed_size, fixed_seq_len_list = mll_read_dl_vec4res(args, vectors, args.window, out_files)
+    # 从out_files中读出 滑窗处理的 特征
+    vectors = mll_files2vectors_seq(args, out_files, args.format, is_dl_flow=True)
+    # 进一步处理特征，得到deep learning compatible的特征
+    vectors, embed_size, fixed_seq_len_list = mll_read_dl_data4res(args, vectors, args.window, out_files)
 
     # 深度学习的独立测试和交叉验证分开
     if args.ind_seq_file is None:
@@ -51,7 +48,7 @@ def mll_res_dl_fe_process(args, label_array, out_files, params_dict):
                           label_array, fixed_seq_len_list, args.window, args.folds, args.results_dir, params_dict)
     else:
         # 独立验证开始
-        mll_res_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, args.fixed_len, params_dict)
+        mll_res_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, args.window, params_dict)
 
 
 def mll_res_ml_fe_process(args, label_array, out_files):
@@ -74,6 +71,8 @@ def mll_res_ml_fe_process(args, label_array, out_files):
         params_dict = params_dict_list[i]
         mll_ensemble_check(label_array.shape[1], params_dict)
         mll_meka_check(args, params_dict)
+
+        # TODO vectors 有问题！没有筛选？？？
         params_dict_list_pro.append(pool.apply_async(mll_one_cl_process,
                                                      (args, vectors, label_array, args.folds, params_dict)))
 
@@ -82,6 +81,7 @@ def mll_res_ml_fe_process(args, label_array, out_files):
     # ** 筛选结束 ** #
 
     # 根据指标进行参数选择
+    # TODO 筛选有问题
     params_selected = mll_params_select(params_dict_list_pro, args.results_dir)
 
     # 特征分析
@@ -101,23 +101,29 @@ def mll_res_ml_fe_process(args, label_array, out_files):
 
 
 def mll_res_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, fixed_len, params_dict):
-    raise NotImplementedError
+    # TODO 在全数据集上训练，再在ind数据上测试
+    print('########################## Independent Test Begin ##########################\n')
+    ind_label_array, ind_out_files = mll_res_preprocess(args, is_ind=True)
+
+    # mll_ensemble_check(ind_label_array.shape[1], params_dict)
+
+    ind_vectors = mll_files2vectors_seq(args, ind_out_files, args.format, is_dl_flow=True)
+    # fixed_len为args.window所替代, 问题转化
+    ind_vectors, embed_size, ind_fixed_seq_len_list = mll_read_dl_data4res(args, ind_vectors, args.window, ind_out_files)
+
+    mll_dl_ind_process(args.need_marginal_data, args.mll, args.ml,
+                       vectors, label_array, fixed_seq_len_list,
+                       ind_vectors, ind_label_array, ind_fixed_seq_len_list,
+                       embed_size, fixed_len, args.results_dir, params_dict)
+    print('########################## Independent Test Finish ##########################\n')
 
 
 def mll_res_ind_ml_fe_process(args, opt_vectors, label_array, model_path, params_selected):
+    # TODO 为什么不复用？！因为要对独立数据做sliding_window，所以不能复用seq_level的流程
+    # TODO 在全数据集上训练，再在ind数据上预测
     print('########################## Independent Test Begin ##########################\n')
 
-    # 为独立测试集配置参数
-    args, ind_label_array = mll_res_ind_preprocess(args)
-    # res.py ind is False?!!
-    ind_out_files = mll_out_res_file(args.results_dir, args.format, ind=True)
-
-    # 读取base特征文件, 待写入
-    ind_vectors_list = read_base_vec_list4res(args.ind_fea_file)
-
-    # convert res mll problem to seq mll problem
-    assert args.window is not None, "please set window size!"
-    mll_sliding_win2files(ind_vectors_list, ind_label_array, args.window, args.format, ind_out_files)
+    ind_label_array, ind_out_files = mll_res_preprocess(args, is_ind=True)
 
     # 读取独立测试数据集特征向量文件
     ind_vectors = mll_files2vectors_seq(args, ind_out_files, args.format)
@@ -134,23 +140,54 @@ def mll_res_ind_ml_fe_process(args, opt_vectors, label_array, model_path, params
     print('########################## Independent Test Finish ##########################\n')
 
 
-def mll_res_ind_preprocess(args):
+def mll_res_preprocess(args, is_ind=False):
     """ 为独立测试步骤生成特征 """
-
-    # 读取序列文件里每条序列的长度
-    ind_seq_len_list, ind_res_label_list = mll_read_res_seq_file(args.ind_seq_file, args.label_file , args.category)
-    ind_label_array, args.need_marginal_data = mll_gen_label_matrix(ind_res_label_list, args.mll)
-
-    # 控制序列的固定长度(只需要在benchmark dataset上操作一次）
-    args.fixed_len = fixed_len_control(ind_seq_len_list, args.fixed_len)
+    label_array = mll_generate_res_label_data(args, is_ind=is_ind)
 
     # 所有res特征在基准数据集上的基础输出文件
-    args.ind_fea_file = args.results_dir + 'ind_res_features.txt'
-    # 提取残基层面特征,生成向量文件
-    ohe2res_base(args.ind_seq_file, args.category, args.method, args.current_dir,
-                 args.pp_file, args.rss_file, args.ind_fea_file, args.cpu)
+    if not is_ind:
+        # TODO ?? 要加[mll]_csv吗？最开始怎么没有
+        args.fea_file = args.results_dir + 'res_features[mll]_csv.txt'
+        out_file = args.fea_file
+    else:
+        args.ind_fea_file = args.results_dir + 'ind_res_features[mll]_csv.txt'
+        out_file = args.ind_fea_file
 
-    return args, ind_label_array
+    mll_dump_res_data2file(args, out_file, is_ind=is_ind)
+
+    return label_array, out_file
+
+
+def mll_generate_res_label_data(args, is_ind=False):
+    # 读取序列文件里每条序列的长度
+    if not is_ind:
+        seq_len_list, res_label_list = mll_read_res_seq_file(args.seq_file, args.label_file, args.category)
+    else:
+        seq_len_list, res_label_list = mll_read_res_seq_file(args.ind_seq_file, args.ind_label_file, args.category)
+
+    # 控制序列的固定长度(只需要在benchmark dataset上操作一次）
+    args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
+    label_array, args.need_marginal_data = mll_gen_label_matrix(res_label_list, args.mll)
+
+    return label_array
+
+
+def mll_dump_res_data2file(args, fea_file, is_ind=False):
+    # 所有res特征在基准数据集上的基础输出文件
+    args.results_dir = create_results_dir(args, args.current_dir)
+    # 提取残基层面特征,生成向量文件到fea_file
+    ohe2res_base(args.seq_file, args.category, args.method, args.current_dir,
+                 args.pp_file, args.rss_file, fea_file, args.cpu)
+
+    # 读取base特征文件fea_file到内存
+    vectors_list = read_base_vec_list4res(fea_file)
+
+    # 划窗处理，创建并转存特征文件out_files
+    out_files = mll_out_res_file(args.results_dir, args.format, ind=is_ind)
+    assert args.window is not None, "please set window size!"
+    mll_sliding_win2files(vectors_list, args.window, args.format, out_files)
+
+    return out_files
 
 
 def main(args):
@@ -158,27 +195,21 @@ def main(args):
     start_time = time.time()
     current_path = os.path.dirname(os.path.realpath(__file__))
     args.current_dir = os.path.dirname(os.getcwd())
+    # 生成结果文件夹
+    args.results_dir = create_results_dir(args, args.current_dir)
 
     # 判断中文目录
     check_contain_chinese(current_path)
-
     # 判断mode和ml的组合是否合理
     args.mode = 'OHE'
     args.score = 'none'
     mll_seq_sys_check(args, True)
-
-    # 生成结果文件夹
-    args.results_dir = create_results_dir(args, args.current_dir)
-
-    # 读取序列文件里每条序列的长度
-    seq_len_list, res_label_list = mll_read_res_seq_file(args.seq_file, args.label_file, args.category)
-    label_array, args.need_marginal_data = mll_gen_label_matrix(res_label_list, args.mll)
-
-    # 控制序列的固定长度(只需要在benchmark dataset上操作一次）
-    args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
-
     # 对每个残基层面的method进行检查
     res_feature_check(args)
+
+    # # 读取序列文件里每条序列的长度
+    label_array = mll_generate_res_label_data(args)
+
     # 对SVM或RF的参数进行检查
     all_params_list_dict = {}  # 包含了机器学习和特征提取的参数
     if args.ml in DeepLearning:
@@ -194,33 +225,23 @@ def main(args):
     print('in res main flow')
     print('all_params_list_dict', all_params_list_dict)
     print('args.params_dict_list', args.params_dict_list)
-    # exit()
 
-    # 所有res特征在基准数据集上的基础输出文件
-    args.fea_file = args.results_dir + 'res_features.txt'
-    # 提取残基层面特征,生成向量文件
-    ohe2res_base(args.seq_file, args.category, args.method, args.current_dir, args.pp_file, args.rss_file,
-                 args.fea_file, args.cpu)
+    fea_file = args.results_dir + 'res_features.txt'
+    out_files = mll_dump_res_data2file(args, fea_file)
+    # print("out_files", out_files)
 
-    # 为存储SVM和RF输入特征的文件命名
-    out_files = mll_out_res_file(args.results_dir, args.format, ind=False)
+    # residue level 转化为 sequence level
+    # label_array 对cv-process共用，对ind-process用做训练
+    # vectors_list通过sliding window处理好，res_vectors2file存储在out_files文件里，在下面流程读出
 
-    # 读取base特征文件, 待写入
-    vectors_list = read_base_vec_list4res(args.fea_file)
-
-    # convert res mll problem to seq mll problem
-    assert args.window is not None, "please set window size!"
-    mll_sliding_win2files(vectors_list, label_array, args.window, args.format, out_files)
-
-    # print("res - cv flow")
-    # print("vectors_list.shape", vectors_list.shape)
-    # print("label_array.shape", label_array.shape)
+    # 只需检查一次
+    # TODO ml 里也要检查，或者，在公共部分检查
+    # TODO 还有其他check
+    mll_ensemble_check(label_array.shape[1], args.params_dict_list)
 
     if args.ml in DeepLearning:
-        args.dl = 1
         mll_res_dl_fe_process(args, label_array, out_files, args.params_dict_list)
     else:
-        args.dl = 0
         mll_res_ml_fe_process(args, label_array, out_files)
 
     print("Done.")

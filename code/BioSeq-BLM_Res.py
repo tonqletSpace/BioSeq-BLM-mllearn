@@ -31,6 +31,7 @@ def create_results_dir(args, cur_dir):
     return results_dir
 
 
+# TODO 去掉print
 def res_cl_fe_process(args, fragment):
     # ** 残基层面特征提取和标签数组生成开始 ** #
     # 为存储SVM和RF输入特征的文件命名
@@ -94,7 +95,6 @@ def res_cl_fe_process(args, fragment):
     print('\n')
     for i in range(len(params_dict_list)):
         params_dict = params_dict_list[i]
-        # tonqlet debug
         # params_dict_list_pro.append(one_cl_process(args, vectors, label_array, args.folds, params_dict))
         # break
         params_dict_list_pro.append(pool.apply_async(one_cl_process, (args, vectors, label_array, args.folds,

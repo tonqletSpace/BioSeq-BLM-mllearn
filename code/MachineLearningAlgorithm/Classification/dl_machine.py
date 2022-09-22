@@ -103,7 +103,7 @@ def get_output_space_dim(y, mll, params_dict):
 def mll_dl_cv_process(need_marginal_data, mll, ml, vectors, embed_size,
                       labels, seq_length_list, max_len, folds, out_dir, params_dict):
 
-    mll_hyper_param_show(mll, ml, params_dict, print_len=60)
+    mll_hyper_param_show(mll, ml, params_dict, is_optimal=True, print_len=60)
 
     tmp_shape = labels.get_shape()
     if need_marginal_data:
@@ -239,16 +239,25 @@ def dl_ind_process(ml, vectors, labels, seq_length_list, ind_vectors, ind_labels
 def mll_dl_ind_process(need_marginal_data, mll, ml, vectors, labels, fixed_seq_len_list,
                        ind_vectors, ind_label_array, ind_fixed_seq_len_list,
                        embed_size, max_len, out_dir, params_dict):
+    """
+    用于训练的数据: vectors, fixed_seq_len_list, labels
+    用于预测的独立测试集数据: ind_vectors, ind_fixed_seq_len_list
+    用于评估的标签: ind_label_array
+    共用的: embed_size, max_len
+    out_dir: 独立测试输出文件
+    """
 
     print("need_marginal_data", need_marginal_data)
 
     print("vectors.shape", vectors.shape)
     print("labels.shape", labels.shape)
-    print("train_seq_length_list.shape", fixed_seq_len_list.shape)
+    print("train_seq_length_list.shape", len(fixed_seq_len_list))
+    print(type(fixed_seq_len_list))
 
     print("ind_vectors.shape", ind_vectors.shape)
     print("ind_labels.shape", ind_label_array.shape)
-    print("ind_seq_length_list.shape", ind_fixed_seq_len_list.shape)
+    print("ind_seq_length_list.shape", len(ind_fixed_seq_len_list))
+    print(type(ind_fixed_seq_len_list))
 
     # exit()
     # blm是每个epoch都测试，选最好的测试结果；这里用fit后的结果来预测

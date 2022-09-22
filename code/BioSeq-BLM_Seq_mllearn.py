@@ -82,6 +82,8 @@ def mll_ml_fe_process(args):
         mll_ensemble_check(label_array.shape[1], params_dict)
         mll_meka_check(args, params_dict)
         # 生成特征向量文件名
+        # TODO 这里不对！vec_files应当由参数组合而成，且保证唯一，这样才起到筛选的作用！
+        # TODO 修正res流程？
         vec_files = mll_out_seq_file(args.format, args.results_dir, params_dict, params_list_dict)
         params_dict['out_files'] = vec_files
         params_dict_list_pro.append(pool.apply_async(
@@ -160,8 +162,6 @@ def mll_dl_fe_process(args):
 
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
     vectors, embed_size, fixed_seq_len_list = mll_read_dl_vec4seq(args, args.fixed_len, out_files)
-
-    print("mll_dl_fe_process", type(vectors))
 
     # 深度学习的独立测试和交叉验证分开
     if args.ind_seq_file is None:

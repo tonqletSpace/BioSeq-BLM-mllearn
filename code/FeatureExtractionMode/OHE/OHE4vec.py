@@ -136,7 +136,7 @@ def sliding_win2files(res_mats, res_labels_list, win_size, out_format, out_files
     print('\n')
 
 
-def mll_sliding_win2files(res_mats, res_labels_list, win_size, out_format, out_files):
+def mll_sliding_win2files(res_mats, win_size, out_format, out_files):
     width = res_mats[0].shape[1]  # 第三维 E
     win_ctrl = win_size // 2
 
