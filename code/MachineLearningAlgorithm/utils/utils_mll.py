@@ -572,6 +572,7 @@ def adaptation_model_factory(mll, params_dict):
 
 
 def mll_meka_check(args, params_dict):
+    assert isinstance(params_dict, dict)
     if is_mll_meka_methods(args.mll):
         params_dict['meka_classpath'] = args.meka_classpath
         params_dict['which_java'] = args.which_java
@@ -765,3 +766,17 @@ def get_mll_model_path(mll, ml, out_dir, params_dict):
 
     model_path = out_dir + '_'.join(methods) + '_' + '_'.join(kv_list) + '.model'
     return model_path
+
+
+def mll_generate_predictions(labels_shape, need_marginal_data):
+    """
+
+    :param labels_shape: (N, q) of data
+    :param need_marginal_data:
+    :return:
+    """
+    if need_marginal_data:
+        labels_shape = (labels_shape[0]-2, labels_shape[1])
+    predicted_labels = np.zeros(labels_shape, dtype=np.int32)  # (N, q)
+    predicted_prob = np.zeros(labels_shape)  # (N, q)
+    return predicted_labels, predicted_prob

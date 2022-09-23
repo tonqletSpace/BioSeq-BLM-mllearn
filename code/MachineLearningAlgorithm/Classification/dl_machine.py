@@ -17,7 +17,8 @@ from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot
 from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
     mll_final_results_output, mll_prob_output, mll_print_metric_dict
 from ..utils.utils_mll import BLMLabelPowerset, MllDeepNetSeq, get_mll_deep_model, get_lp_num_class, \
-    mll_result_sparse_check, Mll_ENSEMBLE_Methods, is_mll_ensemble_methods, mll_hyper_param_show
+    mll_result_sparse_check, Mll_ENSEMBLE_Methods, is_mll_ensemble_methods, mll_hyper_param_show, \
+    mll_generate_predictions
 
 
 def get_partition(feature, target, length, train_index, val_index):
@@ -105,11 +106,7 @@ def mll_dl_cv_process(need_marginal_data, mll, ml, vectors, embed_size,
 
     mll_hyper_param_show(mll, ml, params_dict, is_optimal=True, print_len=60)
 
-    tmp_shape = labels.get_shape()
-    if need_marginal_data:
-        tmp_shape = (tmp_shape[0]-2, tmp_shape[1])
-    predicted_labels = np.zeros(tmp_shape, dtype=np.int32)  # (N, q)
-    predicted_prob = np.zeros(tmp_shape)  # (N, q)
+    predicted_labels, predicted_prob = mll_generate_predictions(labels.get_shape(), need_marginal_data)
 
     results = []
     count = 0
@@ -122,7 +119,8 @@ def mll_dl_cv_process(need_marginal_data, mll, ml, vectors, embed_size,
 
         # blm是每个epoch都测试，选最好的测试结果；这里用fit后的结果来预测
         final_predict_list, final_prob_list = do_dl_fit_predict(
-            mll, ml, mll_clf, x_train, y_train, train_length, max_len, x_val, test_length, 'LP', *lp_args)
+            mll, ml, mll_clf, x_train, y_train, train_length,
+            max_len, x_val, test_length, 'LP', *lp_args)
 
         result = mll_performance(y_val, final_predict_list)
         results.append(result)
@@ -246,20 +244,6 @@ def mll_dl_ind_process(need_marginal_data, mll, ml, vectors, labels, fixed_seq_l
     共用的: embed_size, max_len
     out_dir: 独立测试输出文件
     """
-
-    print("need_marginal_data", need_marginal_data)
-
-    print("vectors.shape", vectors.shape)
-    print("labels.shape", labels.shape)
-    print("train_seq_length_list.shape", len(fixed_seq_len_list))
-    print(type(fixed_seq_len_list))
-
-    print("ind_vectors.shape", ind_vectors.shape)
-    print("ind_labels.shape", ind_label_array.shape)
-    print("ind_seq_length_list.shape", len(ind_fixed_seq_len_list))
-    print(type(ind_fixed_seq_len_list))
-
-    # exit()
     # blm是每个epoch都测试，选最好的测试结果；这里用fit后的结果来预测
     num_class = get_output_space_dim(labels, mll, params_dict)
     lp_args = ml, max_len, embed_size, params_dict
@@ -272,10 +256,10 @@ def mll_dl_ind_process(need_marginal_data, mll, ml, vectors, labels, fixed_seq_l
     mll_clf = do_dl_fit(mll, ml, mll_clf, vectors, labels, train_length, max_len, *lp_args)
     predict_list, prob_list = do_dl_predict(mll, ml, mll_clf, max_len, ind_vectors, ind_fixed_seq_len_list)
 
-    final_predict_list = predict_list.toarray()
+    final_predict_list = predict_list
 
     if prob_list is not None:
-        final_prob_list = prob_list.toarray()
+        final_prob_list = prob_list
 
     final_result = mll_performance(ind_label_array, final_predict_list)
 

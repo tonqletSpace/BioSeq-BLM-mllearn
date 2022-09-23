@@ -116,6 +116,7 @@ def mll_seq_sys_check(args, res=False):
 
 
 def mll_ensemble_check(q, params_dict):
+    assert isinstance(params_dict, dict)
     if params_dict.__contains__('RAkEL_labelset_size') and params_dict['RAkEL_labelset_size'] is not None:
         assert params_dict['RAkEL_labelset_size'] < q,\
             'error! RAkEL_labelset_size must be less than the dimension ' \

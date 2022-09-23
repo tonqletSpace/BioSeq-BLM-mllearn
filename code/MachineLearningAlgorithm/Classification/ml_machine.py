@@ -9,7 +9,7 @@ from skmultilearn.problem_transform import BinaryRelevance, ClassifierChain, Lab
 from .dl_machine import do_ml_fit_predict, do_ml_fit
 from .mll_machine import get_mll_ml_model, mll_sparse_check
 from ..utils.utils_mll import is_mll_instance_methods, is_mll_proba_output_methods, mll_result_sparse_check, \
-    mll_hyper_param_show, get_mll_model_path
+    mll_hyper_param_show, get_mll_model_path, mll_generate_predictions
 from ..utils.utils_results import performance, final_results_output, prob_output, print_metric_dict, mll_performance, \
     mll_final_results_output, mll_prob_output, mll_print_metric_dict
 from ..utils.utils_plot import plot_roc_curve, plot_pr_curve, plot_roc_ind, plot_pr_ind
@@ -134,11 +134,7 @@ def mll_ml_cv_results(need_marginal_data, mll, ml, vectors, labels, folds, out_d
     assert issparse(vectors) and issparse(labels), 'error'
     mll_hyper_param_show(mll, ml, params_dict, is_optimal=True)
 
-    tmp_shape = labels.get_shape()
-    if need_marginal_data:
-        tmp_shape = (tmp_shape[0]-2, tmp_shape[1])
-    predicted_labels = np.zeros(tmp_shape, dtype=np.int32)  # (N, q)
-    predicted_prob = np.zeros(tmp_shape)  # (N, q)
+    predicted_labels, predicted_prob = mll_generate_predictions(labels.get_shape(), need_marginal_data)
 
     results = []
     for train_index, test_index in folds:
@@ -203,12 +199,11 @@ def mll_ml_ind_results(mll, ml, ind_vectors, ind_labels, model_path, out_dir, pa
 
     model = joblib.load(model_path)
 
-    predicted_labels = mll_result_sparse_check(mll, model.predict(ind_vectors)).toarray()
+    predicted_labels = mll_result_sparse_check(mll, model.predict(ind_vectors))
 
     predicted_prob = np.zeros(ind_labels.get_shape())  # (N, q)
     if is_mll_proba_output_methods(mll):
-        y_test_prob = mll_result_sparse_check(mll, model.predict_proba(ind_vectors))
-        predicted_prob = y_test_prob.toarray()
+        predicted_prob = mll_result_sparse_check(mll, model.predict_proba(ind_vectors))
 
     final_result = mll_performance(ind_labels, predicted_labels)
 

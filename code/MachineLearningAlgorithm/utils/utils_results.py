@@ -87,8 +87,9 @@ def mll_performance(origin_labels, predicted_labels):
     :param origin_labels: true values of the data set.
     :param predicted_labels: predicted values of the data set.
     """
-    if not issparse(origin_labels) or not issparse(predicted_labels):
+    if not issparse(origin_labels):
         origin_labels = lil_matrix(origin_labels)
+    if not issparse(predicted_labels):
         predicted_labels = lil_matrix(predicted_labels)
 
     if origin_labels.get_shape() != predicted_labels.get_shape():
@@ -243,12 +244,14 @@ def prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False):
 
 
 def mll_prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False):
-    assert issparse(true_labels) and not issparse(predicted_labels)
-
-    predicted_labels = predicted_labels.astype(np.int, copy=True)
+    if issparse(predicted_labels):
+        predicted_labels = predicted_labels.toarray()
+    if issparse(true_labels):
+        true_labels = true_labels.toarray()
     if prob_list is None:
         prob_list = np.zeros(predicted_labels, np.int)
-    true_labels = true_labels.toarray()
+
+    predicted_labels = predicted_labels.astype(np.int, copy=True)
 
     prob_file = out_path + "prob_out.csv"
     if ind is True:

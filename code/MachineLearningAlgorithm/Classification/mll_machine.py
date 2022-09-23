@@ -27,8 +27,6 @@ def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, params_dict):
     for train_index, val_index in folds:
         x_train, y_train, x_val, y_val = mll_sparse_check(mll, *get_partition(vectors, labels, train_index, val_index))
 
-        # if sp != 'none':
-        #     x_train, y_train = sampling(sp, x_train, y_train)
         clf = get_mll_ml_model(mll, ml, params_dict)
         y_val_ = do_ml_fit_predict(mll, ml, clf, x_train, y_train, x_val, params_dict)
 

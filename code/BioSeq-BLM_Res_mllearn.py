@@ -31,7 +31,7 @@ from MachineLearningSeq import mll_ml_results, mll_seq_ind_dl_fe_process
 from MachineLearningAlgorithm.utils.utils_mll import mll_arg_parser, mll_meka_check
 
 
-def mll_res_dl_fe_process(args, label_array, out_files, params_dict):
+def mll_res_dl_fe_process(args, label_array, out_files):
     # 从out_files中读出 滑窗处理的 特征
     vectors = mll_files2vectors_seq(args, out_files, args.format, is_dl_flow=True)
     # 进一步处理特征，得到deep learning compatible的特征
@@ -45,10 +45,12 @@ def mll_res_dl_fe_process(args, label_array, out_files, params_dict):
         # 构建深度学习分类器
         # fixed_len为args.window所替代
         mll_dl_cv_process(args.need_marginal_data, args.mll, args.ml, vectors, embed_size,
-                          label_array, fixed_seq_len_list, args.window, args.folds, args.results_dir, params_dict)
+                          label_array, fixed_seq_len_list, args.window,
+                          args.folds, args.results_dir, args.params_dict_list)
     else:
         # 独立验证开始
-        mll_res_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, args.window, params_dict)
+        mll_res_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list,
+                                  args.window, args.params_dict_list)
 
 
 def mll_res_ml_fe_process(args, label_array, out_files):
@@ -57,8 +59,6 @@ def mll_res_ml_fe_process(args, label_array, out_files):
 
     # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
     args = mll_prepare4train_res(args, label_array, dl=False)
-
-    args.res = True
 
     # ** 通过遍历SVM/RF参数字典列表来筛选参数 ** #
     # SVM/RF参数字典
@@ -101,11 +101,8 @@ def mll_res_ml_fe_process(args, label_array, out_files):
 
 
 def mll_res_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, fixed_len, params_dict):
-    # TODO 在全数据集上训练，再在ind数据上测试
     print('########################## Independent Test Begin ##########################\n')
     ind_label_array, ind_out_files = mll_res_preprocess(args, is_ind=True)
-
-    # mll_ensemble_check(ind_label_array.shape[1], params_dict)
 
     ind_vectors = mll_files2vectors_seq(args, ind_out_files, args.format, is_dl_flow=True)
     # fixed_len为args.window所替代, 问题转化
@@ -217,12 +214,14 @@ def main(args):
         mll_params_check(args, all_params_list_dict)
         params_list_dict, all_params_list_dict = mode_params_check(args, all_params_list_dict)
         args.params_dict_list = make_params_dicts(all_params_list_dict)[0]
+
+        mll_ensemble_check(label_array.shape[1], args.params_dict_list)
+        mll_meka_check(args, args.params_dict_list)
     else:
         all_params_list_dict = ml_params_check(args, all_params_list_dict)
         mll_params_check(args, all_params_list_dict)
         args.params_dict_list = make_params_dicts(all_params_list_dict)
 
-    print('in res main flow')
     print('all_params_list_dict', all_params_list_dict)
     print('args.params_dict_list', args.params_dict_list)
 
@@ -237,10 +236,9 @@ def main(args):
     # 只需检查一次
     # TODO ml 里也要检查，或者，在公共部分检查
     # TODO 还有其他check
-    mll_ensemble_check(label_array.shape[1], args.params_dict_list)
 
     if args.ml in DeepLearning:
-        mll_res_dl_fe_process(args, label_array, out_files, args.params_dict_list)
+        mll_res_dl_fe_process(args, label_array, out_files)
     else:
         mll_res_ml_fe_process(args, label_array, out_files)
 
