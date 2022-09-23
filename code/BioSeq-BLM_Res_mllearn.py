@@ -2,32 +2,25 @@ import multiprocessing
 import os
 import time
 
-import numpy as np
-
-from CheckAll import results_dir_check, check_contain_chinese, seq_sys_check, ml_params_check, make_params_dicts, \
-    res_feature_check, Machine_Learning_Algorithm, DeepLearning, Final_Path, dl_params_check, Batch_Path_Res, \
-    Method_Res, prepare4train_res, prepare4train_seq, crf_params_check, mll_prepare4train_res, \
+from CheckAll import check_contain_chinese, ml_params_check, make_params_dicts, \
+    res_feature_check, Machine_Learning_Algorithm, DeepLearning, dl_params_check, \
+    Method_Res, mll_prepare4train_res, \
     mll_prepare4train_seq, mode_params_check, mll_seq_sys_check, mll_params_check, mll_ensemble_check, \
     mll_params_select
 from FeatureAnalysis import fa_process
-from FeatureExtractionMode.OHE.OHE4vec import ohe2res_base, sliding_win2files, mat_list2frag_array, \
+from FeatureExtractionMode.OHE.OHE4vec import ohe2res_base, \
     mll_sliding_win2files
-from FeatureExtractionMode.utils.utils_write import read_res_seq_file, read_res_label_file, fixed_len_control, \
-    res_file_check, out_res_file, out_dl_frag_file, res_base2frag_vec, gen_label_array, mll_gen_label_matrix, \
-    mll_read_res_seq_file, mll_out_seq_file, mll_out_res_file
-from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process as seq_dcp, mll_dl_cv_process, \
+from FeatureExtractionMode.utils.utils_write import fixed_len_control, mll_gen_label_matrix, \
+    mll_read_res_seq_file, mll_out_res_file
+from MachineLearningAlgorithm.Classification.dl_machine import mll_dl_cv_process, \
     mll_dl_ind_process
-from MachineLearningAlgorithm.Classification.dl_machine import dl_ind_process as seq_dip
-from MachineLearningAlgorithm.SequenceLabelling.dl_machine import dl_cv_process as res_dcp
-from MachineLearningAlgorithm.SequenceLabelling.dl_machine import dl_ind_process as res_dip
-from MachineLearningAlgorithm.Classification.ml_machine import ml_cv_results, ml_ind_results, mll_ml_ind_results
-from MachineLearningAlgorithm.SequenceLabelling.ml_machine import crf_cv_process, crf_ind_process
-from MachineLearningAlgorithm.utils.utils_read import files2vectors_res, read_base_mat4res, read_base_vec_list4res, \
-    res_label_read, read_dl_vec4seq, res_dl_label_read, mll_files2vectors_seq, mll_read_dl_vec4seq, mll_read_dl_data4res, \
+from MachineLearningAlgorithm.Classification.ml_machine import mll_ml_ind_results
+from MachineLearningAlgorithm.utils.utils_read import read_base_vec_list4res, \
+    mll_read_dl_data4res, \
     mll_files2vectors_seq
-from MachineLearningRes import one_cl_process, params_select, mll_one_cl_process
+from MachineLearningRes import mll_one_cl_process
 from FeatureExtractionRes import create_results_dir
-from MachineLearningSeq import mll_ml_results, mll_seq_ind_dl_fe_process
+from MachineLearningSeq import mll_ml_results
 from MachineLearningAlgorithm.utils.utils_mll import mll_arg_parser, mll_meka_check
 
 
@@ -49,7 +42,7 @@ def mll_res_dl_fe_process(args, label_array, out_files):
                           args.folds, args.results_dir, args.params_dict_list)
     else:
         # 独立验证开始
-        mll_res_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list,
+        mll_res_ind_dl_fe_process(args, vectors, label_array, fixed_seq_len_list,
                                   args.window, args.params_dict_list)
 
 
@@ -97,16 +90,17 @@ def mll_res_ml_fe_process(args, label_array, out_files):
     # -------- 独立测试-------- #
     # 即，将独立测试数据集在最优的model上进行测试
     if args.ind_seq_file is not None:
-        mll_res_ind_ml_fe_process(args, vectors, label_array, model_path, params_selected)
+        mll_res_ind_ml_fe_process(args, model_path, params_selected)
 
 
-def mll_res_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, fixed_len, params_dict):
+def mll_res_ind_dl_fe_process(args, vectors, label_array, fixed_seq_len_list, fixed_len, params_dict):
     print('########################## Independent Test Begin ##########################\n')
     ind_label_array, ind_out_files = mll_res_preprocess(args, is_ind=True)
 
     ind_vectors = mll_files2vectors_seq(args, ind_out_files, args.format, is_dl_flow=True)
     # fixed_len为args.window所替代, 问题转化
-    ind_vectors, embed_size, ind_fixed_seq_len_list = mll_read_dl_data4res(args, ind_vectors, args.window, ind_out_files)
+    ind_vectors, embed_size, ind_fixed_seq_len_list = mll_read_dl_data4res(
+        args, ind_vectors, args.window, ind_out_files)
 
     mll_dl_ind_process(args.need_marginal_data, args.mll, args.ml,
                        vectors, label_array, fixed_seq_len_list,
@@ -115,7 +109,7 @@ def mll_res_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_
     print('########################## Independent Test Finish ##########################\n')
 
 
-def mll_res_ind_ml_fe_process(args, opt_vectors, label_array, model_path, params_selected):
+def mll_res_ind_ml_fe_process(args, model_path, params_selected):
     # TODO 为什么不复用？！因为要对独立数据做sliding_window，所以不能复用seq_level的流程
     # TODO 在全数据集上训练，再在ind数据上预测
     print('########################## Independent Test Begin ##########################\n')
