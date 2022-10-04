@@ -120,7 +120,7 @@ class BLMLabelPowerset(LabelPowerset):
         X = self._ensure_input_format(X, sparse_format='csr', enforce_sparse=True)
         X = self._ensure_input_format(X)
         y = self.transform(y)
-        self.classifier.fit(get_ds_or_x(ds, X, y), None if ds else y)
+        self.classifier.fit(*get_ds_or_xy(ds, X, y))
 
         return self
 
@@ -190,20 +190,21 @@ class BLMBinaryRelevance(BinaryRelevance):
             y_subset = self._ensure_output_format(y_subset)
 
             if mll is None:
-                # BR clf
-                print("BR clf".center(100, '$'))
+                # singleton BR method
                 classifier = copy.deepcopy(self.classifier)
             else:
-                # ensemble clf
-                print("ensemble clf".center(100, '$'))
+                # ensemble of mll methods
                 if max_len is not None and embed_size is not None:
+                    # containing deep learning sub-method
+                    # 1.in our system, assure mll == 'LP'
+                    # 2.derive num_class from label_y when we define dl_model instance
                     lp_args = mll, ml, max_len, embed_size, params_dict
-                    print('$$ DEBUG $$', max_len, embed_size, params_dict)
-                    classifier = get_mll_deep_model(get_lp_num_class(y_subset), *lp_args)  # dl
+                    classifier = get_mll_deep_model(get_lp_num_class(y_subset), *lp_args)
                 else:
-                    classifier = get_mll_ml_model(mll, ml, params_dict)  # ml
-            # dl 的 model 要在fit前根据y来确定num_class
-            classifier.fit(get_ds_or_x(ds, X, y_subset), None if ds else y_subset)
+                    # without deep learning sub-method
+                    classifier = get_mll_ml_model(mll, ml, params_dict)
+
+            classifier.fit(*get_ds_or_xy(ds, X, y_subset))
 
             self.classifiers_.append(classifier)
 
@@ -375,8 +376,8 @@ class BLMMajorityVotingClassifier(BLMLabelSpacePartitioningClassifier):
             (predictions[0].shape[0], self._label_count), dtype='int')
         for model in range(self.model_count_):
             for label in range(len(self.partition_[model])):
-                votes[:, self.partition_[model][label]] = votes[
-                                                         :, self.partition_[model][label]] + predictions[model][:, label]
+                votes[:, self.partition_[model][label]] = \
+                    votes[:, self.partition_[model][label]] + predictions[model][:, label]
                 voters[self.partition_[model][label]] += 1
 
         nonzeros = votes.nonzero()
@@ -418,12 +419,16 @@ class BLMRAkELd(RakelD):
             ),
             require_dense=[False, False]
         )
-        return self.classifier_.fit(
-            get_ds_or_x(ds, X, y), None if ds else y,
-            mll, ml, max_len, embed_size, params_dict)
+
+        return self.classifier_.fit(*get_ds_or_xy(ds, X, y),
+                                    mll, ml, max_len, embed_size, params_dict)
 
     def predict(self, X):
         return self.classifier_.predict(X)
+
+
+def get_ds_or_xy(ds, x, y):
+    return get_ds_or_x(ds, x, y), None if ds else y
 
 
 def get_ds_or_x(ds, x, y=None):
@@ -432,7 +437,7 @@ def get_ds_or_x(ds, x, y=None):
     :param ds: torch.utils.data.Dataset or None
     :param x: sparse matrix, [n_samples, n_features]
     :param y: sparse matrix, [n_samples, n_features]
-    :return: torch.utils.data.Dataset or x
+    :return: single X or single torch.utils.data.Dataset(whose attributes are updated by x and y)
     """
     if ds is None:
         return x

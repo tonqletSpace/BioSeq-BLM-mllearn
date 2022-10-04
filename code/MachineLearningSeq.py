@@ -150,8 +150,6 @@ def mll_seq_ind_dl_fe_process(args, vectors, embed_size, labels, fixed_seq_len_l
     # 获取独立测试集特征向量
     ind_vectors, embed_size, ind_fixed_seq_len_list = mll_read_dl_vec4seq(args, fixed_len, ind_out_files)
 
-    print('params_dict[dropout]', params_dict['dropout'])
-
     # 为独立测试构建深度学习分类器
     mll_dl_ind_process(args.need_marginal_data, args.mll, args.ml, vectors, labels, fixed_seq_len_list,
                        ind_vectors, ind_label_array, ind_fixed_seq_len_list,

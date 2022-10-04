@@ -248,8 +248,9 @@ def mll_prob_output(true_labels, predicted_labels, prob_list, out_path, ind=Fals
         predicted_labels = predicted_labels.toarray()
     if issparse(true_labels):
         true_labels = true_labels.toarray()
+    assert true_labels.shape == predicted_labels.shape
     if prob_list is None:
-        prob_list = np.zeros(predicted_labels, np.int)
+        prob_list = np.zeros(true_labels.shape, np.int)
 
     predicted_labels = predicted_labels.astype(np.int, copy=True)
 

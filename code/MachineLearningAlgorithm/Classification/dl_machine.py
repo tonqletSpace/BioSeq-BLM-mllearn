@@ -168,20 +168,20 @@ def do_dl_fit(mll, ml, mll_clf, x_train, y_train, train_length, max_len, *lp_arg
 def do_dl_predict(mll, ml, mll_clf, max_len, x_val, test_length):
     if mll in Mll_ENSEMBLE_Methods:  # ensemble
         if ml in FORMER:
-            final_predict_list = mll_clf.predict(TrmDataset(x_val, None, test_length, max_len))  # (N, q
-            final_prob_list = None
+            predict_list = mll_clf.predict(TrmDataset(x_val, None, test_length, max_len))  # (N, q
+            prob_list = None
         else:
-            final_predict_list = mll_clf.predict(x_val)  # (N, q
-            final_prob_list = None
+            predict_list = mll_clf.predict(x_val)  # (N, q
+            prob_list = None
     else:
         if ml in FORMER:
-            final_predict_list = mll_clf.predict(TrmDataset(x_val, None, test_length, max_len))  # (N, q
-            final_prob_list = mll_clf.predict_proba(TrmDataset(x_val, None, test_length, max_len))  # (N, n
+            predict_list = mll_clf.predict(TrmDataset(x_val, None, test_length, max_len))  # (N, q
+            prob_list = mll_clf.predict_proba(TrmDataset(x_val, None, test_length, max_len))  # (N, n
         else:
-            final_predict_list = mll_clf.predict(x_val)  # (N, q
-            final_prob_list = mll_clf.predict_proba(x_val)  # (N, n
+            predict_list = mll_clf.predict(x_val)  # (N, q
+            prob_list = mll_clf.predict_proba(x_val)  # (N, n
 
-    return final_predict_list, final_prob_list
+    return predict_list, prob_list
 
 
 def do_ml_fit_predict(mll, ml, mll_clf, x_train, y_train, x_val, params_dict):
@@ -246,20 +246,18 @@ def mll_dl_ind_process(need_marginal_data, mll, ml, vectors, labels, fixed_seq_l
     """
     # blm是每个epoch都测试，选最好的测试结果；这里用fit后的结果来预测
     num_class = get_output_space_dim(labels, mll, params_dict)
-    lp_args = mll, ml, max_len, embed_size, params_dict
-    mll_clf = get_mll_deep_model(num_class, *lp_args)
+
+    # top-tier mll model, could be ensemble or singleton method
+    model_args = mll, ml, max_len, embed_size, params_dict
+    mll_clf = get_mll_deep_model(num_class, *model_args)
 
     range_list = list(range(len(vectors)))
     random.shuffle(range_list)
     vectors, labels, train_length = vectors[range_list], labels[range_list], fixed_seq_len_list[range_list]
 
-    mll_clf = do_dl_fit(mll, ml, mll_clf, vectors, labels, train_length, max_len, *lp_args)
-    predict_list, prob_list = do_dl_predict(mll, ml, mll_clf, max_len, ind_vectors, ind_fixed_seq_len_list)
-
-    final_predict_list = predict_list
-
-    if prob_list is not None:
-        final_prob_list = prob_list
+    fitting_args = 'LP', ml, max_len, embed_size, params_dict
+    mll_clf = do_dl_fit(mll, ml, mll_clf, vectors, labels, train_length, max_len, *fitting_args)
+    final_predict_list, final_prob_list = do_dl_predict(mll, ml, mll_clf, max_len, ind_vectors, ind_fixed_seq_len_list)
 
     final_result = mll_performance(ind_label_array, final_predict_list)
 
