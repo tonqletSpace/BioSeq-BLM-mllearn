@@ -152,14 +152,14 @@ def do_dl_fit(mll, ml, mll_clf, x_train, y_train, train_length, max_len, *lp_arg
     # training step of mll method whose base method is deep learning
     if mll in Mll_ENSEMBLE_Methods:  # ensemble of mll methods
         # extra args(lp_args): mll, ml, max_len, embed_size, params_dict
-        if ml in FORMER:
+        if ml in FORMER:  # Transformer
             mll_clf.fit(TrmDataset(x_train, y_train, train_length, max_len), None, *lp_args)
-        else:
+        else:  # CNN, RNN
             mll_clf.fit(x_train, y_train, *lp_args)
     else:  # singleton of mll methods
-        if ml in FORMER:
+        if ml in FORMER:  # Transformer
             mll_clf.fit(TrmDataset(x_train, y_train, train_length, max_len))
-        else:
+        else:  # CNN, RNN
             mll_clf.fit(x_train, y_train)
 
     return mll_clf
