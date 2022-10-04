@@ -191,13 +191,14 @@ class BLMBinaryRelevance(BinaryRelevance):
 
             if mll is None:
                 # BR clf
-                # print("BR clf".center(100, '*'))
+                print("BR clf".center(100, '$'))
                 classifier = copy.deepcopy(self.classifier)
             else:
                 # ensemble clf
-                # print("ensemble clf".center(100, '*'))
+                print("ensemble clf".center(100, '$'))
                 if max_len is not None and embed_size is not None:
                     lp_args = mll, ml, max_len, embed_size, params_dict
+                    print('$$ DEBUG $$', max_len, embed_size, params_dict)
                     classifier = get_mll_deep_model(get_lp_num_class(y_subset), *lp_args)  # dl
                 else:
                     classifier = get_mll_ml_model(mll, ml, params_dict)  # ml

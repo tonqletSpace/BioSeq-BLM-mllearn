@@ -174,7 +174,8 @@ def mll_dl_fe_process(args):
                           args.folds, args.results_dir, params_dict)
     else:
         # 独立验证开始
-        mll_seq_ind_dl_fe_process(args, vectors, embed_size, label_array, fixed_seq_len_list, args.fixed_len, params_dict)
+        mll_seq_ind_dl_fe_process(args, vectors, embed_size, label_array,
+                                  fixed_seq_len_list, args.fixed_len, params_dict)
 
 
 def main(args):

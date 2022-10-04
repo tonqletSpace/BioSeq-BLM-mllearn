@@ -133,11 +133,7 @@ def mll_seq_ind_dl_fe_process(args, vectors, embed_size, labels, fixed_seq_len_l
     # 合并独立测试集序列文件
     ind_input_one_file = create_all_seq_file(args.ind_seq_file, args.results_dir, ind=True)
     # 统计独立测试集样本数目和序列长度
-    print("args.ind_seq_file", args.ind_seq_file)
-    print("ind_input_one_file", ind_input_one_file)
-    # exit()
-    # TODO 为什么之前注释的流程没有报这个错
-    # TODO 为什么seq level没有报这个错
+
     ind_seq_len_list, ind_seq_label_list = mll_seq_file2one(args.category, args.ind_seq_file, ind_input_one_file)
 
     # 生成独立测试集标签数组
@@ -153,6 +149,8 @@ def mll_seq_ind_dl_fe_process(args, vectors, embed_size, labels, fixed_seq_len_l
 
     # 获取独立测试集特征向量
     ind_vectors, embed_size, ind_fixed_seq_len_list = mll_read_dl_vec4seq(args, fixed_len, ind_out_files)
+
+    print('params_dict[dropout]', params_dict['dropout'])
 
     # 为独立测试构建深度学习分类器
     mll_dl_ind_process(args.need_marginal_data, args.mll, args.ml, vectors, labels, fixed_seq_len_list,

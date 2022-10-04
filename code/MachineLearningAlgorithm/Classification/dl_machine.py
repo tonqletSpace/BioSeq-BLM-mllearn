@@ -151,10 +151,10 @@ def do_dl_fit_predict(mll, ml, mll_clf, x_train, y_train, train_length, max_len,
 def do_dl_fit(mll, ml, mll_clf, x_train, y_train, train_length, max_len, *lp_args):
     if mll in Mll_ENSEMBLE_Methods:  # ensemble
         if ml in FORMER:
-            # 额外参数
+            # extra args
             mll_clf.fit(TrmDataset(x_train, y_train, train_length, max_len), None, *lp_args)
         else:
-            # 额外参数
+            # extra args: X, y, mll, ml, max_len, embed_size, params_dict
             mll_clf.fit(x_train, y_train, *lp_args)
     else:
         if ml in FORMER:
@@ -246,8 +246,8 @@ def mll_dl_ind_process(need_marginal_data, mll, ml, vectors, labels, fixed_seq_l
     """
     # blm是每个epoch都测试，选最好的测试结果；这里用fit后的结果来预测
     num_class = get_output_space_dim(labels, mll, params_dict)
-    lp_args = ml, max_len, embed_size, params_dict
-    mll_clf = get_mll_deep_model(num_class, mll, *lp_args)
+    lp_args = mll, ml, max_len, embed_size, params_dict
+    mll_clf = get_mll_deep_model(num_class, *lp_args)
 
     range_list = list(range(len(vectors)))
     random.shuffle(range_list)
