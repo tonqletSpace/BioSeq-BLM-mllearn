@@ -157,7 +157,7 @@ def mll_ml_cv_results(need_marginal_data, mll, ml, vectors, labels, folds, out_d
     final_results = np.array(results).mean(axis=0)
 
     mll_final_results_output(final_results, out_dir, ind=False)  # 将指标写入文件
-    mll_prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
+    mll_prob_output(labels, predicted_labels, predicted_prob, out_dir, need_md=need_marginal_data)  # 将标签对应概率写入文件
 
     # 利用整个数据集训练并保存模型
     model = get_mll_ml_model(mll, ml, params_dict)
@@ -193,8 +193,9 @@ def ml_ind_results(ml, ind_vectors, ind_labels, multi, res, out_dir, params_dict
     prob_output(ind_labels, pre_labels, ind_prob, out_dir, ind=True)  # 将标签对应概率写入文件
 
 
-def mll_ml_ind_results(mll, ml, ind_vectors, ind_labels, model_path, out_dir, params_dict):
-    assert issparse(ind_vectors) and issparse(ind_labels), 'error'
+def mll_ml_ind_results(need_md, mll, ml, ind_vectors, ind_labels, model_path, out_dir, params_dict):
+    assert issparse(ind_vectors) and issparse(ind_labels), \
+        'error with ind_vectors {} and ind_labels {}'.format(issparse(ind_vectors), issparse(ind_labels))
     mll_hyper_param_show(mll, ml, params_dict, is_optimal=True)
 
     model = joblib.load(model_path)
@@ -209,7 +210,7 @@ def mll_ml_ind_results(mll, ml, ind_vectors, ind_labels, model_path, out_dir, pa
 
     mll_print_metric_dict(final_result, ind=True)
     mll_final_results_output(final_result, out_dir, ind=True)  # 将指标写入文件
-    mll_prob_output(ind_labels, predicted_labels, predicted_prob, out_dir, ind=True)  # 将标签对应概率写入文件
+    mll_prob_output(ind_labels, predicted_labels, predicted_prob, out_dir, ind=True, need_md=need_md)  # 将标签对应概率写入文件
 
 
 def ml_score_cv_process(ml, vec_files, folds_num, metric, sp, multi, in_format, params_dict):

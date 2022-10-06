@@ -28,7 +28,7 @@ def mll_res_dl_fe_process(args, label_array, out_files):
     # 从out_files中读出 滑窗处理的 特征
     vectors = mll_files2vectors_seq(args, out_files, args.format, is_dl_flow=True)
     # 进一步处理特征，得到deep learning compatible的特征
-    vectors, embed_size, fixed_seq_len_list = mll_read_dl_data4res(args, vectors, args.window, out_files)
+    vectors, embed_size, fixed_seq_len_list = mll_read_dl_data4res(args, vectors, args.window)
 
     # 深度学习的独立测试和交叉验证分开
     if args.ind_seq_file is None:
@@ -99,8 +99,7 @@ def mll_res_ind_dl_fe_process(args, vectors, label_array, fixed_seq_len_list, fi
 
     ind_vectors = mll_files2vectors_seq(args, ind_out_files, args.format, is_dl_flow=True)
     # fixed_len为args.window所替代, 问题转化
-    ind_vectors, embed_size, ind_fixed_seq_len_list = mll_read_dl_data4res(
-        args, ind_vectors, args.window, ind_out_files)
+    ind_vectors, embed_size, ind_fixed_seq_len_list = mll_read_dl_data4res(args, ind_vectors, args.window)
 
     mll_dl_ind_process(args.need_marginal_data, args.mll, args.ml,
                        vectors, label_array, fixed_seq_len_list,
@@ -122,12 +121,13 @@ def mll_res_ind_ml_fe_process(args, model_path, params_selected):
     # 独立测试集特征分析
     print(' Shape of Ind Feature vectors: [%d, %d] '.center(66, '*') % (ind_vectors.shape[0], ind_vectors.shape[1]))
     print('\n')
-    if args.score == 'none':
-        ind_vectors = fa_process(args, ind_vectors, ind_label_array, True, True)
-        print(' Shape of Ind Feature vectors after FA process: [%d, %d] '.center(66, '*') % (ind_vectors.shape[0],
-                                                                                             ind_vectors.shape[1]))
+    # if args.score == 'none':
+    #     ind_vectors = fa_process(args, ind_vectors, ind_label_array, True, True)
+    #     print(' Shape of Ind Feature vectors after FA process: [%d, %d] '.center(66, '*') % (ind_vectors.shape[0],
+    #                                                                                          ind_vectors.shape[1]))
     # 构建独立测试集的分类器
-    mll_ml_ind_results(args.mll, args.ml, ind_vectors, ind_label_array, model_path, args.results_dir, params_selected)
+    mll_ml_ind_results(args.need_marginal_data, args.mll, args.ml,
+                       ind_vectors, ind_label_array, model_path, args.results_dir, params_selected)
     print('########################## Independent Test Finish ##########################\n')
 
 
@@ -158,7 +158,7 @@ def mll_generate_res_label_data(args, is_ind=False):
 
     # 控制序列的固定长度(只需要在benchmark dataset上操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
-    label_array, args.need_marginal_data = mll_gen_label_matrix(res_label_list, args.mll)
+    label_array, args.need_marginal_data = mll_gen_label_matrix(res_label_list, args.mll, False if is_ind else True)
 
     return label_array
 
@@ -221,15 +221,10 @@ def main(args):
 
     fea_file = args.results_dir + 'res_features.txt'
     out_files = mll_dump_res_data2file(args, fea_file)
-    # print("out_files", out_files)
 
     # residue level 转化为 sequence level
     # label_array 对cv-process共用，对ind-process用做训练
     # vectors_list通过sliding window处理好，res_vectors2file存储在out_files文件里，在下面流程读出
-
-    # 只需检查一次
-    # TODO ml 里也要检查，或者，在公共部分检查
-    # TODO 还有其他check
 
     if args.ml in DeepLearning:
         mll_res_dl_fe_process(args, label_array, out_files)

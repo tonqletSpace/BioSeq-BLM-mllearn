@@ -43,13 +43,13 @@ def construct_partition2two(labels, folds_num, stratified=True):
 def mll_marginal_check(label_matrix, args, stratified=True):
     if args.need_marginal_data:
         raw_folds = construct_partition2two(label_matrix[:-2], args.folds_num, stratified)
-        n = label_matrix.get_shape()[0]
+        n = label_matrix.get_shape()[0]  # （N, E)
 
         folds = []
         for i in range(args.folds_num):
             test_index = raw_folds[i][1]
             train_index = np.append(raw_folds[i][0], [n - 2, n - 1])  # marginal_data index
-            folds.append((train_index, test_index))
+            folds.append((train_index, test_index))  # (fd_i_train + 2, fd_i_test)
 
         return folds
     else:

@@ -243,16 +243,22 @@ def prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False):
         print('\n')
 
 
-def mll_prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False):
-    if issparse(predicted_labels):
-        predicted_labels = predicted_labels.toarray()
+def mll_prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False, need_md=False):
     if issparse(true_labels):
         true_labels = true_labels.toarray()
-    assert true_labels.shape == predicted_labels.shape
+    if need_md:
+        true_labels = true_labels[:-2]
+
+    if issparse(predicted_labels):
+        predicted_labels = predicted_labels.toarray()
+    predicted_labels = predicted_labels.astype(np.int, copy=True)
+
+    assert true_labels.shape == predicted_labels.shape, \
+        'err! with true_labels of shape {} while predicted_labels of shape {}'.format(
+            true_labels.shape, predicted_labels.shape)
+
     if prob_list is None:
         prob_list = np.zeros(true_labels.shape, np.int)
-
-    predicted_labels = predicted_labels.astype(np.int, copy=True)
 
     prob_file = out_path + "prob_out.csv"
     if ind is True:

@@ -138,7 +138,7 @@ def mll_dl_cv_process(need_marginal_data, mll, ml, vectors, embed_size,
     final_results = np.array(results).mean(axis=0)
     mll_print_metric_dict(final_results, ind=False)
     mll_final_results_output(final_results, out_dir, ind=False)  # 将指标写入文件
-    mll_prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
+    mll_prob_output(labels, predicted_labels, predicted_prob, out_dir, need_md=need_marginal_data)  # 将标签对应概率写入文件
 
 
 def do_dl_fit_predict(mll, ml, mll_clf, x_train, y_train, train_length, max_len, x_val, test_length, *lp_args):
@@ -255,12 +255,13 @@ def mll_dl_ind_process(need_marginal_data, mll, ml, vectors, labels, fixed_seq_l
     random.shuffle(range_list)
     vectors, labels, train_length = vectors[range_list], labels[range_list], fixed_seq_len_list[range_list]
 
-    fitting_args = 'LP', ml, max_len, embed_size, params_dict
+    fitting_args = 'LP', ml, max_len, embed_size, params_dict  # LP is default base mll method of ensemble algorithm
     mll_clf = do_dl_fit(mll, ml, mll_clf, vectors, labels, train_length, max_len, *fitting_args)
     final_predict_list, final_prob_list = do_dl_predict(mll, ml, mll_clf, max_len, ind_vectors, ind_fixed_seq_len_list)
 
     final_result = mll_performance(ind_label_array, final_predict_list)
 
-    mll_print_metric_dict(final_result, ind=True)
-    mll_final_results_output(final_result, out_dir, ind=True)  # 将指标写入文件
-    mll_prob_output(ind_label_array, final_predict_list, final_prob_list, out_dir)  # 将标签对应概率写入文件
+    mll_print_metric_dict(final_result, ind=True)  # to console
+    mll_final_results_output(final_result, out_dir, ind=True)  # to file
+    mll_prob_output(ind_label_array, final_predict_list, final_prob_list,
+                    out_dir, ind=True, need_md=need_marginal_data)  # to file

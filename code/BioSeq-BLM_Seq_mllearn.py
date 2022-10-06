@@ -138,7 +138,7 @@ def mll_dl_fe_process(args):
     # 统计样本数目和序列长度
     seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
     # 生成标签数组
-    label_array, args.need_marginal_data = mll_gen_label_matrix(seq_label_list, args.mll)
+    label_array, args.need_marginal_data = mll_gen_label_matrix(seq_label_list, args.mll, need_md=False)
 
     # 控制序列的固定长度(仅仅需要在基准数据集上操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
@@ -166,7 +166,6 @@ def mll_dl_fe_process(args):
     # 深度学习的独立测试和交叉验证分开
     if args.ind_seq_file is None:
         # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
-
         args = mll_prepare4train_seq(args, label_array, dl=True)
         # 构建深度学习分类器
         mll_dl_cv_process(args.need_marginal_data, args.mll, args.ml, vectors, embed_size,

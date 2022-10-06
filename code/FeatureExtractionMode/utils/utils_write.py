@@ -319,9 +319,13 @@ def gen_label_array(sp_num_list, label_list):
 #     return 0
 
 
-def mll_gen_label_matrix(seq_label_list, mll):
+def mll_gen_label_matrix(seq_label_list, mll, need_md=True):
     """
-    need_marginal_data 是由方法和数据共同决定的
+    taking marginal_data in concern.
+    :param seq_label_list:
+    :param mll:
+    :param need_md: setting to False for one vote deny in independent test flow
+    :return: labels, need_marginal_data
     """
     need_marginal_data = False
     if mll in ['BR', 'CC']:
@@ -352,7 +356,7 @@ def mll_gen_label_matrix(seq_label_list, mll):
             break
         tot += cnt
 
-    need_marginal_data = tot != 2 * q and need_marginal_data
+    need_marginal_data = tot != 2 * q and need_marginal_data and need_md   # one vote deny
     if need_marginal_data:
         seq_label_matrix.append(np.ones(q, np.int32).tolist())
         seq_label_matrix.append(np.zeros(q, np.int32).tolist())
