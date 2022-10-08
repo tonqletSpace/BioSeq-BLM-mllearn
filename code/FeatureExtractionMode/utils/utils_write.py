@@ -321,7 +321,10 @@ def gen_label_array(sp_num_list, label_list):
 
 def mll_gen_label_matrix(seq_label_list, mll, need_md=True):
     """
-    taking marginal_data in concern.
+    Taking marginal data in concern, this function could generate labels for
+    cross-validation flow and independent test flow. For marginal data are used
+    for training step only instead of testing step, we can disable the marginal
+    data directly in case of independent test flow.
     :param seq_label_list:
     :param mll:
     :param need_md: setting to False for one vote deny in independent test flow

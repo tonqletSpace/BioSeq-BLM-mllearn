@@ -259,6 +259,10 @@ def mll_dl_ind_process(need_marginal_data, mll, ml, vectors, labels, fixed_seq_l
     mll_clf = do_dl_fit(mll, ml, mll_clf, vectors, labels, train_length, max_len, *fitting_args)
     final_predict_list, final_prob_list = do_dl_predict(mll, ml, mll_clf, max_len, ind_vectors, ind_fixed_seq_len_list)
 
+    # print(vectors.shape, labels.shape)
+    # print(ind_label_array.shape, final_predict_list.shape)
+    # exit()
+
     final_result = mll_performance(ind_label_array, final_predict_list)
 
     mll_print_metric_dict(final_result, ind=True)  # to console

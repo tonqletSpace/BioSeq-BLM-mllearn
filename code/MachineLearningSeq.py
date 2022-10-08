@@ -138,7 +138,7 @@ def mll_seq_ind_dl_fe_process(args, vectors, embed_size, labels, fixed_seq_len_l
     ind_seq_len_list, ind_seq_label_list = mll_seq_file2one(args.category, args.ind_seq_file, ind_input_one_file)
 
     # 生成独立测试集标签数组
-    ind_label_array, args.need_marginal_data = mll_gen_label_matrix(ind_seq_label_list, args.mll)
+    ind_label_array, args.need_marginal_data = mll_gen_label_matrix(ind_seq_label_list, args.mll, need_md=False)
 
     mll_ensemble_check(ind_label_array.shape[1], params_dict)
 
