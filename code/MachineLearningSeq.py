@@ -95,7 +95,8 @@ def ind_ml_results(args, vectors, labels, ind_vectors, ind_labels, params_select
 
 
 def mll_ind_ml_results(args, ind_vectors, ind_labels, model_path, params_selected):
-    mll_ml_ind_results(args.need_marginal_data, args.mll, args.ml, ind_vectors, ind_labels, model_path, args.results_dir, params_selected)
+    mll_ml_ind_results(args.need_marginal_data, args.mll, args.ml, ind_vectors,
+                       ind_labels, model_path, args.results_dir, params_selected)
 
 
 def mll_seq_ind_ml_fe_process(args, vectors, labels, model_path, params_selected):

@@ -200,9 +200,11 @@ def mll_ml_ind_results(need_md, mll, ml, ind_vectors, ind_labels, model_path, ou
 
     model = joblib.load(model_path)
 
+    ind_vectors, ind_labels = mll_sparse_check(mll, ind_vectors, ind_labels)
+
     predicted_labels = mll_result_sparse_check(mll, model.predict(ind_vectors))
 
-    predicted_prob = np.zeros(ind_labels.get_shape())  # (N, q)
+    predicted_prob = np.zeros(ind_labels.shape)  # (N, q)
     if is_mll_proba_output_methods(mll):
         predicted_prob = mll_result_sparse_check(mll, model.predict_proba(ind_vectors))
 
