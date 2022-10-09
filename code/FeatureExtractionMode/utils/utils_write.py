@@ -307,70 +307,6 @@ def gen_label_array(sp_num_list, label_list):
     return np.array(labels)
 
 
-# def mll_gen_label_matrix(seq_label_list, mll, is_res=False):
-#     if is_res:
-#         # sequence and label are in two separate .fa file
-#         return mll_gen_label_matrix_res_file()
-#     else:
-#         # sequence and label are in one common .fa file
-#         return mll_gen_label_matrix_seq_file(seq_label_list, mll)
-#
-#
-# def mll_gen_label_matrix_res_file(seq_label_list, mll):
-#     return 0
-
-
-def mll_gen_label_matrix_bkp(seq_label_list, mll, need_md=True):
-    """
-    Taking marginal data in concern, this function could generate labels for
-    cross-validation flow and independent test flow. For marginal data are used
-    for training step only instead of testing step, we can disable the marginal
-    data directly in case of independent test flow.
-    :param seq_label_list:
-    :param mll:
-    :param need_md: setting to False for one vote deny in independent test flow
-    :return: labels, need_marginal_data
-    """
-    need_marginal_data = False
-    if mll in ['BR', 'CC']:
-        need_marginal_data = True
-
-    from scipy.sparse import lil_matrix
-    seq_label_matrix = []  # (N, q)
-    for label in seq_label_list:
-        row = []
-        for e in label:
-            if e == '1':
-                row.append(1)
-            else:
-                row.append(0)
-        seq_label_matrix.append(row)
-
-    tot = 0
-    q = len(seq_label_matrix[0])
-    for j in range(q):
-        cnt = -1
-        for row in seq_label_matrix:
-            if cnt == -1:
-                cnt = row[j]  # cnt == 0 or 1
-            elif cnt != row[j]:
-                cnt = 2
-                break
-        if cnt != 2:
-            break
-        tot += cnt
-
-    need_marginal_data = tot != 2 * q and need_marginal_data and need_md   # one vote deny
-    if need_marginal_data:
-        seq_label_matrix.append(np.ones(q, np.int32).tolist())
-        seq_label_matrix.append(np.zeros(q, np.int32).tolist())
-        print('Auxiliary labels are provided for mll task. '
-              'For each dimension of label, as least two distinct samples are needed.')
-
-    return lil_matrix(seq_label_matrix), need_marginal_data
-
-
-# 2022.10.8
 def mll_gen_label_matrix(seq_label_list):
     seq_label_matrix = []  # (N, q)
     for label in seq_label_list:
@@ -383,7 +319,6 @@ def mll_gen_label_matrix(seq_label_list):
         seq_label_matrix.append(row)
 
     return lil_matrix(seq_label_matrix)  # (N, q)
-
 
 
 def fixed_len_control(seq_len_list, fixed_len):

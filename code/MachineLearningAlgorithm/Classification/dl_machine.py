@@ -101,12 +101,12 @@ def get_output_space_dim(y, mll, params_dict):
         return get_lp_num_class(y)
 
 
-def mll_dl_cv_process(need_marginal_data, mll, ml, vectors, embed_size,
-                      labels, seq_length_list, max_len, folds, out_dir, params_dict):
+def mll_dl_cv_process(mll, ml, vectors, embed_size, labels, seq_length_list,
+                      max_len, folds, out_dir, params_dict):
 
     mll_hyper_param_show(mll, ml, params_dict, is_optimal=True, print_len=60)
 
-    predicted_labels, predicted_prob = mll_generate_predictions(labels.get_shape(), need_marginal_data)
+    predicted_labels, predicted_prob = mll_generate_predictions(labels.get_shape())
 
     results = []
     count = 0
@@ -141,7 +141,7 @@ def mll_dl_cv_process(need_marginal_data, mll, ml, vectors, embed_size,
     final_results = np.array(results).mean(axis=0)
     mll_print_metric_dict(final_results, ind=False)
     mll_final_results_output(final_results, out_dir, ind=False)  # 将指标写入文件
-    mll_prob_output(labels, predicted_labels, predicted_prob, out_dir, need_md=need_marginal_data)  # 将标签对应概率写入文件
+    mll_prob_output(labels, predicted_labels, predicted_prob, out_dir)  # 将标签对应概率写入文件
 
 
 def do_dl_fit_predict(mll, ml, mll_clf, x_train, y_train, train_length, max_len, x_val, test_length, *lp_args):
@@ -237,7 +237,7 @@ def dl_ind_process(ml, vectors, labels, seq_length_list, ind_vectors, ind_labels
     prob_output(final_target_list, final_predict_list, final_prob_list, out_dir)
 
 
-def mll_dl_ind_process(need_marginal_data, mll, ml, vectors, labels, fixed_seq_len_list,
+def mll_dl_ind_process(mll, ml, vectors, labels, fixed_seq_len_list,
                        ind_vectors, ind_label_array, ind_fixed_seq_len_list,
                        embed_size, max_len, out_dir, params_dict):
     """
@@ -273,5 +273,4 @@ def mll_dl_ind_process(need_marginal_data, mll, ml, vectors, labels, fixed_seq_l
 
     mll_print_metric_dict(final_result, ind=True)  # to console
     mll_final_results_output(final_result, out_dir, ind=True)  # to file
-    mll_prob_output(ind_label_array, final_predict_list, final_prob_list,
-                    out_dir, ind=True, need_md=need_marginal_data)  # to file
+    mll_prob_output(ind_label_array, final_predict_list, final_prob_list, out_dir, ind=True)  # to file

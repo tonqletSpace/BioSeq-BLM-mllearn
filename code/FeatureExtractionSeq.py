@@ -163,10 +163,7 @@ def mll_one_seq_fe_process(args, input_one_file, labels, vec_files, **params_dic
     print_fe_dict(params_dict)  # 输出特征提取参数详细信息
 
     # data长度，复用blm对二分类的特征提取
-    if not args.need_marginal_data:
-        sample_num_list = [labels.get_shape()[0]]
-    else:
-        sample_num_list = [labels.get_shape()[0] - 2]
+    sample_num_list = [labels.get_shape()[0]]
 
     if args.mode == 'OHE':
         from FeatureExtractionMode.OHE.OHE4vec import ohe2seq_vec, ohe2seq_mat

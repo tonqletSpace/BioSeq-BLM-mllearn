@@ -243,11 +243,9 @@ def prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False):
         print('\n')
 
 
-def mll_prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False, need_md=False):
+def mll_prob_output(true_labels, predicted_labels, prob_list, out_path, ind=False):
     if issparse(true_labels):
         true_labels = true_labels.toarray()
-    if need_md:
-        true_labels = true_labels[:-2]
 
     if issparse(predicted_labels):
         predicted_labels = predicted_labels.toarray()

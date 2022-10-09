@@ -11,7 +11,7 @@ from itertools import count, takewhile, product
 from scipy.sparse import lil_matrix
 from skmultilearn.ext import download_meka
 
-from MachineLearningAlgorithm.utils.utils_math import construct_partition2two, mll_marginal_check
+from MachineLearningAlgorithm.utils.utils_math import construct_partition2two
 
 # Alphabets of DNA, RNA, PROTEIN
 from MachineLearningAlgorithm.utils.utils_mll import is_mll_meka_methods, is_hyper_parameter_mthods, \
@@ -1006,7 +1006,7 @@ def mll_prepare4train_seq(args, label_array, dl):
         args.folds_num = 5
         info_dict['Validation method'] = '5-fold cross validation'
 
-    args.folds = mll_marginal_check(label_array, args)  # 固定交叉验证的每一折index
+    args.folds = construct_partition2two(label_array, args.folds_num)
 
     if dl is False:
         args.metric_index = Mll_Metric_Index[args.metric]
@@ -1127,10 +1127,10 @@ def mll_prepare4train_res(args, label_array, dl):
         info_dict['Validation method'] = '5-fold cross validation'
 
     if dl is False:
-        args.folds = mll_marginal_check(label_array, args)  # 固定交叉验证的每一折index
+        args.folds = construct_partition2two(label_array, args.folds_num)  # 固定交叉验证的每一折index
     else:
         label_array = random.normal(loc=0.0, scale=1, size=(len(label_array)))
-        args.folds = mll_marginal_check(label_array, args, False)  # 固定交叉验证的每一折index
+        args.folds = construct_partition2two(label_array, args.folds_num, False)  # 固定交叉验证的每一折index
 
     args.metric_index = Mll_Metric_Index[args.metric]
     info_dict['Metric for selection'] = Metric_dict[args.metric]

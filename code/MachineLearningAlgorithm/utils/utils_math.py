@@ -15,7 +15,6 @@ STOP_TAG = "<STOP>"
 SEED = 42
 
 
-# TODO: 将数据集划分为训练集和测试集
 def construct_partition2two(labels, folds_num, stratified=True):
     # 将数据集划分为n折，并进行保存？ 如果需要进行相似性打分，则数据集划分提前到特征提取！
     from scipy.sparse import lil_matrix
@@ -38,22 +37,6 @@ def construct_partition2two(labels, folds_num, stratified=True):
 
         folds.append((train_index, test_index))
     return folds
-
-
-def mll_marginal_check(label_matrix, args, stratified=True):
-    if args.need_marginal_data:
-        raw_folds = construct_partition2two(label_matrix[:-2], args.folds_num, stratified)
-        n = label_matrix.get_shape()[0]  # （N, E)
-
-        folds = []
-        for i in range(args.folds_num):
-            test_index = raw_folds[i][1]
-            train_index = np.append(raw_folds[i][0], [n - 2, n - 1])  # marginal_data index
-            folds.append((train_index, test_index))  # (fd_i_train + 2, fd_i_test)
-
-        return folds
-    else:
-        return construct_partition2two(label_matrix, args.folds_num, stratified)
 
 
 def sampling(mode, x_train, y_train):

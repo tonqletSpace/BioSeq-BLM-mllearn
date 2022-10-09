@@ -79,13 +79,13 @@ python BioSeq-BLM_Res_mllearn.py -category Protein -method BLOSUM62 -mll RAkELd 
 
 # Adaptation
 # MLkNN
-python BioSeq-BLM_Res_mllearn.py -category Protein -method BLOSUM62 -mll MLkNN -mll_k 3 5 -mll_s 0.6 0.8 0.1 -mll_ifn 2 5 2 -window 3 -seq_file ../data/dev/mll_protein_seq.txt -label_file ../data/dev/mll_protein_label.txt -metric F1 -fixed_len 500 -ind_seq_file ../data/dev/mll_protein_seq.txt -ind_label_file ../data/dev/mll_protein_label.txt
+python BioSeq-BLM_Res_mllearn.py -category Protein -method BLOSUM62 -mll MLkNN -mll_k 5 -mll_s 0.8 -mll_ifn 2 5 2 -window 3 -seq_file ../data/dev/mll_protein_seq.txt -label_file ../data/dev/mll_protein_label.txt -metric F1 -fixed_len 500 -ind_seq_file ../data/dev/mll_protein_seq.txt -ind_label_file ../data/dev/mll_protein_label.txt
 
 # BRkNNaClassifier
 python BioSeq-BLM_Res_mllearn.py -category Protein -method BLOSUM62 -mll BRkNNaClassifier -mll_k 2 -window 3 -seq_file ../data/dev/mll_protein_seq.txt -label_file ../data/dev/mll_protein_label.txt -metric F1 -fixed_len 500 -ind_seq_file ../data/dev/mll_protein_seq.txt -ind_label_file ../data/dev/mll_protein_label.txt
 
 # BRkNNbClassifier
-python BioSeq-BLM_Res_mllearn.py -category Protein -method BLOSUM62 -mll BRkNNbClassifier -mll_k 2 6 2 -window 3 -seq_file ../data/dev/mll_protein_seq.txt -label_file ../data/dev/mll_protein_label.txt -metric F1 -fixed_len 500 -ind_seq_file ../data/dev/mll_protein_seq.txt -ind_label_file ../data/dev/mll_protein_label.txt
+python BioSeq-BLM_Res_mllearn.py -category Protein -method BLOSUM62 -mll BRkNNbClassifier -mll_k 2 6 3 -window 3 -seq_file ../data/dev/mll_protein_seq.txt -label_file ../data/dev/mll_protein_label.txt -metric F1 -fixed_len 500 -ind_seq_file ../data/dev/mll_protein_seq.txt -ind_label_file ../data/dev/mll_protein_label.txt
 
 # MLARAM
 python BioSeq-BLM_Res_mllearn.py -category Protein -method BLOSUM62 -mll MLARAM -window 3 -seq_file ../data/dev/mll_protein_seq.txt -label_file ../data/dev/mll_protein_label.txt -metric F1 -fixed_len 500 -ind_seq_file ../data/dev/mll_protein_seq.txt -ind_label_file ../data/dev/mll_protein_label.txt

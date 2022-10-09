@@ -774,17 +774,12 @@ def get_mll_model_path(mll, ml, out_dir, params_dict):
     return model_path
 
 
-# TODO ? need_marginal_data
-def mll_generate_predictions(labels_shape, need_marginal_data):
+def mll_generate_predictions(labels_shape):
     """
     :param labels_shape: (N, q) of data
-    :param need_marginal_data:
-    :return: empty_labels and empty_probability removing marginal_data
+    :return:
     """
-    if need_marginal_data:
-        # data and labels are appended with marginal_data and marginal_labels
-        # whose dimensions are (N+2, E) and (N+2, q).
-        labels_shape = (labels_shape[0]-2, labels_shape[1])
+
     predicted_labels = np.zeros(labels_shape, dtype=np.int32)  # (N, q)
     predicted_prob = np.zeros(labels_shape)  # (N, q)
     return predicted_labels, predicted_prob

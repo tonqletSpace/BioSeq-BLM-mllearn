@@ -80,7 +80,7 @@ def ml_results(args, vectors, labels, folds, vec_files, params_selected):
 
 
 def mll_ml_results(args, vectors, labels, folds, params_selected):
-    model_path = mll_ml_cv_results(args.need_marginal_data, args.mll, args.ml, vectors, labels, folds, args.results_dir, params_selected)
+    model_path = mll_ml_cv_results(args.mll, args.ml, vectors, labels, folds, args.results_dir, params_selected)
     return model_path
 
 
@@ -95,8 +95,8 @@ def ind_ml_results(args, vectors, labels, ind_vectors, ind_labels, params_select
 
 
 def mll_ind_ml_results(args, ind_vectors, ind_labels, model_path, params_selected):
-    mll_ml_ind_results(args.need_marginal_data, args.mll, args.ml, ind_vectors,
-                       ind_labels, model_path, args.results_dir, params_selected)
+    mll_ml_ind_results(args.mll, args.ml, ind_vectors, ind_labels, model_path,
+                       args.results_dir, params_selected)
 
 
 def mll_seq_ind_ml_fe_process(args, vectors, labels, model_path, params_selected):
@@ -156,7 +156,7 @@ def mll_seq_ind_dl_fe_process(args, vectors, embed_size, labels, fixed_seq_len_l
     ind_vectors, embed_size, ind_fixed_seq_len_list = mll_read_dl_vec4seq(args, fixed_len, ind_out_files)
 
     # 为独立测试构建深度学习分类器
-    mll_dl_ind_process(args.need_marginal_data, args.mll, args.ml, vectors, labels, fixed_seq_len_list,
+    mll_dl_ind_process(args.mll, args.ml, vectors, labels, fixed_seq_len_list,
                        ind_vectors, ind_label_array, ind_fixed_seq_len_list,
                        embed_size, fixed_len, args.results_dir, params_dict)
 

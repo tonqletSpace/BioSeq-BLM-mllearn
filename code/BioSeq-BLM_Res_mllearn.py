@@ -37,7 +37,7 @@ def mll_res_dl_fe_process(args, label_array, out_files):
         args = mll_prepare4train_seq(args, label_array, dl=True)
         # 构建深度学习分类器
         # fixed_len为args.window所替代
-        mll_dl_cv_process(args.need_marginal_data, args.mll, args.ml, vectors, embed_size,
+        mll_dl_cv_process(args.mll, args.ml, vectors, embed_size,
                           label_array, fixed_seq_len_list, args.window,
                           args.folds, args.results_dir, args.params_dict_list)
     else:
@@ -101,8 +101,7 @@ def mll_res_ind_dl_fe_process(args, vectors, label_array, fixed_seq_len_list, fi
     # fixed_len为args.window所替代, 问题转化
     ind_vectors, embed_size, ind_fixed_seq_len_list = mll_read_dl_data4res(args, ind_vectors, args.window)
 
-    mll_dl_ind_process(args.need_marginal_data, args.mll, args.ml,
-                       vectors, label_array, fixed_seq_len_list,
+    mll_dl_ind_process(args.mll, args.ml, vectors, label_array, fixed_seq_len_list,
                        ind_vectors, ind_label_array, ind_fixed_seq_len_list,
                        embed_size, fixed_len, args.results_dir, params_dict)
     print('########################## Independent Test Finish ##########################\n')
@@ -126,8 +125,8 @@ def mll_res_ind_ml_fe_process(args, model_path, params_selected):
     #     print(' Shape of Ind Feature vectors after FA process: [%d, %d] '.center(66, '*') % (ind_vectors.shape[0],
     #                                                                                          ind_vectors.shape[1]))
     # 构建独立测试集的分类器
-    mll_ml_ind_results(args.need_marginal_data, args.mll, args.ml,
-                       ind_vectors, ind_label_array, model_path, args.results_dir, params_selected)
+    mll_ml_ind_results(args.mll, args.ml, ind_vectors, ind_label_array,
+                       model_path, args.results_dir, params_selected)
     print('########################## Independent Test Finish ##########################\n')
 
 
@@ -158,9 +157,7 @@ def mll_generate_res_label_data(args, is_ind=False):
 
     # 控制序列的固定长度(只需要在benchmark dataset上操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
-    # label_array, args.need_marginal_data = mll_gen_label_matrix(res_label_list, args.mll, False if is_ind else True)
     label_array = mll_gen_label_matrix(res_label_list)
-    args.need_marginal_data = False
 
     return label_array
 
