@@ -10,7 +10,8 @@ from skmultilearn.ext import Meka, download_meka
 from scipy.sparse import lil_matrix, issparse
 
 from .dl_machine import do_ml_fit_predict
-from ..utils.utils_mll import BLMRAkELo, BLMMeka, mll_sparse_check, get_mll_ml_model, mll_hyper_param_show
+from ..utils.utils_mll import BLMRAkELo, BLMMeka, mll_sparse_check, get_mll_ml_model, mll_hyper_param_show, \
+    mll_check_one_class
 from ..utils.utils_results import mll_performance
 
 from warnings import simplefilter
@@ -27,8 +28,10 @@ def mll_ml_cv_process(mll, ml, vectors, labels, folds, metric, params_dict):
     for train_index, val_index in folds:
         x_train, y_train, x_val, y_val = mll_sparse_check(mll, *get_partition(vectors, labels, train_index, val_index))
 
+        x_train_ma, y_train_ma, _ = mll_check_one_class(mll, x_train, y_train)
+
         clf = get_mll_ml_model(mll, ml, params_dict)
-        y_val_ = do_ml_fit_predict(mll, ml, clf, x_train, y_train, x_val, params_dict)
+        y_val_ = do_ml_fit_predict(mll, ml, clf, x_train_ma, y_train_ma, x_val, params_dict)
 
         result = mll_performance(y_val, y_val_)
         results.append(result)

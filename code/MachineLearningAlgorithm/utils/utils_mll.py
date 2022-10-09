@@ -788,3 +788,54 @@ def mll_generate_predictions(labels_shape, need_marginal_data):
     predicted_labels = np.zeros(labels_shape, dtype=np.int32)  # (N, q)
     predicted_prob = np.zeros(labels_shape)  # (N, q)
     return predicted_labels, predicted_prob
+
+
+def mll_check_one_class(mll, data, labels, masks=None):
+    """
+    For a binary classification, the number of classes has to be greater than one.
+
+    :param mll: only binary methods needs
+    :param data: whole data for one fitting step
+    :param labels: whole labels of shape [N, q] for one fitting step
+    :param masks: whole data_mask for one fitting step, only used for transformer-like methods
+    :return: data, label and masks with margin augmentation
+    """
+    need_ma = False  # need margin augmentation
+    if mll in ['BR', 'CC']:
+        need_ma = True
+
+    ls = True if issparse(labels) else False
+    ds = True if issparse(data) else False
+    label_array = labels.toarray() if ls else labels
+
+    tot = 0  # count the total assignment over labels
+    q = label_array.shape[1]
+    for j in range(q):
+        bif = -1  # binary_indicator_flag with -1 as no assignment
+        for instance in label_array:
+            if bif == -1:
+                bif = instance[j]  # assigned with 0 or 1
+            elif bif != instance[j]:
+                bif = 2  # get two assignments
+                break
+
+        if bif != 2:
+            break  # pruning
+        tot += bif
+
+    need_ma = tot != 2 * q and need_ma
+
+    if not need_ma:
+        # print('Not augmented')
+        return data, labels, masks
+    else:
+        # print('Auxiliary labels and data are provided for mll training task.')
+        data_array = data.toarray() if ds else data
+        data_array = np.vstack((data_array, np.zeros((2, data_array.shape[1]), dtype=np.float32)))
+        label_array = np.vstack([label_array, np.ones(q, np.int32), np.zeros(q, np.int32)])
+        masks_ma = np.append(masks, [masks[-1], masks[-1]]) if masks is not None else None
+
+        data_ma = lil_matrix(data_array) if ds else data_array
+        label_ma = lil_matrix(label_array) if ls else label_array
+
+        return data_ma, label_ma, masks_ma

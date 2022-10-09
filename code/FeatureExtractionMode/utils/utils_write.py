@@ -3,6 +3,7 @@ import shutil
 import sys
 
 import numpy as np
+from scipy.sparse import issparse, lil_matrix
 
 from ..utils.utils_const import DNA, RNA, PROTEIN
 from ..utils.utils_fasta import get_seqs, mll_get_seqs
@@ -319,7 +320,7 @@ def gen_label_array(sp_num_list, label_list):
 #     return 0
 
 
-def mll_gen_label_matrix(seq_label_list, mll, need_md=True):
+def mll_gen_label_matrix_bkp(seq_label_list, mll, need_md=True):
     """
     Taking marginal data in concern, this function could generate labels for
     cross-validation flow and independent test flow. For marginal data are used
@@ -367,6 +368,22 @@ def mll_gen_label_matrix(seq_label_list, mll, need_md=True):
               'For each dimension of label, as least two distinct samples are needed.')
 
     return lil_matrix(seq_label_matrix), need_marginal_data
+
+
+# 2022.10.8
+def mll_gen_label_matrix(seq_label_list):
+    seq_label_matrix = []  # (N, q)
+    for label in seq_label_list:
+        row = []
+        for e in label:  # label contains q indication
+            if e == '1':
+                row.append(1)
+            else:
+                row.append(0)
+        seq_label_matrix.append(row)
+
+    return lil_matrix(seq_label_matrix)  # (N, q)
+
 
 
 def fixed_len_control(seq_len_list, fixed_len):

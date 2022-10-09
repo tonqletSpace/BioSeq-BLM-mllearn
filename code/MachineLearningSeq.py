@@ -106,8 +106,10 @@ def mll_seq_ind_ml_fe_process(args, vectors, labels, model_path, params_selected
     # 统计独立测试集样本数目和序列长度
     seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.ind_seq_file, ind_input_one_file)
     # 生成标签矩阵
-    ind_label_array, args.need_marginal_data = mll_gen_label_matrix(
-        seq_label_list, args.mll, need_md=False)  # no training in independent test flow
+    ind_label_array = mll_gen_label_matrix(seq_label_list)
+    # ind_label_array, args.need_marginal_data = mll_gen_label_matrix(
+    #     seq_label_list, args.mll, need_md=False)  # no training in independent test flow
+
     # 控制序列的固定长度(只需要操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
 
@@ -139,7 +141,8 @@ def mll_seq_ind_dl_fe_process(args, vectors, embed_size, labels, fixed_seq_len_l
     ind_seq_len_list, ind_seq_label_list = mll_seq_file2one(args.category, args.ind_seq_file, ind_input_one_file)
 
     # 生成独立测试集标签数组
-    ind_label_array, args.need_marginal_data = mll_gen_label_matrix(ind_seq_label_list, args.mll, need_md=False)
+    # ind_label_array, args.need_marginal_data = mll_gen_label_matrix(ind_seq_label_list, args.mll, need_md=False)
+    ind_label_array = mll_gen_label_matrix(ind_seq_label_list)
 
     mll_ensemble_check(ind_label_array.shape[1], params_dict)
 

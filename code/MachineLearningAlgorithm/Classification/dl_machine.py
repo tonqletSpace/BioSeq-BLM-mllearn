@@ -18,7 +18,7 @@ from ..utils.utils_results import performance, final_results_output, prob_output
     mll_final_results_output, mll_prob_output, mll_print_metric_dict
 from ..utils.utils_mll import BLMLabelPowerset, MllDeepNetSeq, get_mll_deep_model, get_lp_num_class, \
     mll_result_sparse_check, Mll_ENSEMBLE_Methods, is_mll_ensemble_methods, mll_hyper_param_show, \
-    mll_generate_predictions
+    mll_generate_predictions, mll_check_one_class
 
 
 def get_partition(feature, target, length, train_index, val_index):
@@ -113,13 +113,16 @@ def mll_dl_cv_process(need_marginal_data, mll, ml, vectors, embed_size,
     for train_index, val_index in folds:
         x_train, x_val, y_train, y_val, train_length, test_length = get_partition(
             vectors, labels, seq_length_list, train_index, val_index)
-        num_class = get_output_space_dim(y_train, mll, params_dict)
+
+        x_train_ma, y_train_ma, train_length_ma = mll_check_one_class(mll, x_train, y_train, train_length)
+
+        num_class = get_output_space_dim(y_train_ma, mll, params_dict)
         lp_args = ml, max_len, embed_size, params_dict
         mll_clf = get_mll_deep_model(num_class, mll, *lp_args)
 
         # blm是每个epoch都测试，选最好的测试结果；这里用fit后的结果来预测
         final_predict_list, final_prob_list = do_dl_fit_predict(
-            mll, ml, mll_clf, x_train, y_train, train_length,
+            mll, ml, mll_clf, x_train_ma, y_train_ma, train_length_ma,
             max_len, x_val, test_length, 'LP', *lp_args)
 
         result = mll_performance(y_val, final_predict_list)
@@ -253,10 +256,13 @@ def mll_dl_ind_process(need_marginal_data, mll, ml, vectors, labels, fixed_seq_l
 
     range_list = list(range(len(vectors)))
     random.shuffle(range_list)
-    vectors, labels, train_length = vectors[range_list], labels[range_list], fixed_seq_len_list[range_list]
+
+    # vectors, labels, train_length = vectors[range_list], labels[range_list], fixed_seq_len_list[range_list]
+    x_train_ma, y_train_ma, train_length_ma = mll_check_one_class(
+        mll, vectors[range_list], labels[range_list], fixed_seq_len_list[range_list])
 
     fitting_args = 'LP', ml, max_len, embed_size, params_dict  # LP is default base mll method of ensemble algorithm
-    mll_clf = do_dl_fit(mll, ml, mll_clf, vectors, labels, train_length, max_len, *fitting_args)
+    mll_clf = do_dl_fit(mll, ml, mll_clf, x_train_ma, y_train_ma, train_length_ma, max_len, *fitting_args)
     final_predict_list, final_prob_list = do_dl_predict(mll, ml, mll_clf, max_len, ind_vectors, ind_fixed_seq_len_list)
 
     # print(vectors.shape, labels.shape)

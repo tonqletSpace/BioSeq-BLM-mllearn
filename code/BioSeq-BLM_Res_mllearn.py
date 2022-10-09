@@ -158,7 +158,9 @@ def mll_generate_res_label_data(args, is_ind=False):
 
     # 控制序列的固定长度(只需要在benchmark dataset上操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
-    label_array, args.need_marginal_data = mll_gen_label_matrix(res_label_list, args.mll, False if is_ind else True)
+    # label_array, args.need_marginal_data = mll_gen_label_matrix(res_label_list, args.mll, False if is_ind else True)
+    label_array = mll_gen_label_matrix(res_label_list)
+    args.need_marginal_data = False
 
     return label_array
 
@@ -216,8 +218,8 @@ def main(args):
         mll_params_check(args, all_params_list_dict)
         args.params_dict_list = make_params_dicts(all_params_list_dict)
 
-    print('all_params_list_dict', all_params_list_dict)
-    print('args.params_dict_list', args.params_dict_list)
+    # print('all_params_list_dict', all_params_list_dict)
+    # print('args.params_dict_list', args.params_dict_list)
 
     fea_file = args.results_dir + 'res_features.txt'
     out_files = mll_dump_res_data2file(args, fea_file)

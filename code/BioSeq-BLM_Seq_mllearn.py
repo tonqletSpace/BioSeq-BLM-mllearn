@@ -46,7 +46,10 @@ def mll_ml_fe_process(args):
     # 统计样本数目和序列长度
     seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
     # 生成标签矩阵
-    label_array, args.need_marginal_data = mll_gen_label_matrix(seq_label_list, args.mll)
+    label_array = mll_gen_label_matrix(seq_label_list)
+    # label_array, args.need_marginal_data = mll_gen_label_matrix(seq_label_list, args.mll)
+    args.need_marginal_data = False
+
     # 控制序列的固定长度(只需要操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
 
@@ -138,7 +141,9 @@ def mll_dl_fe_process(args):
     # 统计样本数目和序列长度
     seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
     # 生成标签数组
-    label_array, args.need_marginal_data = mll_gen_label_matrix(seq_label_list, args.mll)
+    # label_array, args.need_marginal_data = mll_gen_label_matrix(seq_label_list, args.mll)
+    label_array = mll_gen_label_matrix(seq_label_list)
+    args.need_marginal_data = False
 
     # 控制序列的固定长度(仅仅需要在基准数据集上操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
