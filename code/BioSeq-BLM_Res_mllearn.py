@@ -7,7 +7,7 @@ from CheckAll import check_contain_chinese, ml_params_check, make_params_dicts, 
     Method_Res, mll_prepare4train_res, \
     mll_prepare4train_seq, mode_params_check, mll_seq_sys_check, mll_params_check, mll_ensemble_check, \
     mll_params_select
-from FeatureAnalysis import fa_process
+from FeatureAnalysis import fa_process, mll_fa_process
 from FeatureExtractionMode.OHE.OHE4vec import ohe2res_base, \
     mll_sliding_win2files
 from FeatureExtractionMode.utils.utils_write import fixed_len_control, mll_gen_label_matrix, \
@@ -80,10 +80,10 @@ def mll_res_ml_fe_process(args, label_array, out_files):
     # 特征分析
     print(' Shape of Feature vectors: [%d, %d] '.center(66, '*') % (vectors.shape[0], vectors.shape[1]))
     print('\n')
-    # if args.score == 'none':
-    #     vectors = fa_process(args, vectors, label_array, after_ps=True)
-    #     print(' Shape of Feature vectors after FA process: [%d, %d] '.center(66, '*') % (vectors.shape[0],
-    #                                                                                      vectors.shape[1]))
+    if args.score == 'none':
+        vectors = mll_fa_process(args, vectors, label_array, after_ps=True, ind=False)
+        print(' Shape of Feature vectors after FA process: [%d, %d] '.center(66, '*') % (vectors.shape[0],
+                                                                                         vectors.shape[1]))
 
     # 构建分类器
     model_path = mll_ml_results(args, vectors, label_array, args.folds, params_selected)
@@ -120,10 +120,10 @@ def mll_res_ind_ml_fe_process(args, model_path, params_selected):
     # 独立测试集特征分析
     print(' Shape of Ind Feature vectors: [%d, %d] '.center(66, '*') % (ind_vectors.shape[0], ind_vectors.shape[1]))
     print('\n')
-    # if args.score == 'none':
-    #     ind_vectors = fa_process(args, ind_vectors, ind_label_array, True, True)
-    #     print(' Shape of Ind Feature vectors after FA process: [%d, %d] '.center(66, '*') % (ind_vectors.shape[0],
-    #                                                                                          ind_vectors.shape[1]))
+    if args.score == 'none':
+        ind_vectors = mll_fa_process(args, ind_vectors, ind_label_array, True, True)
+        print(' Shape of Ind Feature vectors after FA process: [%d, %d] '.center(66, '*') % (ind_vectors.shape[0],
+                                                                                             ind_vectors.shape[1]))
     # 构建独立测试集的分类器
     mll_ml_ind_results(args.mll, args.ml, ind_vectors, ind_label_array,
                        model_path, args.results_dir, params_selected)

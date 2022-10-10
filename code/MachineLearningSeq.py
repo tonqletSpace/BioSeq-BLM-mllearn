@@ -14,7 +14,6 @@ from MachineLearningAlgorithm.utils.utils_read import files2vectors_info, seq_la
 from SemanticSimilarity import ind_score_process
 from MachineLearningAlgorithm.Classification.mll_machine import mll_ml_cv_process
 from FeatureExtractionSeq import mll_one_seq_fe_process
-
 from FeatureAnalysis import mll_fa_process
 
 

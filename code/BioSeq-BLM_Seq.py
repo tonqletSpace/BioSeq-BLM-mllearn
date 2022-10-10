@@ -58,8 +58,6 @@ def ml_fe_process(args):
     params_list_dict, all_params_list_dict = mode_params_check(args, all_params_list_dict)
     # 列表字典 ---> 字典列表
     params_dict_list = make_params_dicts(all_params_list_dict)
-    # print(params_dict_list)
-    # exit()
     # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
     args = prepare4train_seq(args, label_array, dl=False)
 
@@ -82,7 +80,6 @@ def ml_fe_process(args):
 
     pool.close()
     pool.join()
-    # exit()
     # 根据指标进行参数选择
     params_selected = params_select(params_dict_list_pro, args.results_dir)
     # 将最优的特征向量文件从"all_fea_files/"文件夹下复制到主文件下
@@ -156,13 +153,6 @@ def dl_fe_process(args):
     # 生成标签数组
     label_array = gen_label_array(sp_num_list, args.label)
 
-    # print(sp_num_list)
-    # print(len(seq_len_list))
-    # print(seq_len_list[:10])
-    # print(len(label_array))
-    # print(label_array[:10])
-    # exit()
-
     # 控制序列的固定长度(仅仅需要在基准数据集上操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
 
@@ -176,19 +166,11 @@ def dl_fe_process(args):
     # 特征向量文件命名
     out_files = out_dl_seq_file(args.label, args.results_dir, ind=False)
 
-    # print(all_params_list_dict)
-    # print(params_dict)
-    # print(out_files)
-    # exit()
     # 深度特征向量提取
     one_seq_fe_process(args, input_one_file, label_array, out_files, sp_num_list, False, **params_dict)
     # 获取深度特征向量
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
     vectors, fixed_seq_len_list = read_dl_vec4seq(args.fixed_len, out_files, return_sp=False)
-
-    # print(vectors.shape)
-    # print(fixed_seq_len_list)
-    # exit()
 
     # 深度学习的独立测试和交叉验证分开
     if args.ind_seq_file is None:
