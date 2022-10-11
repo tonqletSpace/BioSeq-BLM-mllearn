@@ -31,7 +31,6 @@ def create_results_dir(args, cur_dir):
     return results_dir
 
 
-# TODO 去掉print
 def res_cl_fe_process(args, fragment):
     # ** 残基层面特征提取和标签数组生成开始 ** #
     # 为存储SVM和RF输入特征的文件命名
@@ -39,43 +38,19 @@ def res_cl_fe_process(args, fragment):
     # 读取base特征文件, 待写入
     vectors_list = read_base_vec_list4res(args.fea_file)
 
-    print("vectors_list", len(vectors_list))
-    print("vectors_list L", len(vectors_list[0]), len(vectors_list[-1]))
-    print("vectors_list E", len(vectors_list[0][0]), len(vectors_list[-1][0]))
-    print("args.res_labels_list", len(args.res_labels_list))
-    # (N, L', E) L'变长
-    print("args.res_labels_list L", len(args.res_labels_list[0]), len(args.res_labels_list[-1]))
-    print("args.res_labels_list L", args.res_labels_list[0][:3])
-    # exit()
-
     # fragment判断,生成对应的特征向量
     if fragment == 0:
-        print('without fragment')
         assert args.window is not None, "If -fragment is 0, please set window size!"
         # 在fragment=0时,通过滑窗技巧为每个残基生成特征
         sliding_win2files(vectors_list, args.res_labels_list, args.window, args.format, out_files)
     else:
-        print('use fragment')
         # 在fragment=1时, 将每个残基片段的base特征进行flatten
         mat_list2frag_array(vectors_list, args.res_labels_list, args.fixed_len, args.format, out_files)
 
-    print('after sliding window process'.center(100, '*'))
-    print("vectors_list", len(vectors_list))
-    print("vectors_list L", len(vectors_list[0]), len(vectors_list[-1]))
-    print("vectors_list E", len(vectors_list[0][0]), len(vectors_list[-1][0]))
-    print("args.res_labels_list", len(args.res_labels_list))
-    print("args.res_labels_list L", len(args.res_labels_list[0]), len(args.res_labels_list[-1]))
-    print("args.res_labels_list L", args.res_labels_list[0][:3])
-
     # 读取特征向量文件
     vectors, sp_num_list = files2vectors_res(out_files, args.format)
-    print("vectors.shape", vectors.shape)
-    print("sp_num_list", sp_num_list)
-    print("args.label", args.label)
     # 根据不同标签样本数目生成标签数组
     label_array = res_label_read(sp_num_list, args.label)
-    print("label_array", label_array.shape)
-    # exit()
 
     # ** 残基层面特征提取和标签数组生成完毕 ** #
 
@@ -99,8 +74,6 @@ def res_cl_fe_process(args, fragment):
         # break
         params_dict_list_pro.append(pool.apply_async(one_cl_process, (args, vectors, label_array, args.folds,
                                                                       params_dict)))
-        if i == 1:
-            break
 
     pool.close()
     pool.join()
@@ -320,9 +293,6 @@ def main(args):
     # 读取序列文件里每条序列的长度
     seq_len_list = read_res_seq_file(args.seq_file, args.category)
     # 读取标签列表和标签长度列表  res_labels_list --> list[list1, list2,..]
-    # print("seq_len_list", len(seq_len_list))
-    # print("cnt", np.asarray(seq_len_list).sum())
-    # exit()
     args.res_labels_list, label_len_list = read_res_label_file(args.label_file)
     # fragment=0: 判断标签是否有缺失且最短序列长度是否大于5; fragment=1: 判断标签是否唯一
     res_file_check(seq_len_list, label_len_list, args.fragment)
@@ -347,10 +317,6 @@ def main(args):
         # CRF 无需任何参数
         all_params_list_dict = crf_params_check(args, all_params_list_dict)
         args.params_dict_list = make_params_dicts(all_params_list_dict)
-
-    print('all_params_list_dict', all_params_list_dict)
-    print('args.params_dict_list', args.params_dict_list)
-    # exit()
 
     # 所有res特征在基准数据集上的基础输出文件
     args.fea_file = args.results_dir + 'res_features.txt'

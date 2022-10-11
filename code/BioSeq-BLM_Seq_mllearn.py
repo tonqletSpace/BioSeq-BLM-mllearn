@@ -60,8 +60,6 @@ def mll_ml_fe_process(args):
     # 对每个mode的words和method的参数进行检查
     # params_list_dict 为只包括特征提取的参数的字典， all_params_list_dict为包含所有参数的字典
     params_list_dict, all_params_list_dict = mode_params_check(args, all_params_list_dict)
-    # print("all_params_list_dict", all_params_list_dict)
-    # exit()
 
     # 列表字典 ---> 字典列表
     params_dict_list = make_params_dicts(all_params_list_dict)
