@@ -230,8 +230,6 @@ def create_all_seq_file(seq_files, tgt_dir, ind=False):
         return tgt_dir + '/' + 'ind_all_seq_file' + suffix
 
 
-# TODO
-# label_cardinality？？
 def mll_seq_file2one(category, seq_files, out_file, label_cardinality=7, iid=True):
     # 暂时支持单数据文件输入
     if category == 'DNA':
@@ -379,11 +377,11 @@ def out_seq_file(label_list, out_format, results_dir, params_dict, params_list_d
 def mll_out_seq_file(out_format, results_dir, params_dict, params_list_dict):
     # 这里需要注意的是比如params_list_dict = {k: [1, 2, 3], w: [0.7, 0.8], n: [3]}, 则最终的输出文件名只包含k和w
     multi_fea = False
-    # print(params_list_dict)
+    # print("params_list_dict", params_list_dict)
     params_val_list = list(params_list_dict.values())
     for params_val in params_val_list:
         if len(params_val) > 1:
-            multi_fea = True
+            multi_fea = True  # 多个参数选择，产生多个特征，唯一标识它们的方法是进行参数拼接
 
     if multi_fea is False:
         fea_path = results_dir

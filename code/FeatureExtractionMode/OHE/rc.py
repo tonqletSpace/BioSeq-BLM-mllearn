@@ -3,6 +3,7 @@ from ..utils.utils_words import make_km_list
 from ..utils.utils_const import aaList, aaList_DNA, aaList_RNA, aaList_sixbits, aaList_five, aaList_AESNN3, aaList_ncp
 from tqdm import tqdm
 
+
 class ResidueComposition2Vectors(object):
     # TODO: 在模型的初始化函数中定义模型要用到的变量
     def __init__(self, alphabet):
