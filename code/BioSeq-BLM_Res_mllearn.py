@@ -64,8 +64,7 @@ def mll_res_ml_fe_process(args, label_array, out_files):
         params_dict = params_dict_list[i]
         mll_ensemble_check(label_array.shape[1], params_dict)
         mll_meka_check(args, params_dict)
-
-        # TODO vectors 有问题！没有筛选？？？
+        # 只筛选参数，不筛选特征
         params_dict_list_pro.append(pool.apply_async(mll_one_cl_process,
                                                      (args, vectors, label_array, args.folds, params_dict)))
 
@@ -74,7 +73,6 @@ def mll_res_ml_fe_process(args, label_array, out_files):
     # ** 筛选结束 ** #
 
     # 根据指标进行参数选择
-    # TODO 筛选有问题
     params_selected = mll_params_select(params_dict_list_pro, args.results_dir)
 
     # 特征分析
@@ -108,8 +106,6 @@ def mll_res_ind_dl_fe_process(args, vectors, label_array, fixed_seq_len_list, fi
 
 
 def mll_res_ind_ml_fe_process(args, model_path, params_selected):
-    # TODO 为什么不复用？！因为要对独立数据做sliding_window，所以不能复用seq_level的流程
-    # TODO 在全数据集上训练，再在ind数据上预测
     print('########################## Independent Test Begin ##########################\n')
 
     ind_label_array, ind_out_files = mll_res_preprocess(args, is_ind=True)
@@ -136,7 +132,6 @@ def mll_res_preprocess(args, is_ind=False):
 
     # 所有res特征在基准数据集上的基础输出文件
     if not is_ind:
-        # TODO ?? 要加[mll]_csv吗？最开始怎么没有
         args.fea_file = args.results_dir + 'res_features[mll]_csv.txt'
         out_file = args.fea_file
     else:
@@ -214,9 +209,6 @@ def main(args):
         all_params_list_dict = ml_params_check(args, all_params_list_dict)
         mll_params_check(args, all_params_list_dict)
         args.params_dict_list = make_params_dicts(all_params_list_dict)
-
-    # print('all_params_list_dict', all_params_list_dict)
-    # print('args.params_dict_list', args.params_dict_list)
 
     fea_file = args.results_dir + 'res_features.txt'
     out_files = mll_dump_res_data2file(args, fea_file)
