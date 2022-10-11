@@ -60,17 +60,14 @@ def mll_ml_fe_process(args):
     # 对每个mode的words和method的参数进行检查
     # params_list_dict 为只包括特征提取的参数的字典， all_params_list_dict为包含所有参数的字典
     params_list_dict, all_params_list_dict = mode_params_check(args, all_params_list_dict)
-    print("all_params_list_dict", all_params_list_dict)
+    # print("all_params_list_dict", all_params_list_dict)
+    # exit()
 
     # 列表字典 ---> 字典列表
     params_dict_list = make_params_dicts(all_params_list_dict)
-    print("params_dict_list", params_dict_list)
 
     # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
     args.fold = mll_prepare4train_seq(args, label_array, dl=False)
-
-    # 指定分析层面
-    args.res = False
 
     # 多进程计算
     pool = multiprocessing.Pool(args.cpu)
@@ -78,15 +75,15 @@ def mll_ml_fe_process(args):
     print('\n')
     print('Parameter Selection Processing...')
     print('\n')
+
     for i in range(len(params_dict_list)):
         params_dict = params_dict_list[i]
         mll_ensemble_check(label_array.shape[1], params_dict)
         mll_meka_check(args, params_dict)
         # 生成特征向量文件名
-        # TODO 这里不对！vec_files应当由参数组合而成，且保证唯一，这样才起到筛选的作用！
-        # TODO 修正res流程？
-        vec_files = mll_out_seq_file(args.format, args.results_dir, params_dict, params_list_dict)
+        vec_files = mll_out_seq_file(args.format, args.results_dir, params_dict, all_params_list_dict)
         params_dict['out_files'] = vec_files
+
         params_dict_list_pro.append(pool.apply_async(
             mll_one_ml_fe_process, (args, input_one_file, label_array, vec_files, args.folds, params_dict)))
 
@@ -117,8 +114,8 @@ def mll_ml_fe_process(args):
 
 # 参数选择
 def mll_one_ml_fe_process(args, input_one_file, labels, vec_files, folds, params_dict):
+    print('  process begin  '.center(66, '+'))
     # 特征提取
-    # args.res = False
     mll_one_seq_fe_process(args, input_one_file, labels, vec_files, **params_dict)
     # 获取特征向量
     vectors = mll_files2vectors_seq(args, vec_files, args.format)
@@ -129,6 +126,8 @@ def mll_one_ml_fe_process(args, input_one_file, labels, vec_files, folds, params
         print(' Shape of Feature vectors after FA process: [%d, %d] '.center(66, '*') % (vectors.shape[0],
                                                                                          vectors.shape[1]))
     params_dict = mll_one_ml_process(args, vectors, labels, folds, params_dict)
+    print('  process end  '.center(66, '-'))
+    print('\n')
 
     return params_dict
 
