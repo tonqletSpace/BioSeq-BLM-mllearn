@@ -71,7 +71,8 @@ def ml_fe_process(args):
     for i in range(len(params_dict_list)):
         params_dict = params_dict_list[i]
         # 生成特征向量文件名
-        vec_files = out_seq_file(args.label, args.format, args.results_dir, params_dict, params_list_dict)
+        # bug fixed
+        vec_files = out_seq_file(args.label, args.format, args.results_dir, params_dict, all_params_list_dict)
         params_dict['out_files'] = vec_files
         # 注意多进程计算的debug
         # one_ml_fe_process(args, input_one_file, label_array, vec_files, sp_num_list, args.folds, **params_dict)
