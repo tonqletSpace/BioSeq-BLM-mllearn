@@ -9,7 +9,7 @@ from CheckAll import Method_One_Hot_Enc, Feature_Extract_Mode, check_contain_chi
 from FeatureAnalysis import fa_process, mll_fa_process
 from FeatureExtractionMode.utils.utils_write import seq_file2one, gen_label_array, out_seq_file, out_ind_file, \
     opt_file_copy, out_dl_seq_file, create_all_seq_file, fixed_len_control, mll_seq_file2one, mll_gen_label_matrix, \
-    mll_out_seq_file, mll_out_ind_file, mll_out_dl_seq_file
+    mll_out_seq_file, mll_out_ind_file, mll_out_dl_seq_file, mll_gen_label_matrix_from_csv_file
 from FeatureExtractionSeq import one_seq_fe_process, mll_one_seq_fe_process
 from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process, dl_ind_process, mll_dl_cv_process, \
     mll_dl_ind_process
@@ -44,9 +44,10 @@ def mll_ml_fe_process(args):
     # 合并序列文件
     input_one_file = create_all_seq_file(args.seq_file, args.results_dir)
     # 统计样本数目和序列长度
-    seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
+    seq_len_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
     # 生成标签矩阵
-    label_array = mll_gen_label_matrix(seq_label_list)
+    # label_array = mll_gen_label_matrix(seq_label_list)
+    label_array = mll_gen_label_matrix_from_csv_file(args.label_file, is_seq_mode=True)
 
     # 控制序列的固定长度(只需要操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
@@ -134,9 +135,9 @@ def mll_dl_fe_process(args):
     # 合并序列文件
     input_one_file = create_all_seq_file(args.seq_file, args.results_dir)
     # 统计样本数目和序列长度
-    seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
+    seq_len_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
     # 生成标签数组
-    label_array = mll_gen_label_matrix(seq_label_list)
+    label_array = mll_gen_label_matrix_from_csv_file(args.label_file, is_seq_mode=True)
 
     # 控制序列的固定长度(仅仅需要在基准数据集上操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
@@ -386,7 +387,9 @@ if __name__ == '__main__':
     # ----------------------- parameters for input and output ---------------------- #
     # parameters for input
     parse.add_argument('-seq_file', nargs='*', required=True, help="The input files in FASTA format.")
+    parse.add_argument('-label_file', required=True, help="The corresponding label file.")
     parse.add_argument('-ind_seq_file', nargs='*', help="The input independent test files in FASTA format.")
+    parse.add_argument('-ind_label_file', help="The corresponding label file of independent test dataset.")
 
     parse.add_argument('-fixed_len', type=int,
                        help="The length of sequence will be fixed via cutting or padding. If you don't set "

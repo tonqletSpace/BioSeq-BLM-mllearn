@@ -5,7 +5,8 @@ import time
 from CheckAll import ml_params_check, dl_params_check, make_params_dicts, Classification, DeepLearning, \
     Method_Semantic_Similarity, prepare4train_seq, mll_ensemble_check
 from FeatureExtractionMode.utils.utils_write import opt_params2file, gen_label_array, fixed_len_control, \
-    create_all_seq_file, mll_seq_file2one, mll_gen_label_matrix, mll_out_ind_file, mll_out_dl_seq_file
+    create_all_seq_file, mll_seq_file2one, mll_gen_label_matrix, mll_out_ind_file, mll_out_dl_seq_file, \
+    mll_gen_label_matrix_from_csv_file
 from MachineLearningAlgorithm.Classification.dl_machine import dl_cv_process, dl_ind_process, mll_dl_ind_process
 from MachineLearningAlgorithm.Classification.ml_machine import ml_cv_process, ml_cv_results, ml_ind_results, \
     ml_score_cv_process, ml_score_cv_results, ml_score_ind_results, mll_ml_cv_results, mll_ml_ind_results
@@ -103,11 +104,9 @@ def mll_seq_ind_ml_fe_process(args, vectors, labels, model_path, params_selected
     # 合并独立测试集序列文件
     ind_input_one_file = create_all_seq_file(args.ind_seq_file, args.results_dir, ind=True)
     # 统计独立测试集样本数目和序列长度
-    seq_len_list, seq_label_list = mll_seq_file2one(args.category, args.ind_seq_file, ind_input_one_file)
+    seq_len_list = mll_seq_file2one(args.category, args.ind_seq_file, ind_input_one_file)
     # 生成标签矩阵
-    ind_label_array = mll_gen_label_matrix(seq_label_list)
-    # ind_label_array, args.need_marginal_data = mll_gen_label_matrix(
-    #     seq_label_list, args.mll, need_md=False)  # no training in independent test flow
+    ind_label_array = mll_gen_label_matrix_from_csv_file(args.ind_label_file, is_seq_mode=True)
 
     # 控制序列的固定长度(只需要操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
@@ -137,11 +136,10 @@ def mll_seq_ind_dl_fe_process(args, vectors, embed_size, labels, fixed_seq_len_l
     ind_input_one_file = create_all_seq_file(args.ind_seq_file, args.results_dir, ind=True)
     # 统计独立测试集样本数目和序列长度
 
-    ind_seq_len_list, ind_seq_label_list = mll_seq_file2one(args.category, args.ind_seq_file, ind_input_one_file)
+    ind_seq_len_list = mll_seq_file2one(args.category, args.ind_seq_file, ind_input_one_file)
 
     # 生成独立测试集标签数组
-    # ind_label_array, args.need_marginal_data = mll_gen_label_matrix(ind_seq_label_list, args.mll, need_md=False)
-    ind_label_array = mll_gen_label_matrix(ind_seq_label_list)
+    ind_label_array = mll_gen_label_matrix_from_csv_file(args.ind_label_file, is_seq_mode=True)
 
     mll_ensemble_check(ind_label_array.shape[1], params_dict)
 

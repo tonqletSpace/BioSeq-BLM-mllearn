@@ -11,7 +11,7 @@ from FeatureAnalysis import fa_process, mll_fa_process
 from FeatureExtractionMode.OHE.OHE4vec import ohe2res_base, \
     mll_sliding_win2files
 from FeatureExtractionMode.utils.utils_write import fixed_len_control, mll_gen_label_matrix, \
-    mll_read_res_seq_file, mll_out_res_file
+    mll_read_res_seq_file, mll_out_res_file, mll_gen_label_matrix_from_csv_file
 from MachineLearningAlgorithm.Classification.dl_machine import mll_dl_cv_process, \
     mll_dl_ind_process
 from MachineLearningAlgorithm.Classification.ml_machine import mll_ml_ind_results
@@ -146,13 +146,16 @@ def mll_res_preprocess(args, is_ind=False):
 def mll_generate_res_label_data(args, is_ind=False):
     # 读取序列文件里每条序列的长度
     if not is_ind:
-        seq_len_list, res_label_list = mll_read_res_seq_file(args.seq_file, args.label_file, args.category)
-    else:
-        seq_len_list, res_label_list = mll_read_res_seq_file(args.ind_seq_file, args.ind_label_file, args.category)
+        seq_len_list = mll_read_res_seq_file(args.seq_file, args.label_file, args.category)
+        # 控制序列的固定长度(只需要在benchmark dataset上操作一次）
+        args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
+        label_array = mll_gen_label_matrix_from_csv_file(args.label_file, is_seq_mode=False)
 
-    # 控制序列的固定长度(只需要在benchmark dataset上操作一次）
-    args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
-    label_array = mll_gen_label_matrix(res_label_list)
+    else:
+        seq_len_list = mll_read_res_seq_file(args.ind_seq_file, args.ind_label_file, args.category)
+        # 控制序列的固定长度(只需要在benchmark dataset上操作一次）
+        args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
+        label_array = mll_gen_label_matrix_from_csv_file(args.ind_label_file, is_seq_mode=False)
 
     return label_array
 
@@ -192,7 +195,7 @@ def main(args):
     # 对每个残基层面的method进行检查
     res_feature_check(args)
 
-    # # 读取序列文件里每条序列的长度
+    # 读取序列文件里每条序列的长度
     label_array = mll_generate_res_label_data(args)
 
     # 对SVM或RF的参数进行检查
