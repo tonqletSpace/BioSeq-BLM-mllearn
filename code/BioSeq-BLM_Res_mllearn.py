@@ -7,10 +7,10 @@ from CheckAll import check_contain_chinese, ml_params_check, make_params_dicts, 
     Method_Res, mll_prepare4train_res, \
     mll_prepare4train_seq, mode_params_check, mll_seq_sys_check, mll_params_check, mll_ensemble_check, \
     mll_params_select
-from FeatureAnalysis import fa_process, mll_fa_process
+from FeatureAnalysis import mll_fa_process
 from FeatureExtractionMode.OHE.OHE4vec import ohe2res_base, \
     mll_sliding_win2files
-from FeatureExtractionMode.utils.utils_write import fixed_len_control, mll_gen_label_matrix, \
+from FeatureExtractionMode.utils.utils_write import fixed_len_control, \
     mll_read_res_seq_file, mll_out_res_file, mll_gen_label_matrix_from_csv_file
 from MachineLearningAlgorithm.Classification.dl_machine import mll_dl_cv_process, \
     mll_dl_ind_process
@@ -146,13 +146,13 @@ def mll_res_preprocess(args, is_ind=False):
 def mll_generate_res_label_data(args, is_ind=False):
     # 读取序列文件里每条序列的长度
     if not is_ind:
-        seq_len_list = mll_read_res_seq_file(args.seq_file, args.label_file, args.category)
+        seq_len_list = mll_read_res_seq_file(args.seq_file, args.category)
         # 控制序列的固定长度(只需要在benchmark dataset上操作一次）
         args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
         label_array = mll_gen_label_matrix_from_csv_file(args.label_file, is_seq_mode=False)
 
     else:
-        seq_len_list = mll_read_res_seq_file(args.ind_seq_file, args.ind_label_file, args.category)
+        seq_len_list = mll_read_res_seq_file(args.ind_seq_file, args.category)
         # 控制序列的固定长度(只需要在benchmark dataset上操作一次）
         args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
         label_array = mll_gen_label_matrix_from_csv_file(args.ind_label_file, is_seq_mode=False)

@@ -46,7 +46,6 @@ def mll_ml_fe_process(args):
     # 统计样本数目和序列长度
     seq_len_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
     # 生成标签矩阵
-    # label_array = mll_gen_label_matrix(seq_label_list)
     label_array = mll_gen_label_matrix_from_csv_file(args.label_file, is_seq_mode=True)
 
     # 控制序列的固定长度(只需要操作一次）

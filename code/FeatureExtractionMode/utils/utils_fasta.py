@@ -243,11 +243,3 @@ def get_seqs(input_file, alphabet, desc=False):
     else:
         error_info = 'Sorry, the parameter in get_data method must be list or file type.'
         sys.exit(error_info)
-
-
-def mll_get_seqs(input_file, alphabet, is_seq_res_data=True):
-    if is_seq_res_data:
-        return mll_get_sequence_check_dna(input_file, alphabet)
-    else:
-        # read labels
-        return mll_get_sequence_without_check(input_file)

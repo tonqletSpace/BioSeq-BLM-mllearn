@@ -7,7 +7,7 @@ import numpy as np
 from scipy.sparse import issparse, lil_matrix
 
 from ..utils.utils_const import DNA, RNA, PROTEIN
-from ..utils.utils_fasta import get_seqs, mll_get_seqs
+from ..utils.utils_fasta import get_seqs, mll_get_sequence_check_dna
 
 
 class FormatWrite(object):
@@ -248,8 +248,7 @@ def mll_seq_file2one(category, seq_files, out_file):
     seq_len_list = []  # list of length integer (list[len(seq1), len(seq2), ...])
     for i in range(len(seq_files)):
         with open(seq_files[i], 'r') as in_f:
-            seq_all, _ = mll_get_seqs(in_f, alphabet)  # list of sequence in alphabet (list[seq1, seq2, ...])
-            seq_all, seq_info_all = mll_get_seqs(in_f, alphabet)  # list of sequence in alphabet (list[seq1, seq2, ...])
+            seq_all, _ = mll_get_sequence_check_dna(in_f, alphabet)  # list of sequence in alphabet (list[seq1, seq2, ...])
             for seq in seq_all:
                 seq_len_list.append(len(seq))
 
@@ -552,7 +551,7 @@ def read_res_seq_file(seq_file, category):
     return seq_len_list
 
 
-def mll_read_res_seq_file(seq_file, label_file, category):
+def mll_read_res_seq_file(seq_file, category):
     # 暂时支持单数据文件输入
     if category == 'DNA':
         alphabet = DNA
@@ -562,13 +561,10 @@ def mll_read_res_seq_file(seq_file, label_file, category):
         alphabet = PROTEIN
 
     seq_len_list = []  # list of sequence length integer (list[len(seq1), len(seq2), ...])
-    seq_name_list = []  # list of seq_id (list[len(seq1), len(seq2), ...])
     with open(seq_file, 'r') as in_f:
-        seq_all, seq_name_all = mll_get_seqs(in_f, alphabet)  # list of sequence in alphabet (list[seq1, seq2, ...])
+        seq_all, _ = mll_get_sequence_check_dna(in_f, alphabet)  # list of sequence in alphabet (list[seq1, seq2, ...])
         for seq in seq_all:
             seq_len_list.append(len(seq))
-        for seq_name in seq_name_all:
-            seq_name_list.append(seq_name)
 
     return seq_len_list
 
