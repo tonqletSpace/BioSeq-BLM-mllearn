@@ -1020,7 +1020,10 @@ def mll_prepare4train_seq(args, label_array, dl):
             else:
                 info_dict['Technique for sampling'] = 'combine oversampling  and undersampling '
 
-    info_dict['Type of Problem'] = 'Multi-label Learning'
+    if args.ml is None:
+        info_dict['Type of Problem'] = args.mll
+    else:
+        info_dict['Type of Problem'] = args.mll + "(" + args.ml + ")"
 
     print_base_dict(info_dict)
     return args
@@ -1135,7 +1138,10 @@ def mll_prepare4train_res(args, label_array, dl):
     args.metric_index = Mll_Metric_Index[args.metric]
     info_dict['Metric for selection'] = Metric_dict[args.metric]
 
-    info_dict['Type of Problem'] = 'Multi-label Learning'
+    if args.ml is None:
+        info_dict['Type of Problem'] = args.mll
+    else:
+        info_dict['Type of Problem'] = args.mll + "(" + args.ml + ")"
 
     print_base_dict(info_dict)
     return args
