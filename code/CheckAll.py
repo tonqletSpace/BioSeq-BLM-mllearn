@@ -782,6 +782,15 @@ def mll_params_check(args, all_params_list_dict):
     :param all_params_list_dict: used for parameter selection
     :return: None
     """
+    if args.ml is not None:
+        if args.ml == 'SVM':
+            SVM_params_check(args.cost, args.gamma, all_params_list_dict)
+        elif args.ml == 'RF':
+            RF_params_check(args.tree, all_params_list_dict)
+        else:
+            raise ValueError('error! an unregistered ml method name {} found,'
+                             ' please refer to the manual.'.format(args.ml))
+
     if not is_hyper_parameter_mthods(args.mll):
         return
 
@@ -807,6 +816,15 @@ def mll_params_check(args, all_params_list_dict):
     else:
         raise ValueError('error! an unregistered mll method name {} found, '
                          'please refer to the manual.'.format(args.mll))
+
+
+def SVM_params_check(cost, gamma, param_list_dict):
+    param_helper(cost, 'cost', param_list_dict, default_value=1)  # [-5, 11]
+    param_helper(gamma, 'gamma', param_list_dict, default_value=5)  # [-11, 6]
+
+
+def RF_params_check(tree, param_list_dict):
+    param_helper(tree, 'tree', param_list_dict, default_value=100)  # [100, 600, 100]
 
 
 def MLkNN_params_check(k, s, ifn, param_list_dict):

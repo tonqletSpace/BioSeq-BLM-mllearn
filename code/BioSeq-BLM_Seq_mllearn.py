@@ -55,7 +55,6 @@ def mll_ml_fe_process(args):
     seq_feature_check(args)
     # 对SVM或RF的参数进行检查并生成参数字典集合
     all_params_list_dict = {}
-    all_params_list_dict = ml_params_check(args, all_params_list_dict)
     mll_params_check(args, all_params_list_dict)
     # 对每个mode的words和method的参数进行检查
     # params_list_dict 为只包括特征提取的参数的字典， all_params_list_dict为包含所有参数的字典
