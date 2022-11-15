@@ -187,7 +187,7 @@ def final_results_output(results, out_path, ind=False, multi=False):
     else:
         filename = out_path + 'final_results.txt'
     with open(filename, 'w') as f:
-        f.write('The final results of cross validation  are as follows:\n')
+        f.write('The final results of cross validation are as follows:\n')
         for i in eval_re:
             f.write(i)
             f.write("\n")
@@ -214,7 +214,7 @@ def mll_final_results_output(results, out_path, ind=False):
         filename = out_path + 'final_results.txt'
 
     with open(filename, 'w') as f:
-        f.write('The final results of cross validation  are as follows:\n')
+        f.write('The final results of cross validation are as follows:\n')
         for i in eval_re:
             f.write(i)
             f.write("\n")

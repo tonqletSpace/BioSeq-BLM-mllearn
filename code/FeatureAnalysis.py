@@ -76,6 +76,8 @@ def fa_process(args, feature_vectors, labels, after_ps=False, ind=False):
 def mll_fa_process(args, feature_vectors, labels, after_ps=False, ind=False):
     if args.fs != 'none':
         args.fs = None
+        if args.rdb == 'fs':
+            args.rdb == 'no'
         print('Skipping... Feature selection methods are not suitable for mll tasks.')
 
     if not issparse(feature_vectors):
