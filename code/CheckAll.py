@@ -787,6 +787,8 @@ def mll_params_check(args, all_params_list_dict):
             SVM_params_check(args.cost, args.gamma, all_params_list_dict)
         elif args.ml == 'RF':
             RF_params_check(args.tree, all_params_list_dict)
+        elif args.ml in DeepLearning:
+            pass
         else:
             raise ValueError('error! an unregistered ml method name {} found,'
                              ' please refer to the manual.'.format(args.ml))
