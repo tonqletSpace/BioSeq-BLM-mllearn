@@ -374,7 +374,7 @@ if __name__ == '__main__':
     parse.add_argument('-bucket_length', type=int, default=64,
                        help="Average size of qk per bucket, 64 was recommended in paper")
     # parameters for ML parameter selection and cross validation
-    parse.add_argument('-metric', type=str, choices=['Acc', 'MCC', 'AUC', 'BAcc', 'F1'], default='Acc',
+    parse.add_argument('-metric', type=str, choices=['Acc', 'F1'], default='Acc',
                        help="The metric for parameter selection")
     parse.add_argument('-cv', choices=['5', '10', 'j'], default='5',
                        help="The cross validation mode.\n"

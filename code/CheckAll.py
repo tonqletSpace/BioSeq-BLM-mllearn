@@ -79,7 +79,9 @@ FE_PATH_Seq = '/results/FE/Seq/'
 FE_BATCH_PATH_Seq = '/results/batch/FE/Seq/'
 
 # Metric
-Mll_Metric_Index = {'Ham': 0, 'F1': 5}
+Mll_Metric_Index = {'Acc': 1, 'F1': 5}
+# Mll_Metric_List = ['Ham', 'Acc', 'Jac', 'Pr', 'Rc', 'F1']
+
 Metric_Index = {'Acc': 0, 'MCC': 1, 'AUC': 2, 'BAcc': 3, 'F1': 8}
 Metric_dict = {'Acc': 'Accuracy', 'MCC': 'Matthews Correlation Coefficient', 'AUC': 'Area Under Curve',
                'BAcc': 'Balanced-Accuracy', 'F1': 'F-Measure'}
