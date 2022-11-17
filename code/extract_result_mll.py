@@ -9,7 +9,7 @@ c = '../results/batch/' + str(t) + '/'
 
 def get_model_params_result(root_dir):
     for _, result_dirs, _ in os.walk(root_dir):  # (root, dirs, files)
-        with open('params_batch_file', 'w') as pf, open('result_batch_file', 'w') as rf:
+        with open('params_batch_file.txt', 'w') as pf, open('result_batch_file.txt', 'w') as rf:
             for result_dir in result_dirs:
                 if os.path.exists(root_dir + result_dir + '/Opt_params.txt'):
                     # recognize result target
