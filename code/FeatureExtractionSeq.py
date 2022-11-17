@@ -159,14 +159,11 @@ def one_seq_fe_process(args, input_one_file, labels, vec_files, sample_num_list,
                     score_process(args.score, vec_files, labels, args.cv, args.format, args.cpu)
 
 
-def mll_one_seq_fe_process(args, input_one_file, _labels, vec_files, **params_dict):
+def mll_one_seq_fe_process(args, input_one_file, labels, vec_files, **params_dict):
     print_fe_dict(params_dict)  # 输出特征提取参数详细信息
 
     # data长度，复用blm对二分类的特征提取
-    sample_num_list = [_labels.get_shape()[0]]
-
-    from scipy.sparse import issparse
-    labels = _labels.toarray() if issparse(_labels) else _labels
+    sample_num_list = [labels.get_shape()[0]]
 
     if args.mode == 'OHE':
         from FeatureExtractionMode.OHE.OHE4vec import ohe2seq_vec, ohe2seq_mat
@@ -211,6 +208,9 @@ def mll_one_seq_fe_process(args, input_one_file, _labels, vec_files, **params_di
         from FeatureExtractionMode.TM.TM4vec import topic_model
         for out_file in vec_files:
             if not os.path.exists(out_file):
+                if args.methods.find('Labeled-LDA') != -1:
+                    raise NotImplementedError(
+                        'extracting features from multi-label data by Labeled-LDA will be implemented in future.')
                 topic_model(args.in_tm, args.method, input_one_file, labels, args.category, args.words, args.fixed_len,
                             sample_num_list, args.format, vec_files, args.current_dir, **params_dict)
 
@@ -226,6 +226,9 @@ def mll_one_seq_fe_process(args, input_one_file, _labels, vec_files, **params_di
         from FeatureExtractionMode.AF.AF4vec import auto_feature
         for out_file in vec_files:
             if not os.path.exists(out_file):
+                raise NotImplementedError(
+                    'extracting features from multi-label data by '
+                    'supervised-learning AF methods will be implemented in future.')
                 # method, in_fa, input_file, labels, sample_num_list, out_format, out_file_list, alphabet, cur_dir,
                 # chosen_file, cpu, fixed_len, ** params_dict
                 auto_feature(args.method, input_one_file, labels, sample_num_list, vec_files, args, **params_dict)
