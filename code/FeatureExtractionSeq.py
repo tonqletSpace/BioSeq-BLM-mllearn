@@ -208,7 +208,7 @@ def mll_one_seq_fe_process(args, input_one_file, labels, vec_files, **params_dic
         from FeatureExtractionMode.TM.TM4vec import topic_model
         for out_file in vec_files:
             if not os.path.exists(out_file):
-                if args.methods.find('Labeled-LDA') != -1:
+                if args.method.find('Labeled-LDA') != -1:
                     raise NotImplementedError(
                         'extracting features from multi-label data by Labeled-LDA will be implemented in future.')
                 topic_model(args.in_tm, args.method, input_one_file, labels, args.category, args.words, args.fixed_len,
