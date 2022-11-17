@@ -175,7 +175,10 @@ def word2vec(sentence_list, sample_size_list, fixed_len, word_size, win_size, ve
         for y in test_index:
             test_sentences.append(sentence_list[y])
         # The core stone of Gene2vec  |  window: 一个句子中当前单词和被预测单词的最大距离。
-        model = Word2Vec(train_sentences, size=vec_dim, window=win_size, sg=skip_gram)  # sg=1对应skip gram模型
+        # unexpected size error
+        # modified by tonqlet 2022.11.17
+        # model = Word2Vec(train_sentences, size=vec_dim, window=win_size, sg=skip_gram)  # sg=1对应skip gram模型
+        model = Word2Vec(train_sentences, vector_size=vec_dim, window=win_size, sg=skip_gram)  # sg=1对应skip gram模型
         vectors = []
         for sentence in test_sentences:
             # print(sentence)
