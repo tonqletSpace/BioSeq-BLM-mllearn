@@ -4,6 +4,7 @@ from collections import Counter
 from math import log
 from random import shuffle
 
+import gensim
 import networkx as nx
 import numpy as np
 from gensim.models import Word2Vec, FastText
@@ -177,15 +178,21 @@ def word2vec(sentence_list, sample_size_list, fixed_len, word_size, win_size, ve
         # The core stone of Gene2vec  |  window: 一个句子中当前单词和被预测单词的最大距离。
         # unexpected size error
         # modified by tonqlet 2022.11.17
-        # model = Word2Vec(train_sentences, size=vec_dim, window=win_size, sg=skip_gram)  # sg=1对应skip gram模型
-        model = Word2Vec(train_sentences, vector_size=vec_dim, window=win_size, sg=skip_gram)  # sg=1对应skip gram模型
+        if str(gensim.__version__)[0] <= 3:
+            model = Word2Vec(train_sentences, size=vec_dim, window=win_size, sg=skip_gram)  # sg=1对应skip gram模型
+        else:
+            model = Word2Vec(train_sentences, vector_size=vec_dim, window=win_size, sg=skip_gram)  # sg=1对应skip gram模型
+
         vectors = []
         for sentence in test_sentences:
             # print(sentence)
             vector = []
             for j in range(len(sentence)):
                 try:
-                    vec_temp = np.array(model[sentence[j]])
+                    if str(gensim.__version__)[0] <= 3:
+                        vec_temp = np.array(model[sentence[j]])
+                    else:
+                        vec_temp = np.array(model.wc[sentence[j]])
 
                 except KeyError:
                     vec_temp = np.zeros(vec_dim)
