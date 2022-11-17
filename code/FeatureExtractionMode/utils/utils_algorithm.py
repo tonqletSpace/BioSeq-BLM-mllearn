@@ -192,7 +192,7 @@ def word2vec(sentence_list, sample_size_list, fixed_len, word_size, win_size, ve
                     if int(gensim.__version__.split('.')[0]) <= 3:
                         vec_temp = np.array(model[sentence[j]])
                     else:
-                        vec_temp = np.array(model.wc[sentence[j]])
+                        vec_temp = np.array(model.wv[sentence[j]])
 
                 except KeyError:
                     vec_temp = np.zeros(vec_dim)
