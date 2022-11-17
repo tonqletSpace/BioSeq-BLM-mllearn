@@ -160,6 +160,8 @@ def one_seq_fe_process(args, input_one_file, labels, vec_files, sample_num_list,
 
 
 def mll_one_seq_fe_process(args, input_one_file, labels, vec_files, **params_dict):
+    from scipy.sparse import issparse
+    labels.toarray() if issparse(labels) else labels
     print_fe_dict(params_dict)  # 输出特征提取参数详细信息
 
     # data长度，复用blm对二分类的特征提取
@@ -196,6 +198,7 @@ def mll_one_seq_fe_process(args, input_one_file, labels, vec_files, **params_dic
             if not os.path.exists(out_file):
                 text_rank(input_one_file, args.category, args.words, args.fixed_len, sample_num_list,
                           args.format, vec_files, args.current_dir, False, **params_dict)
+
     elif args.mode == 'WE':
         from FeatureExtractionMode.WE.WE4vec import word_emb
         for out_file in vec_files:
@@ -217,6 +220,7 @@ def mll_one_seq_fe_process(args, input_one_file, labels, vec_files, **params_dic
             if not os.path.exists(out_file):
                 syntax_rules(args.method, input_one_file, args.category, sample_num_list,
                              args.format, vec_files, args.current_dir, args, **params_dict)
+
     else:
         from FeatureExtractionMode.AF.AF4vec import auto_feature
         for out_file in vec_files:
