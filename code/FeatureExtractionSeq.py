@@ -159,13 +159,14 @@ def one_seq_fe_process(args, input_one_file, labels, vec_files, sample_num_list,
                     score_process(args.score, vec_files, labels, args.cv, args.format, args.cpu)
 
 
-def mll_one_seq_fe_process(args, input_one_file, labels, vec_files, **params_dict):
-    from scipy.sparse import issparse
-    labels.toarray() if issparse(labels) else labels
+def mll_one_seq_fe_process(args, input_one_file, _labels, vec_files, **params_dict):
     print_fe_dict(params_dict)  # 输出特征提取参数详细信息
 
     # data长度，复用blm对二分类的特征提取
-    sample_num_list = [labels.get_shape()[0]]
+    sample_num_list = [_labels.get_shape()[0]]
+
+    from scipy.sparse import issparse
+    labels = _labels.toarray() if issparse(_labels) else _labels
 
     if args.mode == 'OHE':
         from FeatureExtractionMode.OHE.OHE4vec import ohe2seq_vec, ohe2seq_mat
