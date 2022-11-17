@@ -11,12 +11,13 @@ def get_model_params_result(root_dir):
     with open('params_batch_file.txt', 'w') as pf, open('result_batch_file.txt', 'w') as rf:
         for _, result_dirs, _ in os.walk(root_dir):  # (root, dirs, files)
             for result_dir in result_dirs:
+                print('in '+result_dir+'...')
                 if os.path.exists(root_dir + result_dir + '/Opt_params.txt'):
                     # recognize result target
                     # final_results.txt, Opt_params.txt, <model_name>.model
                     for b in os.walk(root_dir + result_dir):
-                        assert len(b[0]) == 0 and len(b[1]) == 0
-
+                        assert len(b[0]) == 0 and len(b[1]) == 0, 'err'
+                        print('extracting result target...')
                         for f in b[2]:
                             if f.rfind('.model') != -1:
                                 model_name = f.split('.'[0])
@@ -30,6 +31,10 @@ def get_model_params_result(root_dir):
                                 write_file(rf, root_dir + result_dir, f)
                             else:
                                 pass
+                else:
+                    pass
+
+        print('done.')
 
 
 def write_file(io, file_dir, file_name):
