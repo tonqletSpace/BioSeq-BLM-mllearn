@@ -7,15 +7,16 @@ t = sys.argv[1]
 c = '../results/batch/' + str(t) + '/'
 
 
-def get_model_params_result(root_dir):
+def get_model_params_result(result_path):
     with open('params_batch_file.txt', 'w') as pf, open('result_batch_file.txt', 'w') as rf:
-        for target_root, result_dirs, _ in os.walk(root_dir):  # (root, dirs, files)
+        for target_root, result_dirs, _ in os.walk(result_path):  # (root, dirs, files)
             for result_dir in result_dirs:
-                print('in ' + target_root + result_dir + '...')
-                if os.path.exists(target_root + result_dir + '/Opt_params.txt'):
+                target_path = target_root + '/' + result_dir
+                print('in ' + target_path + '...')
+                if os.path.exists(target_path + '/Opt_params.txt'):
                     # recognize result target
                     # final_results.txt, Opt_params.txt, <model_name>.model
-                    for b in os.walk(target_root + result_dir):
+                    for b in os.walk(target_path):
                         assert len(b[0]) == 0 and len(b[1]) == 0, 'err'
                         print('extracting result target...')
                         for f in b[2]:
@@ -26,9 +27,9 @@ def get_model_params_result(root_dir):
                                 break
                         for f in b[2]:
                             if f == 'Opt_params.txt':
-                                write_file(pf, target_root + result_dir, f)
+                                write_file(pf, target_path, f)
                             elif f == 'final_results.txt':
-                                write_file(rf, target_root + result_dir, f)
+                                write_file(rf, target_path, f)
                             else:
                                 pass
                 else:
@@ -37,8 +38,8 @@ def get_model_params_result(root_dir):
         print('done.')
 
 
-def write_file(io, file_dir, file_name):
-    with open(file_dir + '/' + file_name) as r:
+def write_file(io, target_path, file_name):
+    with open(target_path + '/' + file_name) as r:
         io.writelines(r.readlines())
     io.writelines('\n')
         # if os.path.exists(c + dirname + '/param.txt'):
