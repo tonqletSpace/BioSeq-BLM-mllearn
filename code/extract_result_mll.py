@@ -13,8 +13,8 @@ def get_model_params_result(result_path):
             if len(files) == 0:
                 continue
             assert len(dirs) == 0
-            print('extracting result target ' + target_root + '...')
             if os.path.exists(target_root + '/Opt_params.txt'):
+                print('extracting result target ' + target_root + '...')
                 # recognize result target
                 # final_results.txt, Opt_params.txt, <model_name>.model
                 for f in files:
