@@ -28,8 +28,59 @@ p_mll_s=(0.1 1.0 0.3)
 p_mll_v=(0 1 0.3)
 p_mll_t=(0.01 0.03 0.01)
 
-
 default_cmd=(-category DNA -seq_file ${seq_files} -label ${labels} -cpu ${cpu} -bp 1 -metric Acc)
+
+function foo() {
+  mode_list=$1
+
+  if [[ ${mll} = "BR" ||  ${mll} = "LP" ]]; then
+    if [ ${ml} = "RF" ]; then
+      python BioSeq-BLM_Seq_mllearn.py ${mode_list[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+       -tree ${p_tree[*]}
+    elif [ ${ml} = "SVM" ]; then
+      python BioSeq-BLM_Seq_mllearn.py ${mode_list[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+       -cost ${p_cost[*]} -gamma ${p_gamma[*]}
+    else
+      exit 1
+    fi
+
+  elif [ ${mll} = "RAkELo" ]; then
+    if [ ${ml} = "RF" ]; then
+      python BioSeq-BLM_Seq_mllearn.py ${mode_list[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+       -mll_ls ${p_mll_ls[*]} -mll_mc ${p_mll_mc[*]} -tree ${p_tree[*]}
+    elif [ ${ml} = "SVM" ]; then
+      python BioSeq-BLM_Seq_mllearn.py ${mode_list[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+       -mll_ls ${p_mll_ls[*]} -mll_mc ${p_mll_mc[*]} -cost ${p_cost[*]} -gamma ${p_gamma[*]}
+    else
+      exit 1
+    fi
+
+  elif [ ${mll} = "RAkELd" ]; then
+    if [ ${ml} = "RF" ]; then
+      python BioSeq-BLM_Seq_mllearn.py ${mode_list[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+       -mll_ls ${p_mll_ls[*]} -tree ${p_tree[*]}
+    elif [ ${ml} = "SVM" ]; then
+      python BioSeq-BLM_Seq_mllearn.py ${mode_list[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+       -mll_ls ${p_mll_ls[*]} -cost ${p_cost[*]} -gamma ${p_gamma[*]}
+    else
+      exit 1
+    fi
+
+  elif [ ${mll} = "MLkNN" ]; then
+    python BioSeq-BLM_Seq_mllearn.py ${mode_list[*]} -mll ${mll} ${default_cmd[*]}\
+     -mll_k ${p_mll_k[*]} -mll_s ${p_mll_s[*]}
+
+  elif [ ${mll} = "MLARAM" ]; then
+    python BioSeq-BLM_Seq_mllearn.py ${mode_list[*]} -mll ${mll} ${default_cmd[*]}\
+     -mll_t ${p_mll_t[*]} -mll_v ${p_mll_v[*]}
+
+  else
+    exit 1
+  fi
+
+  exit 0
+}
+
 
 # tb345 BSLM based on BOW, TF-IDF, TextRank
 # 12 total
@@ -38,55 +89,53 @@ dna_words=(Kmer)
 for md in ${bslm_modes[*]}; do
   for wd in ${dna_words[*]}; do
     mode_words=(-mode ${md} -words ${wd})
-    if [[ ${mll} = "BR" ||  ${mll} = "LP" ]]; then
-      if [ ${ml} = "RF" ]; then
-        python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
-         -tree ${p_tree[*]}
-      elif [ ${ml} = "SVM" ]; then
-        python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
-         -cost ${p_cost[*]} -gamma ${p_gamma[*]}
-      else
-        exit 1
-      fi
+    foo mode_words
 
-    elif [ ${mll} = "RAkELo" ]; then
-      if [ ${ml} = "RF" ]; then
-        python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
-         -mll_ls ${p_mll_ls[*]} -mll_mc ${p_mll_mc[*]} -tree ${p_tree[*]}
-      elif [ ${ml} = "SVM" ]; then
-        python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
-         -mll_ls ${p_mll_ls[*]} -mll_mc ${p_mll_mc[*]} -cost ${p_cost[*]} -gamma ${p_gamma[*]}
-      else
-        exit 1
-      fi
-
-    elif [ ${mll} = "RAkELd" ]; then
-      if [ ${ml} = "RF" ]; then
-        python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
-         -mll_ls ${p_mll_ls[*]} -tree ${p_tree[*]}
-      elif [ ${ml} = "SVM" ]; then
-        python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
-         -mll_ls ${p_mll_ls[*]} -cost ${p_cost[*]} -gamma ${p_gamma[*]}
-      else
-        exit 1
-      fi
-
-    elif [ ${mll} = "MLkNN" ]; then
-      echo "python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} ${default_cmd[*]}\
-       -mll_k ${p_mll_k[*]} -mll_s ${p_mll_s[*]}"
-      python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} ${default_cmd[*]}\
-       -mll_k ${p_mll_k[*]} -mll_s ${p_mll_s[*]}
-
-    elif [ ${mll} = "MLARAM" ]; then
-      echo "python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} ${default_cmd[*]}\
-       -mll_t ${p_mll_t[*]} -mll_v ${p_mll_v[*]}"
-      python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} ${default_cmd[*]}\
-       -mll_t ${p_mll_t[*]} -mll_v ${p_mll_v[*]}
-
-    else
-      exit 1
-    fi
-    exit 0  # test
+#    if [[ ${mll} = "BR" ||  ${mll} = "LP" ]]; then
+#      if [ ${ml} = "RF" ]; then
+#        python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+#         -tree ${p_tree[*]}
+#      elif [ ${ml} = "SVM" ]; then
+#        python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+#         -cost ${p_cost[*]} -gamma ${p_gamma[*]}
+#      else
+#        exit 1
+#      fi
+#
+#    elif [ ${mll} = "RAkELo" ]; then
+#      if [ ${ml} = "RF" ]; then
+#        python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+#         -mll_ls ${p_mll_ls[*]} -mll_mc ${p_mll_mc[*]} -tree ${p_tree[*]}
+#      elif [ ${ml} = "SVM" ]; then
+#        python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+#         -mll_ls ${p_mll_ls[*]} -mll_mc ${p_mll_mc[*]} -cost ${p_cost[*]} -gamma ${p_gamma[*]}
+#      else
+#        exit 1
+#      fi
+#
+#    elif [ ${mll} = "RAkELd" ]; then
+#      if [ ${ml} = "RF" ]; then
+#        python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+#         -mll_ls ${p_mll_ls[*]} -tree ${p_tree[*]}
+#      elif [ ${ml} = "SVM" ]; then
+#        python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+#         -mll_ls ${p_mll_ls[*]} -cost ${p_cost[*]} -gamma ${p_gamma[*]}
+#      else
+#        exit 1
+#      fi
+#
+#    elif [ ${mll} = "MLkNN" ]; then
+#      python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} ${default_cmd[*]}\
+#       -mll_k ${p_mll_k[*]} -mll_s ${p_mll_s[*]}
+#
+#    elif [ ${mll} = "MLARAM" ]; then
+#      python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} ${default_cmd[*]}\
+#       -mll_t ${p_mll_t[*]} -mll_v ${p_mll_v[*]}
+#
+#    else
+#      exit 1
+#    fi
+#    exit 0  # test
   done
 done
 exit 0
