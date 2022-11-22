@@ -51,8 +51,6 @@ for md in ${bslm_modes[*]}; do
 
     elif [ ${mll} = "RAkELo" ]; then
       if [ ${ml} = "RF" ]; then
-        echo "BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
-         -mll_ls ${p_mll_ls[*]} -mll_mc ${p_mll_mc[*]} -tree ${p_tree[*]}"
         python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
          -mll_ls ${p_mll_ls[*]} -mll_mc ${p_mll_mc[*]} -tree ${p_tree[*]}
       elif [ ${ml} = "SVM" ]; then
@@ -74,12 +72,16 @@ for md in ${bslm_modes[*]}; do
       fi
 
     elif [ ${mll} = "MLkNN" ]; then
+      echo "python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} ${default_cmd[*]}\
+       -mll_k ${p_mll_k[*]} -mll_s ${p_mll_s[*]}"
       python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} ${default_cmd[*]}\
        -mll_k ${p_mll_k[*]} -mll_s ${p_mll_s[*]}
 
     elif [ ${mll} = "MLARAM" ]; then
+      echo "python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} ${default_cmd[*]}\
+       -mll_t ${p_mll_t[*]} -mll_v ${p_mll_v[*]}"
       python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} ${default_cmd[*]}\
-        -mll_t ${p_mll_t[*]} -mll_v ${p_mll_v[*]}
+       -mll_t ${p_mll_t[*]} -mll_v ${p_mll_v[*]}
 
     else
       exit 1
