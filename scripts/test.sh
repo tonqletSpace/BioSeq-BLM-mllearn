@@ -20,7 +20,7 @@ p_mll_mc=(3 20 4)
 #RAkELd
 # p_mll_ls
 # MLkNN
-p_mll_k=(50 601 100)
+p_mll_k=(30 165 40)
 p_mll_s=(0.1 1.0 0.3)
 # BRkNNaClassifier
 # BRkNNbClassifier
