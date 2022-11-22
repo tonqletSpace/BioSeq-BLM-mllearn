@@ -17,7 +17,24 @@ echo "./scripts/mll_param_select_template.sh BR RF test ~/blm-mll/data/sequences
 
 cd code/
 # RF
-p_tree=(50 601 50)
+p_tree=(50 601 100)
+# SVM
+p_cost=(-12 12 4)
+p_gamma=(-12 12 4)
+#RAkELo
+p_mll_ls=(2 5)
+p_mll_mc=(3 20 4)
+#RAkELd
+# p_mll_ls
+# MLkNN
+p_mll_k=(50 601 100)
+p_mll_s=(0.1 1.0 0.3)
+# BRkNNaClassifier
+# BRkNNbClassifier
+# MLARAM
+p_mll_v=(0 1 0.3)
+p_mll_t=(0.01 0.03 0.01)
+
 
 default_cmd=(-category DNA -seq_file ${seq_files} -label ${labels} -cpu ${cpu} -bp 1 -metric Acc)
 
@@ -27,17 +44,53 @@ bslm_modes=(BOW) # Attention TR  TF-IDF TR  RevKmer Mismatch Subsequence
 dna_words=(Kmer)
 for md in ${bslm_modes[*]}; do
   for wd in ${dna_words[*]}; do
-    if [ ${ml} -eq "RF" ]; then
-      python BioSeq-BLM_Seq_mllearn.py -mode ${md} -words ${wd} -mll ${mll} -ml ${ml} -tree ${p_tree[*]} ${default_cmd[*]}
-    elif [ ${ml} -eq "SVM" ]; then
-      python BioSeq-BLM_Seq_mllearn.py -category DNA -mode ${md} -words ${wd} -mll ${mll} -ml ${ml} -tree ${p_tree[*]} -seq_file ${seq_files} -label ${labels} -cpu ${cpu} -bp 1 -metric Acc
+    if [[ ${mll} = "BR" ||  ${mll} = "LP" ]]; then
+      if [ ${ml} = "RF" ]; then
+        python BioSeq-BLM_Seq_mllearn.py -mode ${md} -words ${wd} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+         -tree ${p_tree[*]}
+      elif [ ${ml} = "SVM" ]; then
+        python BioSeq-BLM_Seq_mllearn.py -mode ${md} -words ${wd} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+         -cost ${p_cost[*]} -gamma ${p_gamma[*]}
+      else
+        exit 1
+      fi
+
+    elif [ ${mll} = "RAkELo" ]; then
+      if [ ${ml} = "RF" ]; then
+        python BioSeq-BLM_Seq_mllearn.py -mode ${md} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+         -mll_ls=${p_mll_ls[*]} -mll_mc=${p_mll_mc[*]} -tree ${p_tree[*]}
+      elif [ ${ml} = "SVM" ]; then
+        python BioSeq-BLM_Seq_mllearn.py -mode ${md} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+         -mll_ls=${p_mll_ls[*]} -mll_mc=${p_mll_mc[*]} -cost ${p_cost[*]} -gamma ${p_gamma[*]}
+      else
+        exit 1
+      fi
+
+    elif [ ${mll} = "RAkELd" ]; then
+      if [ ${ml} = "RF" ]; then
+        python BioSeq-BLM_Seq_mllearn.py -mode ${md} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+         -mll_ls=${p_mll_ls[*]} -tree ${p_tree[*]}
+      elif [ ${ml} = "SVM" ]; then
+        python BioSeq-BLM_Seq_mllearn.py -mode ${md} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+         -mll_ls=${p_mll_ls[*]} -cost ${p_cost[*]} -gamma ${p_gamma[*]}
+      else
+        exit 1
+      fi
+
+    elif [ ${mll} = "MLkNN" ]; then
+      python BioSeq-BLM_Seq_mllearn.py -mode ${md} -mll ${mll} ${default_cmd[*]}\
+       -mll_k=${p_mll_k[*]} -mll_s=${p_mll_s[*]}
+
+    elif [ ${mll} = "MLARAM" ]; then
+      python BioSeq-BLM_Seq_mllearn.py -mode ${md} -mll ${mll} ${default_cmd[*]}\
+        -mll_t=${p_mll_t[*]} -mll_v=${p_mll_v[*]}
+
     else
       exit 1
     fi
-
+    exit 0  # test
   done
 done
-
 exit 0
 
 # tb6 BSLMs based on topic models
