@@ -1,14 +1,24 @@
 import os.path
 import sys
+from pathlib import Path
+
+p1 = sys.argv[1]  # e.g. Seq/DNA
+p2 = sys.argv[2]  # br_rf
+result_dir = '../results'
 
 # generate root dir of a batch of results
-# e.g. Seq/DNA
-t = sys.argv[1]
-c = '../results/batch/' + str(t) + '/'
+p11 = result_dir + '/batch/' + str(p1) + '/'
 
 
-def get_model_params_result(result_path):
-    with open('batch_params.txt', 'w') as pf, open('batch_results.txt', 'w') as rf:
+def get_model_params_result(result_path, method_name):
+    extracted_dir = result_dir + '/extracted'
+    ex_p = extracted_dir + '/' + method_name + '_parameter.txt'
+    ex_m = extracted_dir + '/' + method_name + '_evaluation.txt'
+
+    if not Path(extracted_dir).exists():
+        Path(extracted_dir).mkdir(parents=True)
+
+    with open(ex_p, 'w') as pf, open(ex_m, 'w') as rf:
         for target_root, dirs, files in os.walk(result_path):  # (root, dirs, files)
             if len(files) == 0:
                 continue
@@ -45,9 +55,10 @@ def write_file(io, target_path, file_name):
 
 
 def write_header(io, tag, root):
-    io.writelines(''.center(100, '+') + '\n')
-    io.writelines(root[len('../results/batch/'):].center(50, ' ').center(100, '+') + '\n')
-    io.writelines(tag.center(20, ' ').center(100, '+') + '\n')
+    # io.writelines(''.center(100, '+') + '\n')
+    dlen=len('../results/batch/')
+    io.writelines(root[dlen:].center(dlen+2, ' ').center(100, '+') + '\n')
+    io.writelines(tag.center(len(tag)+2, ' ').center(100, '+') + '\n')
 
 
-get_model_params_result(c)
+get_model_params_result(p11, p2)
