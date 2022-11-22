@@ -123,13 +123,12 @@ python extract_result_mll.py Seq/DNA "${out_res}"
 
 # place all results int results/out_res/
 cd ../results/
-default_dir="tmp/${out_res}"
 # 汇总到tmp，由客户命名
-if [ -d "tmp" ]; then
-  rm -rf "tmp"
+if [ ! -d "tmp" ]; then
+  mkdir "tmp"
 fi
-mkdir "tmp"
 
+default_dir="tmp/${out_res}"
 # 覆盖结果
 if [ -d ${default_dir} ]; then
   rm -rf ${default_dir}
