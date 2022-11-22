@@ -41,9 +41,6 @@ def get_model_params_result(result_path, method_name):
                     else:
                         pass
 
-        print('\nderive batch_results here:')
-        os.system('pwd')
-        os.system('ls batch*.txt')
         print('done.')
 
 
