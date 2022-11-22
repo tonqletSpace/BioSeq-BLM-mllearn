@@ -32,6 +32,10 @@ default_cmd=(-category DNA -seq_file ${seq_files} -label ${labels} -cpu ${cpu} -
 
 function foo() {
   mode_list=$1
+  echo ${mode_list[*]}
+  echo "python BioSeq-BLM_Seq_mllearn.py ${mode_list[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+       -tree ${p_tree[*]}"
+  exit 0
 
   if [[ ${mll} = "BR" ||  ${mll} = "LP" ]]; then
     if [ ${ml} = "RF" ]; then
