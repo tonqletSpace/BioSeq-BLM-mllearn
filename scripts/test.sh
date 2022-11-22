@@ -6,13 +6,6 @@ seq_files=$4
 labels=$5
 cpu=$6
 
-
-# intro
-echo "into directory:"
-pwd
-echo "please run command below for mll tasks with BR(RF) algorithm:"
-echo "./scripts/mll_param_select_template.sh BR RF test ~/blm-mll/data/sequences/snoRNA.fasta ~/blm-mll/data/sequences/snoRNA_label.csv 8"
-
 # batch run starting
 
 cd code/
@@ -57,6 +50,8 @@ for md in ${bslm_modes[*]}; do
 
     elif [ ${mll} = "RAkELo" ]; then
       if [ ${ml} = "RF" ]; then
+        echo "BioSeq-BLM_Seq_mllearn.py -mode ${md} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+         -mll_ls=${p_mll_ls[*]} -mll_mc=${p_mll_mc[*]} -tree ${p_tree[*]}"
         python BioSeq-BLM_Seq_mllearn.py -mode ${md} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
          -mll_ls=${p_mll_ls[*]} -mll_mc=${p_mll_mc[*]} -tree ${p_tree[*]}
       elif [ ${ml} = "SVM" ]; then
