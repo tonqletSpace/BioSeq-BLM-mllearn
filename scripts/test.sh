@@ -31,7 +31,6 @@ p_mll_t=(0.01 0.03 0.01)
 default_cmd=(-category DNA -seq_file ${seq_files} -label ${labels} -cpu ${cpu} -bp 1 -metric Acc)
 
 function run_ml_methods() {
-  return 0
   if [[ ${mll} = "BR" ||  ${mll} = "LP" ]]; then
     if [ ${ml} = "RF" ]; then
       python BioSeq-BLM_Seq_mllearn.py $* -mll ${mll} -ml ${ml} ${default_cmd[*]}\
@@ -88,8 +87,10 @@ function run_ml_methods() {
 
 # tb345 BSLM based on BOW, TF-IDF, TextRank
 # 12 total
-bslm_modes=(BOW TF-IDF TR) # Attention TR
-dna_words=(Kmer RevKmer Mismatch Subsequence)
+#bslm_modes=(BOW TF-IDF TR) # Attention TR
+#dna_words=(Kmer RevKmer Mismatch Subsequence)
+bslm_modes=(BOW) # Attention TR
+dna_words=(Kmer)
 for md in ${bslm_modes[*]}; do
   for wd in ${dna_words[*]}; do
     blm_mode=(-mode ${md} -words ${wd})
@@ -126,13 +127,15 @@ python extract_result_mll.py Seq/DNA "${out_res}"
 cd ../results/
 default_dir="tmp/${out_res}"
 # 汇总到tmp，由客户命名
-if [ -d "tmp/" ]; then
-  mkdir "tmp/"
+if [ -d "tmp" ]; then
+  rm -rf "tmp"
 fi
+mkdir "tmp"
+
 # 覆盖结果
 if [ -d default_dir ]; then
   rm -rf default_dir
 fi
 mv batch default_dir
 
-echo "Done! results can be found in results/${out_res}"
+echo "Done! results can be found in default_dir"
