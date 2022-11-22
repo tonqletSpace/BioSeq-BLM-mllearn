@@ -501,7 +501,10 @@ def fast_text(sentence_list, sample_size_list, fixed_len, word_size, win_size, v
             vector = []
             for j in range(len(sentence)):
                 try:
-                    vec_temp = np.array(model[sentence[j]])
+                    if int(gensim.__version__.split('.')[0]) <= 3:
+                        vec_temp = np.array(model[sentence[j]])
+                    else:
+                        vec_temp = np.array(model.wv[sentence[j]])
                 except KeyError:
                     vec_temp = np.zeros(vec_dim)
                 if len(vector) == 0:
