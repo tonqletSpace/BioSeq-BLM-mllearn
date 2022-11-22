@@ -492,7 +492,10 @@ def fast_text(sentence_list, sample_size_list, fixed_len, word_size, win_size, v
         for y in test_index:
             test_sentences.append(sentence_list[y])
         # The core stone of FastText
-        model = FastText(sentence_list, size=vec_dim, window=win_size, sg=skip_gram)
+        if int(gensim.__version__.split('.')[0]) <= 3:
+            model = FastText(sentence_list, size=vec_dim, window=win_size, sg=skip_gram)
+        else:
+            model = FastText(sentence_list, vector_size=vec_dim, window=win_size, sg=skip_gram)
         vectors = []
         for sentence in test_sentences:
             vector = []
