@@ -87,10 +87,8 @@ function run_ml_methods() {
 
 # tb345 BSLM based on BOW, TF-IDF, TextRank
 # 12 total
-#bslm_modes=(BOW TF-IDF TR) # Attention TR
-#dna_words=(Kmer RevKmer Mismatch Subsequence)
-bslm_modes=(BOW) # Attention TR
-dna_words=(Kmer)
+bslm_modes=(BOW TF-IDF TR) # Attention TR
+dna_words=(Kmer RevKmer Mismatch Subsequence)
 for md in ${bslm_modes[*]}; do
   for wd in ${dna_words[*]}; do
     blm_mode=(-mode ${md} -words ${wd})
@@ -133,9 +131,9 @@ fi
 mkdir "tmp"
 
 # 覆盖结果
-if [ -d default_dir ]; then
-  rm -rf default_dir
+if [ -d ${default_dir} ]; then
+  rm -rf ${default_dir}
 fi
-mv batch default_dir
+mv batch ${default_dir}
 
-echo "Done! results can be found in default_dir"
+echo "Done! results can be found in ${default_dir}"
