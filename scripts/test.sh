@@ -109,7 +109,7 @@ done
 
 # tb7 BNLMs based on word embedding
 # 12 total
-we_methods=(word2vec GloVe fastText)
+we_methods=(word2vec Glove fastText)
 we_dna_words=(Kmer RevKmer)  # bugs found for the other two words in BioSeq-BLM
 for we in ${we_methods[*]}; do
   for wd in ${we_dna_words[*]}; do
