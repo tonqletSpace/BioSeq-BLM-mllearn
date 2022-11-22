@@ -37,12 +37,13 @@ bslm_modes=(BOW) # Attention TR  TF-IDF TR  RevKmer Mismatch Subsequence
 dna_words=(Kmer)
 for md in ${bslm_modes[*]}; do
   for wd in ${dna_words[*]}; do
+    mode_words=(-mode ${md} -words ${wd})
     if [[ ${mll} = "BR" ||  ${mll} = "LP" ]]; then
       if [ ${ml} = "RF" ]; then
-        python BioSeq-BLM_Seq_mllearn.py -mode ${md} -words ${wd} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+        python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
          -tree ${p_tree[*]}
       elif [ ${ml} = "SVM" ]; then
-        python BioSeq-BLM_Seq_mllearn.py -mode ${md} -words ${wd} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+        python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
          -cost ${p_cost[*]} -gamma ${p_gamma[*]}
       else
         exit 1
@@ -50,12 +51,12 @@ for md in ${bslm_modes[*]}; do
 
     elif [ ${mll} = "RAkELo" ]; then
       if [ ${ml} = "RF" ]; then
-        echo "BioSeq-BLM_Seq_mllearn.py -mode ${md} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+        echo "BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
          -mll_ls=${p_mll_ls[*]} -mll_mc=${p_mll_mc[*]} -tree ${p_tree[*]}"
-        python BioSeq-BLM_Seq_mllearn.py -mode ${md} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+        python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
          -mll_ls=${p_mll_ls[*]} -mll_mc=${p_mll_mc[*]} -tree ${p_tree[*]}
       elif [ ${ml} = "SVM" ]; then
-        python BioSeq-BLM_Seq_mllearn.py -mode ${md} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+        python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
          -mll_ls=${p_mll_ls[*]} -mll_mc=${p_mll_mc[*]} -cost ${p_cost[*]} -gamma ${p_gamma[*]}
       else
         exit 1
@@ -63,21 +64,21 @@ for md in ${bslm_modes[*]}; do
 
     elif [ ${mll} = "RAkELd" ]; then
       if [ ${ml} = "RF" ]; then
-        python BioSeq-BLM_Seq_mllearn.py -mode ${md} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+        python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
          -mll_ls=${p_mll_ls[*]} -tree ${p_tree[*]}
       elif [ ${ml} = "SVM" ]; then
-        python BioSeq-BLM_Seq_mllearn.py -mode ${md} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+        python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} -ml ${ml} ${default_cmd[*]}\
          -mll_ls=${p_mll_ls[*]} -cost ${p_cost[*]} -gamma ${p_gamma[*]}
       else
         exit 1
       fi
 
     elif [ ${mll} = "MLkNN" ]; then
-      python BioSeq-BLM_Seq_mllearn.py -mode ${md} -mll ${mll} ${default_cmd[*]}\
+      python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} ${default_cmd[*]}\
        -mll_k=${p_mll_k[*]} -mll_s=${p_mll_s[*]}
 
     elif [ ${mll} = "MLARAM" ]; then
-      python BioSeq-BLM_Seq_mllearn.py -mode ${md} -mll ${mll} ${default_cmd[*]}\
+      python BioSeq-BLM_Seq_mllearn.py ${mode_words[*]} -mll ${mll} ${default_cmd[*]}\
         -mll_t=${p_mll_t[*]} -mll_v=${p_mll_v[*]}
 
     else
