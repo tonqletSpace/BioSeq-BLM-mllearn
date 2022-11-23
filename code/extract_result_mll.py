@@ -53,8 +53,9 @@ def write_file(io, target_path, file_name):
 
 def write_header(io, tag, root):
     # io.writelines(''.center(100, '+') + '\n')
-    dlen=len('../results/batch/')
-    io.writelines(root[dlen:].center(dlen+2, ' ').center(100, '+') + '\n')
+    prefix_len=len('../results/batch/')
+    dlen=len(root) - prefix_len
+    io.writelines(root[prefix_len:].center(dlen+2, ' ').center(100, '+') + '\n')
     io.writelines(tag.center(len(tag)+2, ' ').center(100, '+') + '\n')
 
 
