@@ -232,7 +232,7 @@ def main(args):
 if __name__ == '__main__':
     import argparse
 
-    parse = argparse.ArgumentParser(prog='BioSeq-BLM-MLL', description="Step into analysis, please select parameters ")
+    parse = argparse.ArgumentParser(prog='BioSeq-BLM_Res_mllearn', description="Step into analysis, please select parameters ")
 
     # parameters for whole framework
     parse.add_argument('-category', type=str, choices=['DNA', 'RNA', 'Protein'], required=True,
