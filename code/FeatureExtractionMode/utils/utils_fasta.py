@@ -167,7 +167,28 @@ def get_sequence_check_dna(f, alphabet):
     return sequence_list
 
 
-def mll_get_sequence_check_dna(f, alphabet):
+def mll_process_data_mixture(seq, mode):
+    """
+    process biological data mixed with DNA and RNA.
+    if mode is "as_dna", then U(RNA) will be seen as T(DNA).
+    if mode is "as_rna", then T(DNA) will be seen as U(RNA).
+    if mode is "none", then do nothing.
+    :param seq:
+    :param alphabet:
+    :param mode:
+    :return: seq_processed
+    """
+    if mode is None:
+        return seq
+    elif mode == "as_dna":
+        return str(seq).replace('U', 'T')
+    elif mode == "as_rna":
+        return str(seq).replace('T', 'U')
+    else:
+        raise ValueError("data mixture option [{}] wrong.".format(mode))
+
+
+def mll_get_sequence_check_dna(f, alphabet, mode):
     """Read the fasta file.
 
     Input: f: HANDLE to input. e.g. sys.stdin, or open(<file>)
@@ -177,14 +198,15 @@ def mll_get_sequence_check_dna(f, alphabet):
     sequence_list = []
     name_list = []
     for e in read_fasta_yield(f):
-        res = is_under_alphabet(e.seq, alphabet)
+        seq = mll_process_data_mixture(e.seq, mode)
+        res = is_under_alphabet(seq, alphabet)
         if res is not True:
             print(e.name)
             error_info = 'Error, sequence ' + str(e.no) \
                          + ' has character ' + str(res) + '.(The character must be ' + alphabet + ').'
             sys.exit(error_info)
         else:
-            sequence_list.append(e.seq)
+            sequence_list.append(seq)
             name_list.append(e.name)
 
     return sequence_list, name_list

@@ -623,6 +623,8 @@ def mll_arg_parser(parse):
     parse.add_argument("-mll_mc", "--RAkELo_model_count", nargs='*', type=int,
                        action=mll_param_bound(1),
                        help="the desired number of classifiers")
+    parse.add_argument('-mix_mode', type=str, choices=["as_dna", "as_rna"], default=None,
+                       help="process nucleic acid data mixed with DNA and RNA.")
 
 
 def mll_param_bound(lower=float("-inf"), upper=float("inf")):

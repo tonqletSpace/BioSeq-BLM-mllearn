@@ -231,7 +231,7 @@ def create_all_seq_file(seq_files, tgt_dir, ind=False):
         return tgt_dir + '/' + 'ind_all_seq_file' + suffix
 
 
-def mll_seq_file2one(category, seq_files, out_file):
+def mll_seq_file2one(category, seq_files, out_file, mode):
     # 暂时支持单数据文件输入
     if category == 'DNA':
         alphabet = DNA
@@ -248,7 +248,7 @@ def mll_seq_file2one(category, seq_files, out_file):
     seq_len_list = []  # list of length integer (list[len(seq1), len(seq2), ...])
     for i in range(len(seq_files)):
         with open(seq_files[i], 'r') as in_f:
-            seq_all, _ = mll_get_sequence_check_dna(in_f, alphabet)  # list of sequence in alphabet (list[seq1, seq2, ...])
+            seq_all, _ = mll_get_sequence_check_dna(in_f, alphabet, mode)  # list of sequence in alphabet (list[seq1, seq2, ...])
             for seq in seq_all:
                 seq_len_list.append(len(seq))
 
@@ -551,7 +551,7 @@ def read_res_seq_file(seq_file, category):
     return seq_len_list
 
 
-def mll_read_res_seq_file(seq_file, category):
+def mll_read_res_seq_file(seq_file, category, mix_mode):
     # 暂时支持单数据文件输入
     if category == 'DNA':
         alphabet = DNA
@@ -562,7 +562,7 @@ def mll_read_res_seq_file(seq_file, category):
 
     seq_len_list = []  # list of sequence length integer (list[len(seq1), len(seq2), ...])
     with open(seq_file, 'r') as in_f:
-        seq_all, _ = mll_get_sequence_check_dna(in_f, alphabet)  # list of sequence in alphabet (list[seq1, seq2, ...])
+        seq_all, _ = mll_get_sequence_check_dna(in_f, alphabet, mix_mode)  # list of sequence in alphabet (list[seq1, seq2, ...])
         for seq in seq_all:
             seq_len_list.append(len(seq))
 

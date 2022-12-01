@@ -146,13 +146,13 @@ def mll_res_preprocess(args, is_ind=False):
 def mll_generate_res_label_data(args, is_ind=False):
     # 读取序列文件里每条序列的长度
     if not is_ind:
-        seq_len_list = mll_read_res_seq_file(args.seq_file, args.category)
+        seq_len_list = mll_read_res_seq_file(args.seq_file, args.category, args.mix_mode)
         # 控制序列的固定长度(只需要在benchmark dataset上操作一次）
         args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
         label_array = mll_gen_label_matrix_from_csv_file(args.label_file, is_seq_mode=False)
 
     else:
-        seq_len_list = mll_read_res_seq_file(args.ind_seq_file, args.category)
+        seq_len_list = mll_read_res_seq_file(args.ind_seq_file, args.category, args.mix_mode)
         # 控制序列的固定长度(只需要在benchmark dataset上操作一次）
         args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
         label_array = mll_gen_label_matrix_from_csv_file(args.ind_label_file, is_seq_mode=False)

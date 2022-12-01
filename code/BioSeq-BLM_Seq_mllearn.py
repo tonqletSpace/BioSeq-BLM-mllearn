@@ -44,7 +44,7 @@ def mll_ml_fe_process(args):
     # 合并序列文件
     input_one_file = create_all_seq_file(args.seq_file, args.results_dir)
     # 统计样本数目和序列长度
-    seq_len_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
+    seq_len_list = mll_seq_file2one(args.category, args.seq_file, input_one_file, args.mix_mode)
     # 生成标签矩阵
     label_array = mll_gen_label_matrix_from_csv_file(args.label_file, is_seq_mode=True)
 
@@ -133,7 +133,7 @@ def mll_dl_fe_process(args):
     # 合并序列文件
     input_one_file = create_all_seq_file(args.seq_file, args.results_dir)
     # 统计样本数目和序列长度
-    seq_len_list = mll_seq_file2one(args.category, args.seq_file, input_one_file)
+    seq_len_list = mll_seq_file2one(args.category, args.seq_file, input_one_file, args.mix_mode)
     # 生成标签数组
     label_array = mll_gen_label_matrix_from_csv_file(args.label_file, is_seq_mode=True)
 
