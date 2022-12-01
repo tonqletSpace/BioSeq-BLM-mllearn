@@ -1,6 +1,8 @@
 #!/bin/bash
 
-data=(~/blm-mll/data/sequences/snoRNA.fasta ~/blm-mll/data/sequences/snoRNA_label.csv)
+#data=(~/blm-mll/data/sequences/snoRNA.fasta ~/blm-mll/data/sequences/snoRNA_label.csv)
+data=(~/blm-mll/data/sequences/miRNA.fasta ~/blm-mll/data/sequences/miRNA_label.csv)
+
 # test run
 # mll_param_select_template
 ./scripts/test.sh BR RF br_rf ${data[*]} 5
