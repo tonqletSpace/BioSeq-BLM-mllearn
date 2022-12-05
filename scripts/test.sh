@@ -30,7 +30,7 @@ p_mll_s=(0.1 1.0 0.4)
 p_mll_v=(0.0 1.0 0.3)
 p_mll_t=(0.01 1.0 3)
 
-default_cmd=(-cv 10 -category DNA -seq_file ${seq_files} -label ${labels} -cpu ${cpu} -bp 1 -metric Acc)
+default_cmd=(-cv 10 -category DNA -seq_file ${seq_files} -label ${labels} -cpu ${cpu} -bp 1 -metric Acc -mix_mode as_dna)
 
 function run_ml_methods() {
   if [[ ${mll} = "BR" ||  ${mll} = "LP" ]]; then
