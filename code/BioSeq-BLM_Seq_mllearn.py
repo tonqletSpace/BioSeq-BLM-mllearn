@@ -47,7 +47,7 @@ def mll_ml_fe_process(args):
     seq_len_list = mll_seq_file2one(args.category, args.seq_file, input_one_file, args.mix_mode)
     # 生成标签矩阵
     label_array = mll_gen_label_matrix_from_csv_file(args.label_file, is_seq_mode=True)
-
+    assert len(seq_len_list) == label_array.get_shape[0], 'err'
     # 控制序列的固定长度(只需要操作一次）
     args.fixed_len = fixed_len_control(seq_len_list, args.fixed_len)
 
