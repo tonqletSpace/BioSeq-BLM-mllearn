@@ -825,7 +825,7 @@ def mll_params_check(args, all_params_list_dict):
 def SVM_params_check(cost, gamma, kernel, param_list_dict):
     param_helper(cost, 'cost', param_list_dict, default_value=1)  # [-5, 11]
     param_helper(gamma, 'gamma', param_list_dict, default_value=5)  # [-11, 6]
-    param_list_dict['kernel'] = list(kernel)
+    param_list_dict['kernel'] = [kernel]
 
 
 def RF_params_check(tree, param_list_dict):
