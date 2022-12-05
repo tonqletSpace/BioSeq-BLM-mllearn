@@ -540,6 +540,7 @@ def problem_transformation_model_factory(mll, ml, params_dict):
         raise ValueError('error! unregisted mll method {}. please refer to the manual.'.format(mll))
 
 
+# TODO SVM微调
 def ml_model_factory(ml, params_dict, is_weka_ml=False):
     if ml == 'SVM':
         if is_weka_ml:
@@ -547,7 +548,14 @@ def ml_model_factory(ml, params_dict, is_weka_ml=False):
                    " -K \"weka.classifiers.functions.supportVector.RBFKernel -G {}\"".\
                        format(2 ** params_dict['cost'], 2 ** params_dict['gamma'])
 
-        return svm.SVC(C=2 ** params_dict['cost'], gamma=2 ** params_dict['gamma'], probability=True)
+        # return svm.SVC(C=2 ** params_dict['cost'], gamma=2 ** params_dict['gamma'], probability=True)
+        print('debug'.center(100, '$'))
+        print(params_dict['kernel'])
+        return svm.SVC(C=2 ** params_dict['cost'],
+                       gamma=2 ** params_dict['gamma'],
+                       probability=True,
+                       kernel=params_dict['kernel'])
+
     elif ml == 'RF':
         if is_weka_ml:
             return "weka.classifiers.trees.RandomForest -S {} -I {}".format(42, params_dict['tree'])
@@ -625,6 +633,8 @@ def mll_arg_parser(parse):
                        help="the desired number of classifiers")
     parse.add_argument('-mix_mode', type=str, choices=["as_dna", "as_rna"], default=None,
                        help="process nucleic acid data mixed with DNA and RNA.")
+    parse.add_argument('-kernel', type=str, choices=["linear", "poly", "rbf", "sigmoid", "precomputed"], default="rbf",
+                       help="kernel of svm.SVC, default rbf.")
 
 
 def mll_param_bound(lower=float("-inf"), upper=float("inf")):

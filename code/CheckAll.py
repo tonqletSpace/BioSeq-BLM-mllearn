@@ -786,7 +786,7 @@ def mll_params_check(args, all_params_list_dict):
     """
     if args.ml is not None:
         if args.ml == 'SVM':
-            SVM_params_check(args.cost, args.gamma, all_params_list_dict)
+            SVM_params_check(args.cost, args.gamma, args.kernel, all_params_list_dict)
         elif args.ml == 'RF':
             RF_params_check(args.tree, all_params_list_dict)
         elif args.ml in DeepLearning:
@@ -822,9 +822,10 @@ def mll_params_check(args, all_params_list_dict):
                          'please refer to the manual.'.format(args.mll))
 
 
-def SVM_params_check(cost, gamma, param_list_dict):
+def SVM_params_check(cost, gamma, kernel, param_list_dict):
     param_helper(cost, 'cost', param_list_dict, default_value=1)  # [-5, 11]
     param_helper(gamma, 'gamma', param_list_dict, default_value=5)  # [-11, 6]
+    param_list_dict['kernel'] = list(kernel)
 
 
 def RF_params_check(tree, param_list_dict):
