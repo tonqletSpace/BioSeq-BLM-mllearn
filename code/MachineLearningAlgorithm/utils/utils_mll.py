@@ -549,8 +549,6 @@ def ml_model_factory(ml, params_dict, is_weka_ml=False):
                        format(2 ** params_dict['cost'], 2 ** params_dict['gamma'])
 
         # return svm.SVC(C=2 ** params_dict['cost'], gamma=2 ** params_dict['gamma'], probability=True)
-        print('debug'.center(100, '$'))
-        print(params_dict['kernel'])
         return svm.SVC(C=2 ** params_dict['cost'],
                        gamma=2 ** params_dict['gamma'],
                        probability=True,
