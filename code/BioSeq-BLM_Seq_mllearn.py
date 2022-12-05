@@ -385,9 +385,9 @@ if __name__ == '__main__':
     # ----------------------- parameters for input and output ---------------------- #
     # parameters for input
     parse.add_argument('-seq_file', nargs='*', required=True, help="The input files in FASTA format.")
-    parse.add_argument('-label_file', required=True, help="The corresponding label file.")
+    parse.add_argument('-label_file', nargs='*', required=True, help="The corresponding label file.")
     parse.add_argument('-ind_seq_file', nargs='*', help="The input independent test files in FASTA format.")
-    parse.add_argument('-ind_label_file', help="The corresponding label file of independent test dataset.")
+    parse.add_argument('-ind_label_file', nargs='*', help="The corresponding label file of independent test dataset.")
 
     parse.add_argument('-fixed_len', type=int,
                        help="The length of sequence will be fixed via cutting or padding. If you don't set "
