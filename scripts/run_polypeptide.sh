@@ -8,10 +8,10 @@ cd code/
 
 # data
 cpu=5
-#data=(~/blm-mll/data/polypeptide/train/seqs.fasta ~/blm-mll/data/polypeptide/val/seqs.fasta)
-#label=(~/blm-mll/data/polypeptide/train/labels.csv ~/blm-mll/data/polypeptide/val/labels.csv)
-data=(~/blm-mll/data/polypeptide/val/seqs.fasta)
-label=(~/blm-mll/data/polypeptide/val/labels.csv)
+data=(~/blm-mll/data/polypeptide/train/seqs.fasta ~/blm-mll/data/polypeptide/val/seqs.fasta)
+label=(~/blm-mll/data/polypeptide/train/labels.csv ~/blm-mll/data/polypeptide/val/labels.csv)
+#data=(~/blm-mll/data/polypeptide/val/seqs_test.fasta)
+#label=(~/blm-mll/data/polypeptide/val/labels_test.csv)
 ind_data=~/blm-mll/data/polypeptide/test/seqs.fasta
 ind_label=~/blm-mll/data/polypeptide/test/labels.csv
 
@@ -30,7 +30,7 @@ p_mll_s=(0.1 1.0 0.4)
 #p_mll_v=(0.0 1.0 0.3)
 #p_mll_t=(0.01 1.0 3)
 
-default_cmd=(-cv 10 -category Protein -cpu ${cpu} -bp 1 -metric Acc -mix_mode as_dna\
+default_cmd=(-cv 5 -category Protein -cpu ${cpu} -bp 1 -metric Acc -mix_mode as_dna\
  -seq_file ${data[*]} -label ${label[*]} -ind_seq_file ${ind_data} -ind_label_file ${ind_label})
 
 function run_ml_methods() {
@@ -103,7 +103,7 @@ function run_ml_methods() {
 #  done
 #done
 
-tm_methods=(LSA)
+tm_methods=(LSA LDA)
 sub_methods=(TF-IDF TextRank) # Attention TextRank
 for md in ${tm_methods[*]}; do
   for sub_md in ${sub_methods[*]}; do
