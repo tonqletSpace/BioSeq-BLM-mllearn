@@ -4,16 +4,17 @@ from pathlib import Path
 
 p1 = sys.argv[1]  # e.g. Seq/DNA
 p2 = sys.argv[2]  # br_rf
+p3 = sys.argv[3]  # is independent test or not
 result_dir = '../results'
 
 # generate root dir of a batch of results
 p11 = result_dir + '/batch/' + str(p1) + '/'
 
 
-def get_model_params_result(result_path, method_name):
+def get_model_params_result(result_path, method_name, ind=False):
     extracted_dir = result_dir + '/extracted'
-    ex_p = extracted_dir + '/' + method_name + '_parameter.txt'
-    ex_m = extracted_dir + '/' + method_name + '_evaluation.txt'
+    ex_p = extracted_dir + '/' + method_name + '{}parameter.txt'.format('_ind_' if ind else '_')
+    ex_m = extracted_dir + '/' + method_name + '{}evaluation.txt'.format('_ind_' if ind else '_')
 
     if not Path(extracted_dir).exists():
         Path(extracted_dir).mkdir(parents=True)
@@ -36,7 +37,9 @@ def get_model_params_result(result_path, method_name):
                 for f in files:
                     if f == 'Opt_params.txt':
                         write_file(pf, target_root, f)
-                    elif f == 'final_results.txt':
+                    elif ind and f == 'ind_final_results.txt':
+                        write_file(rf, target_root, f)
+                    elif not ind and f == 'final_results.txt':
                         write_file(rf, target_root, f)
                     else:
                         pass
@@ -59,4 +62,4 @@ def write_header(io, tag, root):
     io.writelines(tag.center(len(tag)+2, ' ').center(100, '+') + '\n')
 
 
-get_model_params_result(p11, p2)
+get_model_params_result(p11, p2, p3)

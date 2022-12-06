@@ -270,8 +270,7 @@ def mll_seq_file2one(category, seq_files, out_file, mode):
             out_f.write('\n')
             out_f.write(seq_list[i])
             out_f.write('\n')
-
-    assert len(seq_len_list) == len(seq_list), 'err'
+    # assert len(seq_len_list) == len(seq_list), 'err'
 
     return seq_len_list
 

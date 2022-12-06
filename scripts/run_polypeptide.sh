@@ -8,8 +8,10 @@ cd code/
 
 # data
 cpu=5
-data=(~/blm-mll/data/polypeptide/train/seqs.fasta ~/blm-mll/data/polypeptide/val/seqs.fasta)
-label=(~/blm-mll/data/polypeptide/train/labels.csv ~/blm-mll/data/polypeptide/val/labels.csv)
+#data=(~/blm-mll/data/polypeptide/train/seqs.fasta ~/blm-mll/data/polypeptide/val/seqs.fasta)
+#label=(~/blm-mll/data/polypeptide/train/labels.csv ~/blm-mll/data/polypeptide/val/labels.csv)
+data=(~/blm-mll/data/polypeptide/val/seqs.fasta)
+label=(~/blm-mll/data/polypeptide/val/labels.csv)
 ind_data=~/blm-mll/data/polypeptide/test/seqs.fasta
 ind_label=~/blm-mll/data/polypeptide/test/labels.csv
 
@@ -32,8 +34,8 @@ default_cmd=(-cv 10 -category Protein -cpu ${cpu} -bp 1 -metric Acc -mix_mode as
  -seq_file ${data[*]} -label ${label[*]} -ind_seq_file ${ind_data} -ind_label_file ${ind_label})
 
 function run_ml_methods() {
-  echo "python BioSeq-BLM_Seq_mllearn.py $* -mll ${mll} -ml ${ml} ${default_cmd[*]}\
-       -tree ${p_tree[*]}"; exit 0
+#  echo "python BioSeq-BLM_Seq_mllearn.py $* -mll ${mll} -ml ${ml} ${default_cmd[*]}\
+#       -tree ${p_tree[*]}"; exit 0
   if [[ ${mll} = "BR" ||  ${mll} = "LP" ]]; then
     if [ ${ml} = "RF" ]; then
       python BioSeq-BLM_Seq_mllearn.py $* -mll ${mll} -ml ${ml} ${default_cmd[*]}\
@@ -90,25 +92,25 @@ function run_ml_methods() {
 
 # tb345 BSLM based on BOW, TF-IDF, TextRank
 # 12 total
-bslm_modes=(BOW TF-IDF TR) # Attention TR
+#bslm_modes=(BOW TF-IDF TR) # Attention TR
 # lncRNA very slow
 # dna_words=(Kmer RevKmer Mismatch Subsequence)
-dna_words=(Kmer)
-for md in ${bslm_modes[*]}; do
-  for wd in ${dna_words[*]}; do
-    blm_mode=(-mode ${md} -words ${wd} -word_size 4)
-    run_ml_methods ${blm_mode[*]}
-  done
-done
-
-#tm_methods=(LSA LDA PLSA)
-#sub_methods=(BOW TF-IDF TextRank) # Attention TextRank
-#for md in ${tm_methods[*]}; do
-#  for sub_md in ${sub_methods[*]}; do
-#    blm_mode=(-mode TM -method ${md} -in_tm ${sub_md} -words Kmer -word_size 4)
+#dna_words=(Kmer)
+#for md in ${bslm_modes[*]}; do
+#  for wd in ${dna_words[*]}; do
+#    blm_mode=(-mode ${md} -words ${wd} -word_size 4)
 #    run_ml_methods ${blm_mode[*]}
 #  done
 #done
+
+tm_methods=(LSA)
+sub_methods=(TF-IDF TextRank) # Attention TextRank
+for md in ${tm_methods[*]}; do
+  for sub_md in ${sub_methods[*]}; do
+    blm_mode=(-mode TM -method ${md} -in_tm ${sub_md} -words Kmer -word_size 4)
+    run_ml_methods ${blm_mode[*]}
+  done
+done
 
 #we_methods=(word2vec Glove fastText)
 #we_dna_words=(Kmer)  # bugs found for the other two words in BioSeq-BLM
@@ -120,7 +122,7 @@ done
 #done
 
 # generate params and evals in code/
-python extract_result_mll.py Seq/Protein "${out_res}"
+python extract_result_mll.py Seq/Protein "${out_res}" true
 
 # place all results int results/out_res/
 cd ../results/

@@ -214,14 +214,20 @@ def mll_final_results_output(results, out_path, ind=False):
         filename = out_path + 'final_results.txt'
 
     with open(filename, 'w') as f:
-        f.write('The final results of cross validation are as follows:\n')
+        if ind is True:
+            f.write('The final results of independent test are as follows:\n')
+        else:
+            f.write('The final results of cross validation are as follows:\n')
         for i in eval_re:
             f.write(i)
             f.write("\n")
 
     full_path = os.path.abspath(filename)
     if os.path.isfile(full_path):
-        print('The output file for final results can be found:')
+        if ind is True:
+            print('The output file for independent test results can be found:')
+        else:
+            print('The output file for final results can be found:')
         print(full_path)
         print('\n')
 
