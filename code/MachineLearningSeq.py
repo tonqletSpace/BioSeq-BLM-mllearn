@@ -104,7 +104,7 @@ def mll_seq_ind_ml_fe_process(args, vectors, labels, model_path, params_selected
     # 合并独立测试集序列文件
     ind_input_one_file = create_all_seq_file(args.ind_seq_file, args.results_dir, ind=True)
     # 统计独立测试集样本数目和序列长度
-    seq_len_list = mll_seq_file2one(args.category, args.ind_seq_file, ind_input_one_file)
+    seq_len_list = mll_seq_file2one(args.category, args.ind_seq_file, ind_input_one_file, args.mix_mode)
     # 生成标签矩阵
     ind_label_array = mll_gen_label_matrix_from_csv_file(args.ind_label_file, is_seq_mode=True)
 
@@ -136,7 +136,7 @@ def mll_seq_ind_dl_fe_process(args, vectors, embed_size, labels, fixed_seq_len_l
     ind_input_one_file = create_all_seq_file(args.ind_seq_file, args.results_dir, ind=True)
     # 统计独立测试集样本数目和序列长度
 
-    ind_seq_len_list = mll_seq_file2one(args.category, args.ind_seq_file, ind_input_one_file)
+    ind_seq_len_list = mll_seq_file2one(args.category, args.ind_seq_file, ind_input_one_file, args.mix_mode)
 
     # 生成独立测试集标签数组
     ind_label_array = mll_gen_label_matrix_from_csv_file(args.ind_label_file, is_seq_mode=True)
