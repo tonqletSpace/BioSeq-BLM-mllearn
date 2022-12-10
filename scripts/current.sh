@@ -3,14 +3,13 @@
 
 # 多肽识别
 ./scripts/run_polypeptide.sh BR RF br_rf
-exit 0
 ./scripts/run_polypeptide.sh BR SVM br_svm
 ./scripts/run_polypeptide.sh LP RF lp_rf
 ./scripts/run_polypeptide.sh LP SVM lp_svm
 ./scripts/run_polypeptide.sh RAkELo RF rakelo_rf
-./scripts/run_polypeptide.sh RAkELo SVM rakelo_svm
+# ./scripts/run_polypeptide.sh RAkELo SVM rakelo_svm
 ./scripts/run_polypeptide.sh RAkELd RF rakeld_rf
-./scripts/run_polypeptide.sh RAkELd SVM rakeld_svm
+# ./scripts/run_polypeptide.sh RAkELd SVM rakeld_svm
 #./scripts/run_polypeptide.sh MLARAM _ mlaram
 ./scripts/run_polypeptide.sh MLkNN _ mlknn
 ./scripts/run_polypeptide.sh BRkNNaClassifier _ brknna

@@ -7,7 +7,7 @@ out_res=$3
 cd code/
 
 # data
-cpu=5
+cpu=1
 data=(~/blm-mll/data/polypeptide/train/seqs.fasta ~/blm-mll/data/polypeptide/val/seqs.fasta)
 label=(~/blm-mll/data/polypeptide/train/labels.csv ~/blm-mll/data/polypeptide/val/labels.csv)
 ind_data=~/blm-mll/data/polypeptide/test/seqs.fasta
@@ -19,12 +19,12 @@ p_tree=(450)
 p_cost=(-5)
 p_gamma=(0)
 #RAkELo
-p_mll_ls=(5 11 5)
+p_mll_ls=(11)
 p_mll_mc=(15)
 # MLkNN, BRkNNaClassifier, BRkNNbClassifier
 p_mll_k=(450)
 p_mll_s=(0.1 1.0 0.4)
- MLARAM
+#  MLARAM
 p_mll_v=(0.0 1.0 0.3)
 p_mll_t=(0.01 1.0 3)
 
@@ -89,12 +89,12 @@ function run_ml_methods() {
 
 # modes=OHE or SR
 #ohe_methods=(PSSM PSFM One-hot CS)
-ohe_methods=(PSSM)
+ohe_methods=(One-hot)
 for md in ${ohe_methods[*]}; do
-  blm_mode=(-mode OHE -method ${md} -fixed_len 4200)
+  blm_mode=(-mode OHE -method ${md} -fixed_len 210)
   # fa=(-sn L1-normalize -dr PCA -np 512 -rdb dr)
-  fa=(-dr PCA -np 512 -rdb dr)
-  run_ml_methods ${blm_mode[*]} ${fa[*]}
+  fa=(-dr PCA -np 1024 -rdb dr) ${fa[*]}
+  run_ml_methods ${blm_mode[*]}
 done
 
 # generate params and evals in code/
