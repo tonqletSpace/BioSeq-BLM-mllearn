@@ -629,7 +629,7 @@ def mll_arg_parser(parse):
     parse.add_argument("-mll_mc", "--RAkELo_model_count", nargs='*', type=int,
                        action=mll_param_bound(1),
                        help="the desired number of classifiers")
-    parse.add_argument('-mix_mode', type=str, choices=["as_dna", "as_rna"], default=None,
+    parse.add_argument('-mix_mode', type=str, choices=["as_dna", "as_rna"], default=None, required=False,
                        help="process nucleic acid data mixed with DNA and RNA.")
     parse.add_argument('-kernel', type=str, choices=["linear", "poly", "rbf", "sigmoid", "precomputed"], default="rbf",
                        help="kernel of svm.SVC, default rbf.")

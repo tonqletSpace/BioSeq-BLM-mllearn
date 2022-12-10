@@ -93,8 +93,8 @@ ohe_methods=(One-hot)
 for md in ${ohe_methods[*]}; do
   blm_mode=(-mode OHE -method ${md} -fixed_len 210)
   # fa=(-sn L1-normalize -dr PCA -np 512 -rdb dr)
-  fa=(-dr PCA -np 1024 -rdb dr) ${fa[*]}
-  run_ml_methods ${blm_mode[*]}
+  fa=(-dr PCA -np 1024 -rdb dr)
+  run_ml_methods ${blm_mode[*]} ${fa[*]}
 done
 
 # generate params and evals in code/
