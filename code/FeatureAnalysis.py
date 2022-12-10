@@ -178,6 +178,9 @@ def dimension_reduction(data, n_components, dr_method):
 
     new_data = np.zeros((data.shape[0], n_components))
     if dr_method == 'PCA':
+        print('debug!!!')
+        print(data.shape)
+        print(n_components)
         new_data = PCA(n_components=n_components, whiten=True).fit_transform(data)
     elif dr_method == 'KernelPCA':
         new_data = KernelPCA(n_components=n_components, kernel="rbf").fit_transform(data)
