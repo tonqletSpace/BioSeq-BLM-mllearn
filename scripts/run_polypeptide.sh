@@ -7,7 +7,7 @@ out_res=$3
 cd code/
 
 # data
-cpu=1
+cpu=5
 data=(~/blm-mll/data/polypeptide/train/seqs.fasta ~/blm-mll/data/polypeptide/val/seqs.fasta)
 label=(~/blm-mll/data/polypeptide/train/labels.csv ~/blm-mll/data/polypeptide/val/labels.csv)
 ind_data=~/blm-mll/data/polypeptide/test/seqs.fasta
