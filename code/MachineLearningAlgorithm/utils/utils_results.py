@@ -263,6 +263,8 @@ def mll_prob_output(true_labels, predicted_labels, prob_list, out_path, ind=Fals
 
     if prob_list is None:
         prob_list = np.zeros(true_labels.shape, np.int)
+    if issparse(prob_list):
+        prob_list = prob_list.toarray()
 
     prob_file = out_path + "prob_out.csv"
     if ind is True:

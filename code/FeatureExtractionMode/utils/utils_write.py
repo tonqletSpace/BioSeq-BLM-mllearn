@@ -239,6 +239,7 @@ def mll_seq_file2one(category, seq_files, out_file, mode):
         alphabet = RNA
     else:
         alphabet = PROTEIN
+        mode = None  # mode is not available
 
     # collect multiple files
     if not isinstance(seq_files, list):
@@ -258,19 +259,12 @@ def mll_seq_file2one(category, seq_files, out_file, mode):
             seq_len_list.extend([len(seq) for seq in seq_all])
 
     # 写入所有序列
-    # with open(out_file, 'w') as out_f:
-    #     for j in range(len(seq_all)):
-    #         out_f.write('>Sequence[' + str(j) + ']')
-    #         out_f.write('\n')
-    #         out_f.write(seq_all[j])
-    #         out_f.write('\n')
     with open(out_file, 'w') as out_f:
         for i in range(len(seq_list)):
             out_f.write('>Sequence[' + str(i) + ']')
             out_f.write('\n')
             out_f.write(seq_list[i])
             out_f.write('\n')
-    # assert len(seq_len_list) == len(seq_list), 'err'
     return seq_len_list
 
 
