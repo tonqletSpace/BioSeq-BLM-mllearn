@@ -2,6 +2,7 @@
 /.idea
 /results
 /data
+/software
 *.pyc
 *.csv
 *.pt
