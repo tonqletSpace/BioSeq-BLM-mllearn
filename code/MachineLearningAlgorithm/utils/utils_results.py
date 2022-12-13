@@ -101,7 +101,7 @@ def mll_performance(origin_labels, predicted_labels):
     jaccard_similarity = metrics.jaccard_score(origin_labels, predicted_labels, average='samples', zero_division=0)
     precision = metrics.precision_score(origin_labels, predicted_labels, average='samples', zero_division=0)
     recall = metrics.recall_score(origin_labels, predicted_labels, average='samples', zero_division=0)
-    f1_score = metrics.f1_score(origin_labels, predicted_labels, average='micro', zero_division=0)
+    f1_score = metrics.f1_score(origin_labels, predicted_labels, average='macro', zero_division=0)
 
     return hamming_loss, accuracy, jaccard_similarity, precision, recall, f1_score
 
