@@ -13,6 +13,12 @@ p11 = result_dir + '/batch/' + str(p1) + '/'
 
 def get_model_params_result(result_path, method_name, ind=False):
     extracted_dir = result_dir + '/extracted'
+
+    if ind.startswith('t') or ind.startswith('T'):
+        ind = True
+    else:
+        ind = False
+
     ex_p = extracted_dir + '/' + method_name + '{}parameter.txt'.format('_ind_' if ind else '_')
     ex_m = extracted_dir + '/' + method_name + '{}evaluation.txt'.format('_ind_' if ind else '_')
 

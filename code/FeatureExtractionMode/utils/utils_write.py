@@ -590,7 +590,8 @@ def mll_read_res_seq_file(seq_file, category, mix_mode):
 
     seq_len_list = []  # list of sequence length integer (list[len(seq1), len(seq2), ...])
     with open(seq_file, 'r') as in_f:
-        seq_all, _ = mll_get_sequence_check_dna(in_f, alphabet, mix_mode)  # list of sequence in alphabet (list[seq1, seq2, ...])
+        # list of sequence in alphabet (list[seq1, seq2, ...])
+        seq_all, _ = mll_get_sequence_check_dna(in_f, alphabet, mix_mode)
         for seq in seq_all:
             seq_len_list.append(len(seq))
 
