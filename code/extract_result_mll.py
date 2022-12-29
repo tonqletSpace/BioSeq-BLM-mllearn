@@ -12,8 +12,8 @@ p1_ = result_dir + '/' + str(p1) + '/'
 
 
 def get_model_params_result(target_dir_to_collect, method_name, ind=False):
-    print('set extracting mode to {}.'.format('independent' if ind else 'cross_validation'))
     ind = True if ind.startswith('t') or ind.startswith('T') else False
+    print('set extracting mode to {} and start working...'.format('independent' if ind else 'cross_validation'))
 
     # generate output directory: ${target_dir_to_collect}/extracted
     extracted_dir = target_dir_to_collect + '/extracted'
@@ -47,8 +47,8 @@ def get_model_params_result(target_dir_to_collect, method_name, ind=False):
                     else:
                         pass
 
-        print('you can find extracted results in directory {}'.format(extracted_dir))
         print('done.')
+        print('you can find extracted results in directory {}'.format(extracted_dir))
 
 
 def write_file(io, target_path, file_name):
