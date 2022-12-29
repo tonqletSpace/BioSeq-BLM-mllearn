@@ -2,9 +2,9 @@ import os.path
 import sys
 from pathlib import Path
 
-p1 = sys.argv[1]  # the directory to collect. e.g. batch/Seq/DNA
-p2 = sys.argv[2]  # method name of output files. e.g. br_rf, br_rf_v0.1
-p3 = sys.argv[3]  # True to collect cross_validation results. False to collect independent test results
+p1 = sys.argv[1]  # the directory(relative to results/) to collect. e.g. batch/Seq/DNA
+p2 = sys.argv[2]  # custom method name of output files. e.g. br_rf, br_rf_v0.1
+p3 = sys.argv[3]  # True to collect independent test results. False to collect cross_validation results.
 result_dir = '../results'  # directory of results
 
 # generate root dir of a batch of results
@@ -47,6 +47,7 @@ def get_model_params_result(target_dir_to_collect, method_name, ind=False):
                     else:
                         pass
 
+        print('you can find extracted results in directory {}'.format(extracted_dir))
         print('done.')
 
 
