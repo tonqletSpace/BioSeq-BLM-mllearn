@@ -47,8 +47,9 @@ def get_model_params_result(target_dir_to_collect, method_name, ind=False):
                     else:
                         pass
 
-        print('done.')
         print('you can find extracted results in directory {}'.format(extracted_dir))
+        print('done.')
+        print()
 
 
 def write_file(io, target_path, file_name):
