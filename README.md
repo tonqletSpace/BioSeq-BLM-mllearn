@@ -1,6 +1,6 @@
 > Owner
 
-`ZhangQi`, `Beijing Institue of Tecnology `
+`ZhangQi from Beijing Institue of Tecnology`
 
 
 > Contact
