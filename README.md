@@ -1,6 +1,9 @@
+> Owner
 
-Contact
-----
+`ZhangQi`, `Beijing Institue of Tecnology `
 
-`zhangqi` zhangQi_dlut@126.com
-``` 
+
+> Contact
+
+`zhangQi_dlut@126.com`
+
