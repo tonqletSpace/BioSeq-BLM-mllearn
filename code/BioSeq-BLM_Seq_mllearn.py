@@ -130,7 +130,6 @@ def mll_one_ml_fe_process(args, input_one_file, labels, vec_files, folds, params
 
 
 def mll_dl_fe_process(args):
-    # 合并序列文件
     input_one_file = create_all_seq_file(args.seq_file, args.results_dir)
     # 统计样本数目和序列长度
     seq_len_list = mll_seq_file2one(args.category, args.seq_file, input_one_file, args.mix_mode)
@@ -142,26 +141,24 @@ def mll_dl_fe_process(args):
 
     all_params_list_dict = {}
     all_params_list_dict = dl_params_check(args, all_params_list_dict)
-    # 对每个mode的words和method的参数进行检查
-    # params_list_dict 为只包括特征提取的参数的字典， all_params_list_dict为包含所有参数的字典
+    # params_list_dict 为只包括特征提取的参数的字典, all_params_list_dict为包含所有参数的字典
     params_list_dict, all_params_list_dict = mode_params_check(args, all_params_list_dict)
     # 列表字典 ---> 字典列表 --> 参数字典
     mll_params_check(args, all_params_list_dict)
     params_dict = make_params_dicts(all_params_list_dict)[0]
     mll_ensemble_check(label_array.shape[1], params_dict)
 
-    # 特征向量文件命名
     out_files = mll_out_dl_seq_file(args.results_dir, ind=False)
 
     # 深度特征向量提取
     mll_one_seq_fe_process(args, input_one_file, label_array, out_files, **params_dict)
     # 获取深度特征向量
-
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
     vectors, embed_size, fixed_seq_len_list = mll_read_dl_vec4seq(args, args.fixed_len, out_files)
 
     # 深度学习的独立测试和交叉验证分开
     if args.ind_seq_file is None:
+        # 交叉验证
         # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
         args = mll_prepare4train_seq(args, label_array, dl=True)
         # 构建深度学习分类器
@@ -385,9 +382,11 @@ if __name__ == '__main__':
     # ----------------------- parameters for input and output ---------------------- #
     # parameters for input
     parse.add_argument('-seq_file', nargs='*', required=True, help="The input files in FASTA format.")
-    parse.add_argument('-label_file', nargs='*', required=True, help="The corresponding label file.")
+    parse.add_argument('-label_file', nargs='*', required=True,
+                       help="The corresponding label file in csv format(header needed).")
     parse.add_argument('-ind_seq_file', nargs='*', help="The input independent test files in FASTA format.")
-    parse.add_argument('-ind_label_file', nargs='*', help="The corresponding label file of independent test dataset.")
+    parse.add_argument('-ind_label_file', nargs='*',
+                       help="The corresponding label file of independent test dataset in csv format(header needed).")
 
     parse.add_argument('-fixed_len', type=int,
                        help="The length of sequence will be fixed via cutting or padding. If you don't set "

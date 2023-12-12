@@ -195,7 +195,7 @@ def main(args):
     # 对每个残基层面的method进行检查
     res_feature_check(args)
 
-    # 读取序列文件里每条序列的长度
+    # 读取序列文件里每条序列的长度，读取数据
     label_array = mll_generate_res_label_data(args)
 
     # 对SVM或RF的参数进行检查
@@ -332,9 +332,10 @@ if __name__ == '__main__':
                        help="Select technique for oversampling.")
     # ----------------------- parameters for input and output ---------------------- #
     parse.add_argument('-seq_file', required=True, help="The input file in FASTA format.")
-    parse.add_argument('-label_file', required=True, help="The corresponding label file.")
-    parse.add_argument('-ind_seq_file', help="The independent test dataset in FASTA format.")
-    parse.add_argument('-ind_label_file', help="The corresponding label file of independent test dataset.")
+    parse.add_argument('-label_file', required=True, help="The corresponding label file in csv format(header needed).")
+    parse.add_argument('-ind_seq_file', nargs='*', help="The independent test dataset in FASTA format.")
+    parse.add_argument('-ind_label_file', nargs='*',
+                       help="The corresponding label file of independent test dataset in csv format(header needed).")
     parse.add_argument('-fixed_len', type=int,
                        help="The length of sequence will be fixed via cutting or padding. If you don't set "
                             "value for 'fixed_len', it will be the maximum length of all input sequences. ")

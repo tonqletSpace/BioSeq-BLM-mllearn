@@ -160,6 +160,15 @@ def one_seq_fe_process(args, input_one_file, labels, vec_files, sample_num_list,
 
 
 def mll_one_seq_fe_process(args, input_one_file, labels, vec_files, **params_dict):
+    """
+    operate BLM feature descriptor.
+    :param args:
+    :param input_one_file: standardized input data resource
+    :param labels: input label resource in sparse lil_matrix format
+    :param vec_files:
+    :param params_dict:
+    :return: data representation in ndarray(aka np.array) format
+    """
     print_fe_dict(params_dict)  # 输出特征提取参数详细信息
 
     # data长度，复用blm对二分类的特征提取

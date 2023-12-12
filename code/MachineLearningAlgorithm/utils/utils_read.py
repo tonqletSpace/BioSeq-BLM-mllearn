@@ -195,6 +195,13 @@ def read_dl_vec4seq(fixed_len, in_files, return_sp):
 
 
 def mll_read_dl_vec4seq(args, fixed_len, in_files):
+    """
+
+    :param args:
+    :param fixed_len:
+    :param in_files:
+    :return: np.array
+    """
     vectors_list = []
     seq_len_list = []
     for in_file in in_files:

@@ -78,8 +78,6 @@ class FormatWrite(object):
 
 
 def vectors2files(vectors, sample_num_list, out_format, out_file_list):
-    # print('执行了vectors2files函数吗这里')
-    # print(vectors)
     st = 0
     for i in range(len(sample_num_list)):
         ed = st + sample_num_list[i]
@@ -180,47 +178,13 @@ def fa_vectors2files(vectors, sample_num_list, out_format, file_list):
     vectors2files(vectors, sample_num_list, out_format, out_file_list)
 
 
-# def table_sample(level, ml, sample_num_list, label_list, fixed_len, ind):
-#     tb = pt.PrettyTable()
-#     print('+---------------------------------------------------+')
-#     if ind is True:
-#         print('|   The information of independent test dataset     |')
-#     else:
-#         print('|       The information of benchmark dataset        |')
-#     print('+---------------------------------------------------+')
-#     tb.field_names = ["label of sample", "number of sample"]
-#     if ml in ['CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer'] and level == 'residue':
-#         tb.add_row([label_list, sample_num_list[0]])
-#     else:
-#         for label, sample_num in zip(label_list, sample_num_list):
-#             tb.add_row([label, sample_num, fixed_len])
-#     print(tb)
-#     print('\n')
-#
-#
-# def table_params(params_dict, opt=False):
-#     tb = pt.PrettyTable()
-#
-#     if opt is False:
-#         print('Parameter details'.center(21, '*'))
-#         tb.field_names = ["parameter", "value"]
-#     else:
-#         print('\n')
-#         print('\n')
-#         print('\n')
-#         print('\n')
-#         print('+---------------------------+')
-#         print('| Optimal parameter details |')
-#         print('+---------------------------+')
-#         tb.field_names = ["parameter", "optimal value"]
-#     for item in list(params_dict.items()):
-#         if item[0] not in ['out_files', 'ind_out_files']:
-#             tb.add_row(item)
-#     print(tb)
-#     print('\n')
-
-
 def create_all_seq_file(seq_files, tgt_dir, ind=False):
+    """
+    :param seq_files: original input data resource, maybe a list
+    :param tgt_dir:
+    :param ind: independent test mode or not
+    :return: a resource name for further data pre-processing.
+    """
     suffix = os.path.splitext(seq_files[0])[-1]
     if len(tgt_dir) >= 2 and tgt_dir[-1] == '/':
         tgt_dir = tgt_dir[:-1]
@@ -232,6 +196,13 @@ def create_all_seq_file(seq_files, tgt_dir, ind=False):
 
 
 def mll_seq_file2one(category, seq_files, out_file, mode):
+    """
+    :param category:
+    :param seq_files: original input data resource, maybe a list
+    :param out_file: standardized input data resource, whose data is obtained from original input data resource.
+    :param mode: for case in which RNA and DNA data are mixed.
+    :return: list of integer each of which indicates the length of a sequence (list[len(seq1), len(seq2), ...])
+    """
     # 暂时支持单数据文件输入
     if category == 'DNA':
         alphabet = DNA
@@ -246,15 +217,13 @@ def mll_seq_file2one(category, seq_files, out_file, mode):
         seq_files = [seq_files]
 
     # 读取所有序列
-    seq_len_list = []  # list of length integer (list[len(seq1), len(seq2), ...])
+    seq_len_list = []
     seq_list = []
     for i in range(len(seq_files)):
         with open(seq_files[i], 'r') as in_f:
             # list of sequence in alphabet (list[seq1, seq2, ...])
             seq_all, _ = mll_get_sequence_check_dna(in_f, alphabet, mode)
 
-            # for seq in seq_all:
-            #     seq_len_list.append(len(seq))
             seq_list.extend(seq_all)
             seq_len_list.extend([len(seq) for seq in seq_all])
 
@@ -322,6 +291,11 @@ def mll_gen_label_matrix(seq_label_list):
 
 
 def mll_gen_label_matrix_from_csv_file(label_files, is_seq_mode):
+    """
+    :param label_files: input label data(in csv format with a header)
+    :param is_seq_mode: sequence-level or residue-level
+    :return: label data in sparse lil_matrix format
+    """
     # collect multiple files
     if not isinstance(label_files, list):
         label_files = [label_files]
@@ -344,24 +318,6 @@ def mll_gen_label_matrix_from_csv_file(label_files, is_seq_mode):
                     for j in range(int(len(row) / q)):
                         label = [int(e) for e in row[j * q: j * q + q]]
                         label_list.append(label)
-
-    # with open(label_file, mode="r", encoding="utf-8") as f:
-    #     csv_in = csv.reader(f)
-    #
-    #     header = next(csv_in)  # ignore the header
-    #     q = len(header)  # q indicates each dimension of multi-label
-    #
-    #     for row in csv_in:
-    #         if is_seq_mode:
-    #             label = [int(e) for e in row]  # label contains q indication
-    #             label_list.append(label)
-    #         else:
-    #             # residue label file
-    #             assert len(row) % q == 0, 'err in label file'
-    #             for i in range(int(len(row) / q)):
-    #                 label = [int(e) for e in row[i*q: i*q+q]]
-    #                 label_list.append(label)
-    # return lil_matrix(label_list)
 
     return lil_matrix(label_list)
 
@@ -486,6 +442,9 @@ def out_dl_seq_file(label, results_dir, ind=False):
 
 
 def mll_out_dl_seq_file(results_dir, ind=False):
+    """
+    :return: a resource name for features generated by deep learning model.
+    """
     if ind is True:
         fea_path = results_dir + 'ind_dl_features[' + 'mll' + ']_.txt'
     else:

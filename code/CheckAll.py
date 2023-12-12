@@ -118,6 +118,9 @@ def mll_seq_sys_check(args, res=False):
 
 
 def mll_ensemble_check(q, params_dict):
+    """
+    check parameters for ensemble mll algorithms(RAkELo RAkELd) who requires logical size of label set.
+    """
     assert isinstance(params_dict, dict)
     if params_dict.__contains__('RAkEL_labelset_size') and params_dict['RAkEL_labelset_size'] is not None:
         assert params_dict['RAkEL_labelset_size'] <= q,\
