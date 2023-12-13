@@ -103,6 +103,15 @@ def get_output_space_dim(y, mll, params_dict):
 
 def mll_dl_cv_process(mll, ml, vectors, embed_size, labels, seq_length_list,
                       max_len, folds, out_dir, params_dict):
+    """
+    perform MLL training flow in the way of cross-validation.
+    :param mll: MLL algorithm
+    :param ml: base SLL(Single-Label Learning) method
+    :param vectors: features of input
+    :param embed_size: feature embedding size
+    :param labels: labels of input
+    :return:
+    """
 
     mll_hyper_param_show(mll, ml, params_dict, is_optimal=True, print_len=60)
 
@@ -120,15 +129,15 @@ def mll_dl_cv_process(mll, ml, vectors, embed_size, labels, seq_length_list,
         lp_args = ml, max_len, embed_size, params_dict
         mll_clf = get_mll_deep_model(num_class, mll, *lp_args)
 
-        # blm是每个epoch都测试，选最好的测试结果；这里用fit后的结果来预测
+        # fit and predict
         final_predict_list, final_prob_list = do_dl_fit_predict(
             mll, ml, mll_clf, x_train_ma, y_train_ma, train_length_ma,
             max_len, x_val, test_length, 'LP', *lp_args)
 
+        # evaluate
         result = mll_performance(y_val, final_predict_list)
         results.append(result)
 
-        # 这里为保存概率文件准备
         predicted_labels[val_index] = final_predict_list.toarray()
 
         if final_prob_list is not None:
@@ -241,11 +250,16 @@ def mll_dl_ind_process(mll, ml, vectors, labels, fixed_seq_len_list,
                        ind_vectors, ind_label_array, ind_fixed_seq_len_list,
                        embed_size, max_len, out_dir, params_dict):
     """
-    用于训练的数据: vectors, fixed_seq_len_list, labels
-    用于预测的独立测试集数据: ind_vectors, ind_fixed_seq_len_list
-    用于评估的标签: ind_label_array
-    共用的: embed_size, max_len
-    out_dir: 独立测试输出文件
+    :param mll,
+    :param ml: specify MLL predictor
+    :param vectors,
+    :param labels,
+    :param fixed_seq_len_list: resource for training
+    :param ind_vectors,
+    :param ind_label_array,
+    :param ind_fixed_seq_len_list: resource for independent test
+    :param out_dir: output directory
+    :return:
     """
     # blm是每个epoch都测试，选最好的测试结果；这里用fit后的结果来预测
     num_class = get_output_space_dim(labels, mll, params_dict)
@@ -261,16 +275,14 @@ def mll_dl_ind_process(mll, ml, vectors, labels, fixed_seq_len_list,
     x_train_ma, y_train_ma, train_length_ma = mll_check_one_class(
         mll, vectors[range_list], labels[range_list], fixed_seq_len_list[range_list])
 
+    # do fit and predict
     fitting_args = 'LP', ml, max_len, embed_size, params_dict  # LP is default base mll method of ensemble algorithm
     mll_clf = do_dl_fit(mll, ml, mll_clf, x_train_ma, y_train_ma, train_length_ma, max_len, *fitting_args)
     final_predict_list, final_prob_list = do_dl_predict(mll, ml, mll_clf, max_len, ind_vectors, ind_fixed_seq_len_list)
 
-    # print(vectors.shape, labels.shape)
-    # print(ind_label_array.shape, final_predict_list.shape)
-    # exit()
-
+    # evaluate
     final_result = mll_performance(ind_label_array, final_predict_list)
 
-    mll_print_metric_dict(final_result, ind=True)  # to console
-    mll_final_results_output(final_result, out_dir, ind=True)  # to file
-    mll_prob_output(ind_label_array, final_predict_list, final_prob_list, out_dir, ind=True)  # to file
+    mll_print_metric_dict(final_result, ind=True)
+    mll_final_results_output(final_result, out_dir, ind=True)  # dump result to file
+    mll_prob_output(ind_label_array, final_predict_list, final_prob_list, out_dir, ind=True)  # dump result to file

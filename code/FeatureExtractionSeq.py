@@ -165,7 +165,7 @@ def mll_one_seq_fe_process(args, input_one_file, labels, vec_files, **params_dic
     :param args:
     :param input_one_file: standardized input data resource
     :param labels: input label resource in sparse lil_matrix format
-    :param vec_files:
+    :param vec_files: output file on which BLM feature descriptor dumps the extracted features
     :param params_dict:
     :return: data representation in ndarray(aka np.array) format
     """

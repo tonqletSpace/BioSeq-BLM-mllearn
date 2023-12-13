@@ -196,11 +196,11 @@ def read_dl_vec4seq(fixed_len, in_files, return_sp):
 
 def mll_read_dl_vec4seq(args, fixed_len, in_files):
     """
-
+    read feature from in_files into machine memory
     :param args:
     :param fixed_len:
-    :param in_files:
-    :return: np.array
+    :param in_files: file on which BLM feature descriptor dumps the extracted features
+    :return:
     """
     vectors_list = []
     seq_len_list = []

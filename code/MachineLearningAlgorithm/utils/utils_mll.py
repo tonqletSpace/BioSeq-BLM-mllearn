@@ -72,6 +72,7 @@ def get_mll_deep_model(num_class, mll, ml, max_len, embed_size, params_dict):
         base_clf = None
         require_dense = [False, False]
 
+    # factory to build a MLL predictor which contains a MLL strategy and one or more SLL base classifiers
     mll_clf = MllDeepNetSeq(mll, params_dict, require_dense).mll_classifier(base_clf)
 
     return mll_clf

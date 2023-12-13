@@ -72,12 +72,11 @@ def mll_ml_fe_process(args):
     print('\n')
     print('Parameter Selection Processing...')
     print('\n')
-
     for i in range(len(params_dict_list)):
         params_dict = params_dict_list[i]
         mll_ensemble_check(label_array.shape[1], params_dict)
         mll_meka_check(args, params_dict)
-        # 生成特征向量文件名
+        # operate BLM feature descriptor to represent raw data, and dump features into files
         vec_files = mll_out_seq_file(args.format, args.results_dir, params_dict, all_params_list_dict)
         params_dict['out_files'] = vec_files
 
@@ -95,16 +94,13 @@ def mll_ml_fe_process(args):
     # 获取最优特征向量
     opt_vectors = mll_files2vectors_seq(args, opt_files, args.format)
     print(' Shape of Optimal Feature vectors: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0], opt_vectors.shape[1]))
-    # 特征分析
-    if args.score == 'none':
-        opt_vectors = mll_fa_process(args, opt_vectors, label_array, after_ps=True, ind=False)
-        print(' Shape of Optimal Feature vectors after FA process: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0],
+    # 特征分析(降维，正则化等)
+    opt_vectors = mll_fa_process(args, opt_vectors, label_array, after_ps=True, ind=False)
+    print(' Shape of Optimal Feature vectors after FA process: [%d, %d] '.center(66, '*') % (opt_vectors.shape[0],
                                                                                                  opt_vectors.shape[1]))
-
-    # 构建分类器
+    # train a predictor on input dataset and dump the model into a resource path
     model_path = mll_ml_results(args, opt_vectors, label_array, args.folds, params_selected)
     # -------- 独立测试-------- #
-    # 即，将独立测试数据集在最优的model上进行测试
     if args.ind_seq_file is not None:
         mll_seq_ind_ml_fe_process(args, opt_vectors, label_array, model_path, params_selected)
 
@@ -118,10 +114,9 @@ def mll_one_ml_fe_process(args, input_one_file, labels, vec_files, folds, params
     vectors = mll_files2vectors_seq(args, vec_files, args.format)
     print(' Shape of Feature vectors: [%d, %d] '.center(66, '*') % (vectors.shape[0], vectors.shape[1]))
 
-    if args.score == 'none':
-        vectors = mll_fa_process(args, vectors, labels, after_ps=False, ind=False)
-        print(' Shape of Feature vectors after FA process: [%d, %d] '.center(66, '*') % (vectors.shape[0],
-                                                                                         vectors.shape[1]))
+    vectors = mll_fa_process(args, vectors, labels, after_ps=False, ind=False)
+    print(' Shape of Feature vectors after FA process: [%d, %d] '.center(66, '*') %
+          (vectors.shape[0], vectors.shape[1]))
     params_dict = mll_one_ml_process(args, vectors, labels, folds, params_dict)
     print('  process end  '.center(66, '-'))
     print('\n')
@@ -156,17 +151,13 @@ def mll_dl_fe_process(args):
     # fixed_seq_len_list: 最大序列长度为fixed_len的序列长度的列表
     vectors, embed_size, fixed_seq_len_list = mll_read_dl_vec4seq(args, args.fixed_len, out_files)
 
-    # 深度学习的独立测试和交叉验证分开
+    # cross-validation or independent test
     if args.ind_seq_file is None:
-        # 交叉验证
-        # 在参数便利前进行一系列准备工作: 1. 固定划分；2.设定指标；3.指定任务类型
-        args = mll_prepare4train_seq(args, label_array, dl=True)
-        # 构建深度学习分类器
+        args = mll_prepare4train_seq(args, label_array, dl=True)  # prepare for cross-validation
         mll_dl_cv_process(args.mll, args.ml, vectors, embed_size,
                           label_array, fixed_seq_len_list, args.fixed_len,
                           args.folds, args.results_dir, params_dict)
     else:
-        # 独立验证开始
         mll_seq_ind_dl_fe_process(args, vectors, embed_size, label_array,
                                   fixed_seq_len_list, args.fixed_len, params_dict)
 
