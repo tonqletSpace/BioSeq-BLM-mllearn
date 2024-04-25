@@ -6,7 +6,6 @@ if [ ${mode} = 'aav' ]; then # algo Arch validation
 
     ./scripts/mll_algo_arch_validation.sh BR RF br_rf
     ./scripts/mll_algo_arch_validation.sh BR SVM br_svm
-    # add kNN? XGBoost?
 
     ./scripts/mll_algo_arch_validation.sh CC RF cc_rf
     ./scripts/mll_algo_arch_validation.sh CC SVM cc_svm
@@ -30,12 +29,11 @@ if [ ${mode} = 'aav' ]; then # algo Arch validation
 
 
 elif [ ${mode} = 'db' ]; then # debug
-    ./scripts/mll_algo_arch_validation.sh CLR RF clr_rf
-    ./scripts/mll_algo_arch_validation.sh CLR SVM clr_svm
-    ./scripts/mll_algo_arch_validation.sh FW RF fw_rf
-    ./scripts/mll_algo_arch_validation.sh FW SVM fw_svm
-    ./scripts/mll_algo_arch_validation.sh RT RF rt_rf
-    ./scripts/mll_algo_arch_validation.sh RT SVM rt_svm
+    ./scripts/mll_algo_arch_validation.sh BR NB br_nb
+    ./scripts/mll_algo_arch_validation.sh BR AB br_ab
+    ./scripts/mll_algo_arch_validation.sh BR BG br_bg
+    ./scripts/mll_algo_arch_validation.sh BR kNN br_knn
+
 
 elif [ ${mode} = 'sc' ]; then # subcell
 
