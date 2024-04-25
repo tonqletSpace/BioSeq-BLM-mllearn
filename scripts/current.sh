@@ -4,13 +4,6 @@ mode=$1
 # ./scripts/current.sh aav
 if [ ${mode} = 'aav' ]; then # algo Arch validation
 
-    ./scripts/mll_algo_arch_validation.sh BR RF br_rf
-    ./scripts/mll_algo_arch_validation.sh BR SVM br_svm
-    ./scripts/mll_algo_arch_validation.sh BR NB br_nb
-    ./scripts/mll_algo_arch_validation.sh BR AB br_ab
-    ./scripts/mll_algo_arch_validation.sh BR BG br_bg
-    ./scripts/mll_algo_arch_validation.sh BR kNN br_knn
-
     ./scripts/mll_algo_arch_validation.sh CC RF cc_rf
     ./scripts/mll_algo_arch_validation.sh CC SVM cc_svm
     ./scripts/mll_algo_arch_validation.sh LP RF lp_rf
@@ -30,6 +23,13 @@ if [ ${mode} = 'aav' ]; then # algo Arch validation
     ./scripts/mll_algo_arch_validation.sh MLkNN _ mlknn
     ./scripts/mll_algo_arch_validation.sh BRkNNaClassifier _ brknna
     ./scripts/mll_algo_arch_validation.sh BRkNNbClassifier _ brknnb
+
+    ./scripts/mll_algo_arch_validation.sh BR RF br_rf
+    ./scripts/mll_algo_arch_validation.sh BR SVM br_svm
+    ./scripts/mll_algo_arch_validation.sh BR NB br_nb
+    ./scripts/mll_algo_arch_validation.sh BR AB br_ab
+    ./scripts/mll_algo_arch_validation.sh BR BG br_bg
+    ./scripts/mll_algo_arch_validation.sh BR kNN br_knn
 
 # ./scripts/current.sh db
 elif [ ${mode} = 'db' ]; then # debug
