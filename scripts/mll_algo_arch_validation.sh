@@ -3,8 +3,8 @@ mll=$1
 ml=$2
 out_res=$3
 
-seq_files=~/blm-mll/data/BaiTData/data/mRNA.fasta
-labels=~/blm-mll/data/BaiTData/label/mRNA_label.csv
+seq_files=~/blm-mll/data/bt_lncRNA/human_lncRNA.fasta
+labels=~/blm-mll/data/bt_lncRNA/human_lncRNA_label.csv
 cpu=5
 
 # batch run starting
