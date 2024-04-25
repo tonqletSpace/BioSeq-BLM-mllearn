@@ -33,8 +33,7 @@ if [ ${mode} = 'aav' ]; then # algo Arch validation
 
 # ./scripts/current.sh db
 elif [ ${mode} = 'db' ]; then # debug
-
-
+    exit 0
 
 elif [ ${mode} = 'sc' ]; then # subcell
 
