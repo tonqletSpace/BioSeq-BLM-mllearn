@@ -818,6 +818,8 @@ def mll_params_check(args, all_params_list_dict):
             SVM_params_check(args.cost, args.gamma, args.kernel, all_params_list_dict)
         elif args.ml == 'RF':
             RF_params_check(args.tree, all_params_list_dict)
+        elif args.ml in ExtensiveClassification:
+            pass
         elif args.ml in DeepLearning:
             pass
         else:
