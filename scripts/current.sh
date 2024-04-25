@@ -27,7 +27,7 @@ if [ ${mode} = 'aav' ]; then # algo Arch validation
     ./scripts/mll_algo_arch_validation.sh BRkNNaClassifier _ brknna
     ./scripts/mll_algo_arch_validation.sh BRkNNbClassifier _ brknnb
 
-
+# ./scripts/current.sh db
 elif [ ${mode} = 'db' ]; then # debug
     ./scripts/mll_algo_arch_validation.sh BR NB br_nb
     ./scripts/mll_algo_arch_validation.sh BR AB br_ab

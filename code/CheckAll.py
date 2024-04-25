@@ -65,7 +65,6 @@ Ml = {'SVM': 'Support Vector Machine(SVM)', 'RF': 'Random Forest(RF)', 'CRF': 'C
       'GRU': 'Gate Recurrent Unit(GRU)', 'Transformer': 'Transformer',
       'Weighted-Transformer': 'Weighted-Transformer', 'Reformer': 'Reformer'} + ExtensiveMl
 
-
 DeepLearning = ['CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer']
 ExtensiveClassification = ['BG', 'AB', 'NB', 'kNN']
 Classification = ['SVM', 'RF', 'CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer'] \
