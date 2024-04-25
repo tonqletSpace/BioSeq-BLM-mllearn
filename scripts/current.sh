@@ -1,8 +1,43 @@
 #!/bin/bash
 mode=$1
 
+# ./scripts/current.sh aav
+if [ ${mode} = 'aav' ]; then # algo Arch validation
 
-if [ ${mode} = 'sc' ]; then # subcell
+    ./scripts/mll_algo_arch_validation.sh BR RF br_rf
+    ./scripts/mll_algo_arch_validation.sh BR SVM br_svm
+    # add kNN? XGBoost?
+
+    ./scripts/mll_algo_arch_validation.sh CC RF cc_rf
+    ./scripts/mll_algo_arch_validation.sh CC SVM cc_svm
+    ./scripts/mll_algo_arch_validation.sh LP RF lp_rf
+    ./scripts/mll_algo_arch_validation.sh LP SVM lp_svm
+    ./scripts/mll_algo_arch_validation.sh RAkELo RF rakelo_rf
+    ./scripts/mll_algo_arch_validation.sh RAkELo SVM rakelo_svm
+    ./scripts/mll_algo_arch_validation.sh RAkELd RF rakeld_rf
+    ./scripts/mll_algo_arch_validation.sh RAkELd SVM rakeld_svm
+    ./scripts/mll_algo_arch_validation.sh CLR RF clr_rf
+    ./scripts/mll_algo_arch_validation.sh CLR SVM clr_svm
+    ./scripts/mll_algo_arch_validation.sh FW RF fw_rf
+    ./scripts/mll_algo_arch_validation.sh FW SVM fw_svm
+    ./scripts/mll_algo_arch_validation.sh RT RF rt_rf
+    ./scripts/mll_algo_arch_validation.sh RT SVM rt_svm
+
+    ./scripts/mll_algo_arch_validation.sh MLARAM _ mlaram
+    ./scripts/mll_algo_arch_validation.sh MLkNN _ mlknn
+    ./scripts/mll_algo_arch_validation.sh BRkNNaClassifier _ brknna
+    ./scripts/mll_algo_arch_validation.sh BRkNNbClassifier _ brknnb
+
+
+elif [ ${mode} = 'db' ]; then # debug
+    ./scripts/mll_algo_arch_validation.sh CLR RF clr_rf
+    ./scripts/mll_algo_arch_validation.sh CLR SVM clr_svm
+    ./scripts/mll_algo_arch_validation.sh FW RF fw_rf
+    ./scripts/mll_algo_arch_validation.sh FW SVM fw_svm
+    ./scripts/mll_algo_arch_validation.sh RT RF rt_rf
+    ./scripts/mll_algo_arch_validation.sh RT SVM rt_svm
+
+elif [ ${mode} = 'sc' ]; then # subcell
 
     # 亚细胞定位
     #data=(~/blm-mll/data/sequences/snoRNA.fasta ~/blm-mll/data/sequences/snoRNA_label.csv)
