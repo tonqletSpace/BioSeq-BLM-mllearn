@@ -1,4 +1,5 @@
 import os
+import subprocess
 from decimal import Decimal
 
 import numpy as np
@@ -110,7 +111,12 @@ def mll_seq_sys_check(args, res=False):
     # check meka
     if is_mll_meka_methods(args.mll):
         args.meka_classpath = download_meka()
-        args.which_java = '/usr/bin/java'  # TODO should read from path
+        # args.which_java = '/usr/bin/java'  # TODO should read from path
+        completed_process = subprocess.run(['which', 'java'], capture_output=True, text=True)
+        if completed_process.stderr:
+            exit(1)
+        print("jdk found: " + completed_process.stdout)
+        args.which_java = completed_process.stdout
 
     # blm
     if args.ml:
