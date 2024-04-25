@@ -5,7 +5,9 @@ import sys
 
 import torch
 from sklearn import svm
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, BaggingClassifier, AdaBoostClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
 from skmultilearn.adapt import MLkNN, BRkNNaClassifier, BRkNNbClassifier, MLARAM
 from skmultilearn.base import MLClassifierBase
 from skmultilearn.cluster import RandomLabelSpaceClusterer
@@ -538,7 +540,18 @@ def problem_transformation_model_factory(mll, ml, params_dict):
             java_command=params_dict['which_java']
         )
     else:
-        raise ValueError('error! unregisted mll method {}. please refer to the manual.'.format(mll))
+        # for Extension
+        if mll == 'BG':
+            return BaggingClassifier(n_estimators=50, random_state=13)
+        elif mll == 'AB':
+            return AdaBoostClassifier(n_estimators=50, random_state=13)
+        elif mll == 'NB':
+            return GaussianNB()
+        elif mll == 'kNN':
+            return KNeighborsClassifier(n_neighbors=3)
+        else:
+            raise ValueError('error! unregisted mll method {}. please refer to the manual.'.format(mll))
+
 
 
 # TODO SVM微调
