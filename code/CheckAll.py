@@ -128,6 +128,9 @@ def mll_seq_sys_check(args, res=False):
         # 使用which函数查找java的路径
         java_path = which("java")
         print('jdk found: ', java_path)
+        if java_path is None:
+            print('please check your jdk path, which java command is suggested.')
+            exit(0)
         args.which_java = java_path
 
     # blm
