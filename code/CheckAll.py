@@ -1,10 +1,8 @@
 import os
-import subprocess
 from decimal import Decimal
 
 import numpy as np
 from numpy import random
-import shutil
 import sys
 from collections import Counter
 from itertools import count, takewhile, product
@@ -108,15 +106,29 @@ def seq_sys_check(args, res=False):
 
 
 def mll_seq_sys_check(args, res=False):
+    def which(program):
+        def is_exe(fpath):
+            return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+        fpath, fname = os.path.split(program)
+        if fpath:
+            if is_exe(program):
+                return program
+        else:
+            for path in os.environ["PATH"].split(os.pathsep):
+                exe_file = os.path.join(path, program)
+                if is_exe(exe_file):
+                    return exe_file
+        return None
+
     # check meka
     if is_mll_meka_methods(args.mll):
         args.meka_classpath = download_meka()
         # args.which_java = '/usr/bin/java'  # TODO should read from path
-        completed_process = subprocess.run(['which', 'java'], capture_output=True, text=True)
-        if completed_process.stderr:
-            exit(1)
-        print("jdk found: " + completed_process.stdout)
-        args.which_java = completed_process.stdout
+        # 使用which函数查找java的路径
+        java_path = which("java")
+        print('jdk found: ', java_path)
+        args.which_java = java_path
 
     # blm
     if args.ml:
