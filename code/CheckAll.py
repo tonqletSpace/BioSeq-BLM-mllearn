@@ -59,13 +59,17 @@ Mode = {'OHE': 'one-hot encoding', 'BOW': 'bag of words', 'TF-IDF': 'term freque
         'TR': 'TextRank', 'WE': 'word embedding', 'TM': 'topic model', 'SR': 'syntax rules', 'AF': 'automatic features'}
 Machine_Learning_Algorithm = ['SVM', 'RF', 'CRF', 'CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer',
                               'Reformer']
+ExtensiveMl = {'BG': 'Bagging Aggregating', 'AB': 'Adaptive Boosting', 'NB': 'Naive Bayes', 'kNN': 'K-Nearest Neighbors'}
 Ml = {'SVM': 'Support Vector Machine(SVM)', 'RF': 'Random Forest(RF)', 'CRF': 'Conditional Random Field(CRF)',
       'CNN': 'Convolutional Neural Networks(CNN)', 'LSTM': 'Long Short-Term Memory(LSTM)',
       'GRU': 'Gate Recurrent Unit(GRU)', 'Transformer': 'Transformer',
-      'Weighted-Transformer': 'Weighted-Transformer', 'Reformer': 'Reformer'}
+      'Weighted-Transformer': 'Weighted-Transformer', 'Reformer': 'Reformer'} + ExtensiveMl
+
+
 DeepLearning = ['CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer']
-ExtensiveCandidates = ['BG', 'AB', 'NB', 'kNN']
-Classification = ['SVM', 'RF', 'CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer'] + ExtensiveCandidates
+ExtensiveClassification = ['BG', 'AB', 'NB', 'kNN']
+Classification = ['SVM', 'RF', 'CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer'] \
+                 + ExtensiveClassification
 SequenceLabelling = ['CRF', 'CNN', 'LSTM', 'GRU', 'Transformer', 'Weighted-Transformer', 'Reformer']
 
 # 路径
