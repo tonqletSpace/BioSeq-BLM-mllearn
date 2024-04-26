@@ -2,7 +2,21 @@
 mode=$1
 
 # ./scripts/current.sh aav
-if [ ${mode} = 'aav' ]; then # algo Arch validation
+if [ ${mode} = 'ap' ]; then # analysis platform
+    # 表征学习！！
+    # blm
+    ./scripts/mll_algo_arch_validation.sh BR ? br_?
+
+    # platform的
+    ./scripts/mll_algo_arch_validation.sh LP RF lp_rf
+    ./scripts/mll_algo_arch_validation.sh LP SVM lp_svm
+    ./scripts/mll_algo_arch_validation.sh LP CNN lp_rf
+    ./scripts/mll_algo_arch_validation.sh RAkELo RF rakelo_rf
+    ./scripts/mll_algo_arch_validation.sh RAkELo SVM rakelo_svm
+    ./scripts/mll_algo_arch_validation.sh RAkELd RF rakeld_rf
+    ./scripts/mll_algo_arch_validation.sh RAkELd SVM rakeld_svm
+
+elif [ ${mode} = 'aav' ]; then # algo Arch validation
 
     ./scripts/mll_algo_arch_validation.sh CC RF cc_rf
     ./scripts/mll_algo_arch_validation.sh CC SVM cc_svm
@@ -24,6 +38,10 @@ if [ ${mode} = 'aav' ]; then # algo Arch validation
     ./scripts/mll_algo_arch_validation.sh BRkNNaClassifier _ brknna
     ./scripts/mll_algo_arch_validation.sh BRkNNbClassifier _ brknnb
 
+
+
+# ./scripts/current.sh db
+elif [ ${mode} = 'db' ]; then # debug
     ./scripts/mll_algo_arch_validation.sh BR RF br_rf
     ./scripts/mll_algo_arch_validation.sh BR SVM br_svm
     ./scripts/mll_algo_arch_validation.sh BR NB br_nb
@@ -31,8 +49,8 @@ if [ ${mode} = 'aav' ]; then # algo Arch validation
     ./scripts/mll_algo_arch_validation.sh BR BG br_bg
     ./scripts/mll_algo_arch_validation.sh BR kNN br_knn
 
-# ./scripts/current.sh db
-elif [ ${mode} = 'db' ]; then # debug
+    ./scripts/mll_algo_arch_validation.sh CLR RF clr_rf
+    ./scripts/mll_algo_arch_validation.sh CLR SVM clr_svm
     exit 0
 
 elif [ ${mode} = 'sc' ]; then # subcell

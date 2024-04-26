@@ -520,23 +520,23 @@ def problem_transformation_model_factory(mll, ml, params_dict):
         )
     elif mll == 'FW':
         return BLMMeka(
-            meka_classifier="meka.classifiers.multilabel.FW",  # Binary Relevance
-            weka_classifier=ml_model_factory(ml, params_dict, True),  # with Naive Bayes single-label classifier
-            meka_classpath=params_dict['meka_classpath'],  # obtained via download_meka
+            meka_classifier="meka.classifiers.multilabel.FW",
+            weka_classifier=ml_model_factory(ml, params_dict, True),
+            meka_classpath=params_dict['meka_classpath'],
             java_command=params_dict['which_java']
         )
     elif mll == 'RT':
         return BLMMeka(
-            meka_classifier="meka.classifiers.multilabel.RT",  # Binary Relevance
-            weka_classifier=ml_model_factory(ml, params_dict, True),  # with Naive Bayes single-label classifier
-            meka_classpath=params_dict['meka_classpath'],  # obtained via download_meka
+            meka_classifier="meka.classifiers.multilabel.RT",
+            weka_classifier=ml_model_factory(ml, params_dict, True),
+            meka_classpath=params_dict['meka_classpath'],
             java_command=params_dict['which_java']
         )
     elif mll == 'CLR':
         return BLMMeka(
-            meka_classifier="meka.classifiers.multilabel.MULAN -S CLR",  # Binary Relevance
-            weka_classifier=ml_model_factory(ml, params_dict, True),  # with Naive Bayes single-label classifier
-            meka_classpath=params_dict['meka_classpath'],  # obtained via download_meka
+            meka_classifier="meka.classifiers.multilabel.MULAN -S CLR",
+            weka_classifier=ml_model_factory(ml, params_dict, True),
+            meka_classpath=params_dict['meka_classpath'],
             java_command=params_dict['which_java']
         )
     else:
