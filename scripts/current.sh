@@ -5,11 +5,11 @@ mode=$1
 if [ ${mode} = 'apv' ]; then # analysis platform validation
     # 表征学习！！
     # blm
-    ./scripts/mll_platform_validation.sh BR RF br_rf
 #    ./scripts/mll_platform_validation.sh BR SVM br_svm
     ./scripts/mll_platform_validation.sh BR CNN br_cnn
     ./scripts/mll_platform_validation.sh BR GRU br_gru
     ./scripts/mll_platform_validation.sh BR Transformer br_trm
+
 
     # platform
     ./scripts/mll_platform_validation.sh LP RF lp_rf
@@ -29,6 +29,8 @@ if [ ${mode} = 'apv' ]; then # analysis platform validation
     ./scripts/mll_platform_validation.sh RAkELd CNN rakeld_cnn
     ./scripts/mll_platform_validation.sh RAkELd GRU rakeld_gru
     ./scripts/mll_platform_validation.sh RAkELd Transformer rakeld_trm
+
+    ./scripts/mll_platform_validation.sh BR RF br_rf
 
 elif [ ${mode} = 'aav' ]; then # algo Arch validation
 

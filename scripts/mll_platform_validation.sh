@@ -108,7 +108,7 @@ function run_ml_methods() {
 # BSLM based on BOW, TF-IDF, TextRank
 # 12 total
 bslm_modes=(BOW TF-IDF) # Attention TR
-dna_words=(Kmer Subsequence)
+dna_words=(Kmer)
 for md in ${bslm_modes[*]}; do
   for wd in ${dna_words[*]}; do
     blm_mode=(-mode ${md} -words ${wd})
@@ -119,7 +119,7 @@ done
 # tb6 BSLMs based on topic models
 # 9 total
 tm_methods=(LSA LDA)
-sub_methods=(BOW TextRank) # Attention TextRank
+sub_methods=(BOW) # Attention TextRank
 for md in ${tm_methods[*]}; do
   for sub_md in ${sub_methods[*]}; do
     blm_mode=(-mode TM -method ${md} -in_tm ${sub_md} -words Kmer)
@@ -130,7 +130,7 @@ done
 # tb7 BNLMs based on word embedding
 # 4 total
 we_methods=(word2vec fastText)
-we_rna_words=(Kmer Mismatch)
+we_rna_words=(Kmer)
 for we in ${we_methods[*]}; do
   for wd in ${we_rna_words[*]}; do
     blm_mode=(-mode WE -method ${we} -words ${wd})
