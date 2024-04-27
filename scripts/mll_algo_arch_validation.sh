@@ -88,7 +88,7 @@ function run_ml_methods() {
 }
 
 modes=(SR) # syntax rule
-words=(DCC, DAC) # DAC
+words=(DCC DAC) # DAC
 for md in ${modes[*]}; do
   for wd in ${words[*]}; do
     blm_mode=(-mode ${md} -method ${wd})
