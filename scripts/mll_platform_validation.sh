@@ -104,17 +104,11 @@ function run_ml_methods() {
   return 0
 }
 
-# modes=OHE
-ohe_methods=(PSSM)
-for md in ${ohe_methods[*]}; do
-  blm_mode=(-mode OHE -method ${md})
-  run_ml_methods ${blm_mode[*]}
-done
 
 # BSLM based on BOW, TF-IDF, TextRank
 # 12 total
 bslm_modes=(BOW TF-IDF) # Attention TR
-dna_words=(Kmer Mismatch Subsequence)
+dna_words=(Kmer Subsequence)
 for md in ${bslm_modes[*]}; do
   for wd in ${dna_words[*]}; do
     blm_mode=(-mode ${md} -words ${wd})
@@ -136,9 +130,9 @@ done
 # tb7 BNLMs based on word embedding
 # 4 total
 we_methods=(word2vec fastText)
-we_dna_words=(Kmer RevKmer)  # bugs found for the other two words in BioSeq-BLM
+we_rna_words=(Kmer Mismatch)
 for we in ${we_methods[*]}; do
-  for wd in ${we_dna_words[*]}; do
+  for wd in ${we_rna_words[*]}; do
     blm_mode=(-mode WE -method ${we} -words ${wd})
     run_ml_methods ${blm_mode[*]}
   done
