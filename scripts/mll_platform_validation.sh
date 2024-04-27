@@ -104,39 +104,50 @@ function run_ml_methods() {
   return 0
 }
 
+if [[ ${ml} = "CNN" || ${ml} = "LSTM" || ${ml} = "GRU" || ${ml} = "Transformer" || ${ml} = "Weighted-Transformer" ]]; then
+    ohe_methods=(One-hot)
+    for md in ${ohe_methods[*]}; do
+      blm_mode=(-mode OHE -method ${md})
+      run_ml_methods ${blm_mode[*]}
+    done
+else
+    # BSLM based on BOW, TF-IDF, TextRank
+    # 12 total
+    bslm_modes=(BOW TF-IDF) # Attention TR
+    dna_words=(Kmer)
+    for md in ${bslm_modes[*]}; do
+      for wd in ${dna_words[*]}; do
+        blm_mode=(-mode ${md} -words ${wd})
+        run_ml_methods ${blm_mode[*]}
+      done
+    done
 
-# BSLM based on BOW, TF-IDF, TextRank
-# 12 total
-bslm_modes=(BOW TF-IDF) # Attention TR
-dna_words=(Kmer)
-for md in ${bslm_modes[*]}; do
-  for wd in ${dna_words[*]}; do
-    blm_mode=(-mode ${md} -words ${wd})
-    run_ml_methods ${blm_mode[*]}
-  done
-done
+    # tb6 BSLMs based on topic models
+    # 9 total
+    tm_methods=(LSA LDA)
+    sub_methods=(BOW) # Attention TextRank
+    for md in ${tm_methods[*]}; do
+      for sub_md in ${sub_methods[*]}; do
+        blm_mode=(-mode TM -method ${md} -in_tm ${sub_md} -words Kmer)
+        run_ml_methods ${blm_mode[*]}
+      done
+    done
 
-# tb6 BSLMs based on topic models
-# 9 total
-tm_methods=(LSA LDA)
-sub_methods=(BOW) # Attention TextRank
-for md in ${tm_methods[*]}; do
-  for sub_md in ${sub_methods[*]}; do
-    blm_mode=(-mode TM -method ${md} -in_tm ${sub_md} -words Kmer)
-    run_ml_methods ${blm_mode[*]}
-  done
-done
+    # tb7 BNLMs based on word embedding
+    # 4 total
+    we_methods=(word2vec fastText)
+    we_rna_words=(Kmer)
+    for we in ${we_methods[*]}; do
+      for wd in ${we_rna_words[*]}; do
+        blm_mode=(-mode WE -method ${we} -words ${wd})
+        run_ml_methods ${blm_mode[*]}
+      done
+    done
+fi
 
-# tb7 BNLMs based on word embedding
-# 4 total
-we_methods=(word2vec fastText)
-we_rna_words=(Kmer)
-for we in ${we_methods[*]}; do
-  for wd in ${we_rna_words[*]}; do
-    blm_mode=(-mode WE -method ${we} -words ${wd})
-    run_ml_methods ${blm_mode[*]}
-  done
-done
+
+
+
 
 # generate params and evals in code/
 # last param: is_ind
