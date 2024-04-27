@@ -1,20 +1,34 @@
 #!/bin/bash
 mode=$1
 
-# ./scripts/current.sh aav
-if [ ${mode} = 'ap' ]; then # analysis platform
+# ./scripts/current.sh apv
+if [ ${mode} = 'apv' ]; then # analysis platform validation
     # 表征学习！！
     # blm
-    ./scripts/mll_algo_arch_validation.sh BR ? br_?
+    ./scripts/mll_platform_validation.sh BR RF br_rf
+#    ./scripts/mll_platform_validation.sh BR SVM br_svm
+    ./scripts/mll_platform_validation.sh BR CNN br_cnn
+    ./scripts/mll_platform_validation.sh BR GRU br_gru
+    ./scripts/mll_platform_validation.sh BR Transformer br_trm
 
-    # platform的
-    ./scripts/mll_algo_arch_validation.sh LP RF lp_rf
-    ./scripts/mll_algo_arch_validation.sh LP SVM lp_svm
-    ./scripts/mll_algo_arch_validation.sh LP CNN lp_rf
-    ./scripts/mll_algo_arch_validation.sh RAkELo RF rakelo_rf
-    ./scripts/mll_algo_arch_validation.sh RAkELo SVM rakelo_svm
-    ./scripts/mll_algo_arch_validation.sh RAkELd RF rakeld_rf
-    ./scripts/mll_algo_arch_validation.sh RAkELd SVM rakeld_svm
+    # platform
+    ./scripts/mll_platform_validation.sh LP RF lp_rf
+#    ./scripts/mll_platform_validation.sh LP SVM lp_svm
+    ./scripts/mll_platform_validation.sh LP CNN lp_cnn
+    ./scripts/mll_platform_validation.sh LP GRU lp_gru
+    ./scripts/mll_platform_validation.sh LP Transformer lp_trm
+
+    ./scripts/mll_platform_validation.sh RAkELo RF rakelo_rf
+#    ./scripts/mll_platform_validation.sh RAkELo SVM rakelo_svm
+    ./scripts/mll_platform_validation.sh RAkELo CNN rakelo_cnn
+    ./scripts/mll_platform_validation.sh RAkELo GRU rakelo_gru
+    ./scripts/mll_platform_validation.sh RAkELo Transformer rakelo_trm
+
+    ./scripts/mll_platform_validation.sh RAkELd RF rakeld_rf
+#    ./scripts/mll_platform_validation.sh RAkELd SVM rakeld_svm
+    ./scripts/mll_platform_validation.sh RAkELd CNN rakeld_cnn
+    ./scripts/mll_platform_validation.sh RAkELd GRU rakeld_gru
+    ./scripts/mll_platform_validation.sh RAkELd Transformer rakeld_trm
 
 elif [ ${mode} = 'aav' ]; then # algo Arch validation
 
@@ -47,8 +61,6 @@ elif [ ${mode} = 'aav' ]; then # algo Arch validation
 
 # ./scripts/current.sh db
 elif [ ${mode} = 'db' ]; then # debug
-    ./scripts/mll_algo_arch_validation.sh CLR SVM clr_svm
-    # ./scripts/mll_algo_arch_validation.sh CLR RF clr_rf
     exit 0
 
 
