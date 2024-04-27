@@ -47,9 +47,10 @@ elif [ ${mode} = 'aav' ]; then # algo Arch validation
 
 # ./scripts/current.sh db
 elif [ ${mode} = 'db' ]; then # debug
-    ./scripts/mll_algo_arch_validation.sh CLR RF clr_rf
-    # ./scripts/mll_algo_arch_validation.sh CLR SVM clr_svm
+    ./scripts/mll_algo_arch_validation.sh CLR SVM clr_svm
+    # ./scripts/mll_algo_arch_validation.sh CLR RF clr_rf
     exit 0
+
 
 elif [ ${mode} = 'sc' ]; then # subcell
 

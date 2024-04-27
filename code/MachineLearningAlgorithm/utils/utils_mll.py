@@ -283,7 +283,7 @@ class BLMMeka(Meka):
         if sys.platform != 'win32':
             meka_command = shlex.split(meka_command)
 
-        print('meka command:', str(meka_command))  # debug
+        # print('meka command:', str(meka_command))  # debug
         pipes = subprocess.Popen(meka_command,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE,

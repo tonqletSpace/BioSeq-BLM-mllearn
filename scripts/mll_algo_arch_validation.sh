@@ -12,10 +12,13 @@ cpu=5
 cd code/
 # RF
 # p_tree=(50 600 100)
-p_tree=(50 100 50) # debug!
+p_tree=(50 100 50)  # debug!
 # SVM
-p_cost=(-12 12 4)
-p_gamma=(-12 12 4)
+# p_cost=(-12 12 4)
+# p_gamma=(-12 12 4)
+p_cost=(-2 2 2)
+p_gamma=(-2 2 2)  # debug!
+
 #RAkELo
 p_mll_ls=(2 5)
 p_mll_mc=(3 20 4)
