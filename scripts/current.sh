@@ -38,10 +38,6 @@ elif [ ${mode} = 'aav' ]; then # algo Arch validation
     ./scripts/mll_algo_arch_validation.sh BRkNNaClassifier _ brknna
     ./scripts/mll_algo_arch_validation.sh BRkNNbClassifier _ brknnb
 
-
-
-# ./scripts/current.sh db
-elif [ ${mode} = 'db' ]; then # debug
     ./scripts/mll_algo_arch_validation.sh BR RF br_rf
     ./scripts/mll_algo_arch_validation.sh BR SVM br_svm
     ./scripts/mll_algo_arch_validation.sh BR NB br_nb
@@ -49,8 +45,10 @@ elif [ ${mode} = 'db' ]; then # debug
     ./scripts/mll_algo_arch_validation.sh BR BG br_bg
     ./scripts/mll_algo_arch_validation.sh BR kNN br_knn
 
+# ./scripts/current.sh db
+elif [ ${mode} = 'db' ]; then # debug
     ./scripts/mll_algo_arch_validation.sh CLR RF clr_rf
-    ./scripts/mll_algo_arch_validation.sh CLR SVM clr_svm
+    # ./scripts/mll_algo_arch_validation.sh CLR SVM clr_svm
     exit 0
 
 elif [ ${mode} = 'sc' ]; then # subcell

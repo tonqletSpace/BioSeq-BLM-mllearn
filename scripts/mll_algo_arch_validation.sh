@@ -11,7 +11,8 @@ cpu=5
 
 cd code/
 # RF
-p_tree=(50 600 100)
+# p_tree=(50 600 100)
+p_tree=(50 100 50) # debug!
 # SVM
 p_cost=(-12 12 4)
 p_gamma=(-12 12 4)
@@ -87,7 +88,7 @@ function run_ml_methods() {
 }
 
 modes=(SR) # syntax rule
-words=(DCC) # DAC
+words=(DCC, DAC) # DAC
 for md in ${modes[*]}; do
   for wd in ${words[*]}; do
     blm_mode=(-mode ${md} -method ${wd})
@@ -99,7 +100,7 @@ done
 
 
 # generate params and evals in code/
-python extract_result_mll.py Seq/RNA "${out_res}"
+python extract_result_mll.py Seq/RNA "${out_res}" Fasle
 
 # place all results into results/out_res/
 cd ../results/

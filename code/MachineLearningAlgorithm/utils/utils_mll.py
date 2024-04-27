@@ -283,6 +283,7 @@ class BLMMeka(Meka):
         if sys.platform != 'win32':
             meka_command = shlex.split(meka_command)
 
+        print('meka command:', str(meka_command))  # debug
         pipes = subprocess.Popen(meka_command,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE,
@@ -294,6 +295,7 @@ class BLMMeka(Meka):
             self._error = self._error.decode(sys.stdout.encoding)
 
         if pipes.returncode != 0:
+            print(str(self.output_) + str(self._error))  # debug
             raise Exception(self.output_ + self._error)
 
 
