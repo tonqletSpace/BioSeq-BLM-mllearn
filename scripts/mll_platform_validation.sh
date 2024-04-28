@@ -17,8 +17,8 @@ p_tree=(350 800 200)
 p_cost=(-6 5 6)
 p_gamma=(-4 3 4)
 #RAkELo
-p_mll_ls=(10)
-p_mll_mc=(15)
+p_mll_ls=(3 5)
+p_mll_mc=(10 30 10)
 # MLkNN, BRkNNaClassifier, BRkNNbClassifier
 p_mll_k=(450)
 p_mll_s=(0.1 1.0 0.4)
