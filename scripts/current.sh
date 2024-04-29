@@ -33,19 +33,12 @@ if [ ${mode} = 'apv' ]; then # analysis platform validation
 # ./scripts/current.sh db
 elif [ ${mode} = 'db' ]; then # debug
 
-
-    ./scripts/mll_platform_validation.sh RAkELo RF rakelo_rf
-    ./scripts/mll_platform_validation.sh RAkELo CNN rakelo_cnn
-    ./scripts/mll_platform_validation.sh RAkELo GRU rakelo_gru
-    ./scripts/mll_platform_validation.sh RAkELo Transformer rakelo_trm
-
-    ./scripts/mll_platform_validation.sh RAkELd RF rakeld_rf
-    ./scripts/mll_platform_validation.sh RAkELd CNN rakeld_cnn
-    ./scripts/mll_platform_validation.sh RAkELd GRU rakeld_gru
-    ./scripts/mll_platform_validation.sh RAkELd Transformer rakeld_trm
-
-    ./scripts/mll_platform_validation.sh BR SVM br_svm
+    # ./scripts/mll_platform_validation.sh BR SVM br_svm
     # 还需要再跑其他 SVM！
+#    ./scripts/mll_platform_validation.sh BR SVM br_svm
+    ./scripts/mll_platform_validation.sh LP SVM br_svm
+    ./scripts/mll_platform_validation.sh RAkELo SVM br_svm
+    ./scripts/mll_platform_validation.sh RAkELd SVM br_svm
 
 elif [ ${mode} = 'aav' ]; then # algo Arch validation
 
