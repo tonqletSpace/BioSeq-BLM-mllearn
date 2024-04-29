@@ -36,9 +36,9 @@ elif [ ${mode} = 'db' ]; then # debug
     # ./scripts/mll_platform_validation.sh BR SVM br_svm
     # 还需要再跑其他 SVM！
 #    ./scripts/mll_platform_validation.sh BR SVM br_svm
-    ./scripts/mll_platform_validation.sh LP SVM br_svm
-    ./scripts/mll_platform_validation.sh RAkELo SVM br_svm
-    ./scripts/mll_platform_validation.sh RAkELd SVM br_svm
+    ./scripts/mll_platform_validation.sh LP SVM lp_svm
+    ./scripts/mll_platform_validation.sh RAkELo SVM rakelo_svm
+    ./scripts/mll_platform_validation.sh RAkELd SVM rakeld_svm
 
 elif [ ${mode} = 'aav' ]; then # algo Arch validation
 
